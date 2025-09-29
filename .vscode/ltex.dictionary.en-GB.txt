@@ -1,1 +1,11 @@
 cull-gmail
+version-url
+circleci-url
+circleci-badge
+crates-url
+docs-url
+mit-url
+ghub-url
+BuyMeaCoffee
+GitHubSponsors
+bmac-url
