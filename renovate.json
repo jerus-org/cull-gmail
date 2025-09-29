@@ -1,0 +1,9 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "schedule": [
+    "* 0-5 24 * *"
+  ],
+  "extends": [
+    "github>jerusdp/renovate-config:default.json"
+  ]
+}
