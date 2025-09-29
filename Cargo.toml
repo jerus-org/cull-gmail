@@ -2,7 +2,7 @@
 name = "cull-gmail"
 description = """Tool to assist in culling emails from a 
 gmail account using the gmail API"""
-version = "0.1.0"
+version = "0.0.0"
 authors = ["Jeremiah Russell <jrussell@jerus.ie>"]
 edition = "2024"
 rust-version = "1.87"
