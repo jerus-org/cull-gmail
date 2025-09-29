@@ -10,5 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Update-gitignore-for-cargo-project(pr [#2])
+- 👷 ci(config)-add version parameter to save_next_version job(pr [#4])
 
 [#2]: https://github.com/jerus-org/cull-gmail/pull/2
+[#4]: https://github.com/jerus-org/cull-gmail/pull/4
