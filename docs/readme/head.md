@@ -1,0 +1,37 @@
+![cull-gmail — Generate a change log based on the git commits compatible with keep-a-changelog and using conventional commits to categorize commits][splash]
+
+[splash]: https://raw.githubusercontent.com/jerus-org/cull-gmail/main/assets/splash.svg
+
+[![Rust 1.87+][version-badge]][version-url]
+[![circleci-badge]][circleci-url]
+[![Crates.io][crates-badge]][crates-url]
+[![Docs][docs-badge]][docs-url]
+[![MIT licensed][mit-badge]][mit-url]
+[![BuyMeaCoffee][bmac-badge]][bmac-url]
+[![GitHubSponsors][ghub-badge]][ghub-url]
+
+[crates-badge]: https://img.shields.io/crates/v/cull-gmail.svg
+[crates-url]: https://crates.io/crates/gen-changlog
+[mit-badge]: https://img.shields.io/badge/license-MIT-blue.svg
+[mit-url]: https://github.com/jerusdp/cull-gmail/blob/main/LICENSE-MIT
+[apache-badge]: https://img.shields.io/badge/license-APACHE-blue.svg
+[apache-url]: https://github.com/jerusdp/cull-gmail/blob/main/LICENSE-APACHE
+[circleci-badge]: https://dl.circleci.com/status-badge/img/gh/jerus-org/cull-gmail/tree/main.svg?style=svg
+[circleci-url]: https://dl.circleci.com/status-badge/redirect/gh/jerus-org/cull-gmail/tree/main
+[version-badge]: https://img.shields.io/badge/rust-1.87+-orange.svg
+[version-url]: https://www.rust-lang.org
+[docs-badge]:  https://docs.rs/cull-gmail/badge.svg
+[docs-url]:  https://docs.rs/cull-gmail
+[bmac-badge]: https://badgen.net/badge/icon/buymeacoffee?color=yellow&icon=buymeacoffee&label
+[bmac-url]: https://buymeacoffee.com/jerusdp
+[ghub-badge]: https://img.shields.io/badge/sponsor-30363D?logo=GitHub-Sponsors&logoColor=#white
+[ghub-url]: https://github.com/sponsors/jerusdp
+
+The `cull-gmail` provides a software library and command line program to enable the culling of emails using the Gmail API.
+
+## Main Features
+
+- login to get authorization
+- backup the mailbox 
+- filtered lists of the contents
+- move email matching a filtered list to trash
