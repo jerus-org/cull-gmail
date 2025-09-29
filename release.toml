@@ -1,5 +1,5 @@
 pre-release-replacements = [
-    { file = "docs/lib.md", search = """gen-changelog = "\\d+.\\d+.\\d+"""", replace = "{{crate_name}} = \"{{version}}\"", exactly = 1 },
+    { file = "docs/lib.md", search = """cull-gmail = "\\d+.\\d+.\\d+"""", replace = "{{crate_name}} = \"{{version}}\"", exactly = 1 },
     { file = "PRLOG.md", search = "## \\[Unreleased\\]", replace = "## [{{version}}] - {{date}}", exactly = 1 },
     { file = "PRLOG.md", search = "\\[Unreleased\\]:", replace = "[{{version}}]:", exactly = 1 },
     { file = "PRLOG.md", search = "\\.\\.\\.HEAD", replace = "...{{tag_name}}", exactly = 1 },
