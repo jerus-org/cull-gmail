@@ -133,6 +133,7 @@ workflows:
             - bot-check
           ssh_fingerprint: << pipeline.parameters.fingerprint >>
           min_rust_version: << pipeline.parameters.min-rust-version >>
+          version: 0.0.1
 
       - toolkit/no_release:
           min_rust_version: << pipeline.parameters.min-rust-version >>
