@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- ✨ add command line interface with logging(pr [#12])
+
 ### Changed
 
 - 🔧 chore(release)-update PRLOG replacements for release process(pr [#9])
@@ -33,5 +37,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#9]: https://github.com/jerus-org/cull-gmail/pull/9
 [#10]: https://github.com/jerus-org/cull-gmail/pull/10
 [#11]: https://github.com/jerus-org/cull-gmail/pull/11
+[#12]: https://github.com/jerus-org/cull-gmail/pull/12
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...HEAD
 [0.0.1]: https://github.com/jerus-org/cull-gmail/releases/tag/v0.0.1
