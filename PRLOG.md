@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - 🔧 chore(release)-update PRLOG replacements for release process(pr [#9])
+- 🔧 chore(ci)-remove hardcoded version from CircleCI config(pr [#10])
 
 ## [0.0.1] - 2025-09-30
 
@@ -29,5 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#7]: https://github.com/jerus-org/cull-gmail/pull/7
 [#8]: https://github.com/jerus-org/cull-gmail/pull/8
 [#9]: https://github.com/jerus-org/cull-gmail/pull/9
+[#10]: https://github.com/jerus-org/cull-gmail/pull/10
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...HEAD
 [0.0.1]: https://github.com/jerus-org/cull-gmail/releases/tag/v0.0.1
