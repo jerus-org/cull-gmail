@@ -22,3 +22,18 @@ include = [
 ]
 
 [dependencies]
+
+[lints.clippy]
+uninlined-format-args = "warn"
+unnecessary_semicolon = "warn"
+
+[lints.rust]
+dead-code = "allow" # allow temporarily while developing initial code
+
+[lib]
+name = "cull_gmail"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cull-gmail"
+path = "src/main.rs"
