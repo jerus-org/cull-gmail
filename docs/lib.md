@@ -18,6 +18,6 @@ Or by configuring the dependencies manually in `Cargo.toml`:
 
 ```toml
 [dependencies]
-cull-gmail = "0.1.0"
+cull-gmail = "0.0.1"
 ```
 
