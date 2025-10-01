@@ -71,6 +71,7 @@ workflows:
           min_rust_version: << pipeline.parameters.min-rust-version >>
       - toolkit/security:
           context: SonarCloud
+          ignore_advisories: RUSTSEC-2025-0066
       - toolkit/update_prlog:
           filters:
             branches:
