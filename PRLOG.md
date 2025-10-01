@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - ✨ add command line interface with logging(pr [#12])
+- ✨ add list subcommand(pr [#13])
 
 ### Changed
 
@@ -38,5 +39,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#10]: https://github.com/jerus-org/cull-gmail/pull/10
 [#11]: https://github.com/jerus-org/cull-gmail/pull/11
 [#12]: https://github.com/jerus-org/cull-gmail/pull/12
+[#13]: https://github.com/jerus-org/cull-gmail/pull/13
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...HEAD
 [0.0.1]: https://github.com/jerus-org/cull-gmail/releases/tag/v0.0.1
