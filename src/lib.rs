@@ -11,3 +11,4 @@ mod list;
 pub use client::get_auth;
 pub use client::get_client;
 pub use credential::Credential;
+pub use list::List;
