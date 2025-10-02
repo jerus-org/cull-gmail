@@ -10,7 +10,8 @@ use google_gmail1::{
 
 use crate::{Credential, Error};
 
-const DEFAULT_MAX_RESULTS: u32 = 10;
+/// Default for the maximum number of results to return on a page
+pub const DEFAULT_MAX_RESULTS: &str = "10";
 
 /// Struct to capture configuration for List API call.
 pub struct List {
@@ -50,8 +51,18 @@ impl List {
 
         Ok(List {
             hub: Gmail::new(client, auth),
-            max_results: DEFAULT_MAX_RESULTS,
+            max_results: DEFAULT_MAX_RESULTS.parse::<u32>().unwrap(),
         })
+    }
+
+    /// Set the maximum results
+    pub fn set_max_results(&mut self, value: u32) {
+        self.max_results = value;
+    }
+
+    /// Report the maximum results value
+    pub fn max_results(&self) -> u32 {
+        self.max_results
     }
 
     /// Run the Gmail api as configured
