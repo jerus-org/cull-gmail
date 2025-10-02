@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🔧 chore(release)-update PRLOG replacements for release process(pr [#9])
 - 🔧 chore(ci)-remove hardcoded version from CircleCI config(pr [#10])
 - 🔧 chore(config)-update Cargo.toml with lints and library settings(pr [#11])
+- Delete-client(pr [#17])
 
 ### Fixed
 
@@ -49,5 +50,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#14]: https://github.com/jerus-org/cull-gmail/pull/14
 [#15]: https://github.com/jerus-org/cull-gmail/pull/15
 [#16]: https://github.com/jerus-org/cull-gmail/pull/16
+[#17]: https://github.com/jerus-org/cull-gmail/pull/17
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...HEAD
 [0.0.1]: https://github.com/jerus-org/cull-gmail/releases/tag/v0.0.1
