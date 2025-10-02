@@ -1,4 +1,3 @@
-use google_clis_common as common;
 use google_gmail1::{
     Gmail,
     hyper_rustls::{HttpsConnector, HttpsConnectorBuilder},
@@ -23,10 +22,7 @@ impl List {
     /// Create a new List struct and add the Gmail api connection.
     pub async fn new(credential: &str) -> Result<Self, Error> {
         let (config_dir, secret) = {
-            let config_dir = match common::assure_config_dir_exists("~/.cull-gmail") {
-                Err(e) => return Err(Error::InvalidOptionsError(e, 3)),
-                Ok(p) => p,
-            };
+            let config_dir = crate::utils::assure_config_dir_exists("~/.cull-gmail")?;
 
             let secret: ApplicationSecret = Credential::load_json_file(credential).into();
             (config_dir, secret)
@@ -66,7 +62,8 @@ impl List {
             .messages_list("me")
             .max_results(self.max_results)
             .doit()
-            .await?;
+            .await
+            .map_err(Box::new)?;
 
         // println!("{list:#?}");
         if let Some(messages) = list.messages {
@@ -81,7 +78,8 @@ impl List {
                         .format("metadata")
                         .add_metadata_headers("subject")
                         .doit()
-                        .await?;
+                        .await
+                        .map_err(Box::new)?;
 
                     let mut subject = String::new();
                     if let Some(payload) = m.payload {
