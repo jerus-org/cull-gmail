@@ -65,7 +65,6 @@ impl List {
             .await
             .map_err(Box::new)?;
 
-        // println!("{list:#?}");
         if let Some(messages) = list.messages {
             for message in messages {
                 if let Some(id) = message.id {
