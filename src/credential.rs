@@ -25,7 +25,7 @@ impl Credential {
     pub fn load_json_file(path: &str) -> Self {
         let home_dir = env::home_dir().unwrap();
 
-        let path = PathBuf::new().join(home_dir).join(".config").join(path);
+        let path = PathBuf::new().join(home_dir).join(".cull-gmail").join(path);
         let json_str = fs::read_to_string(path).expect("could not read path");
 
         serde_json::from_str(&json_str).expect("could not convert to struct")
