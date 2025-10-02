@@ -30,8 +30,8 @@ async fn main() {
     logging.init();
     log::info!("Logging started.");
 
-    match run(args).await {
-        Ok(_) => {}
+    std::process::exit(match run(args).await {
+        Ok(_) => 0,
         Err(e) => {
             if let Some(src) = e.source() {
                 log::error!("{e}: {src}");
@@ -40,9 +40,9 @@ async fn main() {
                 log::error!("{e}");
                 eprintln!("{e}");
             }
-            std::process::exit(101);
+            101
         }
-    }
+    });
 }
 
 async fn run(args: Cli) -> Result<(), Error> {
@@ -63,7 +63,7 @@ fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
 
     let mut builder = env_logger::Builder::new();
 
-    builder.filter(None, level);
+    builder.filter(Some("cull_gmail"), level);
 
     builder.format_timestamp_secs().format_module_path(false);
 
