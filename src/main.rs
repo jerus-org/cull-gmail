@@ -2,9 +2,9 @@ use clap::{Parser, Subcommand};
 
 mod list_cli;
 
-use cull_gmail::Credential;
-use google_gmail1::{Gmail, yup_oauth2::ApplicationSecret};
+use cull_gmail::Error;
 use list_cli::ListCli;
+use std::error::Error as stdError;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -28,40 +28,39 @@ async fn main() {
 
     let mut logging = get_logging(args.logging.log_level_filter());
     logging.init();
+    log::info!("Logging started.");
 
-    run(args).await;
-    // match run(args) {
-    //     Ok(_) => {}
-    //     Err(e) => {
-    //         if let Some(src) = e.source() {
-    //             log::error!("{e}: {src}");
-    //             eprintln!("{e}: {src}");
-    //         } else {
-    //             log::error!("{e}");
-    //             eprintln!("{e}");
-    //         }
-    //         std::process::exit(101);
-    //     }
-    // }
-}
-
-async fn run(args: Cli) {
-    let secret: ApplicationSecret = Credential::load_json_file("credential.json").into();
-
-    let auth = cull_gmail::get_auth(secret).await;
-    let client = cull_gmail::get_client();
-
-    let hub = Gmail::new(client, auth);
-
-    if let Some(cmds) = args.command {
-        match cmds {
-            Commands::List(list_cli) => list_cli.run(hub).await,
+    match run(args).await {
+        Ok(_) => {}
+        Err(e) => {
+            if let Some(src) = e.source() {
+                log::error!("{e}: {src}");
+                eprintln!("{e}: {src}");
+            } else {
+                log::error!("{e}");
+                eprintln!("{e}");
+            }
+            std::process::exit(101);
         }
     }
-    // Ok(())
+}
+
+async fn run(args: Cli) -> Result<(), Error> {
+    if let Some(cmds) = args.command {
+        match cmds {
+            Commands::List(list_cli) => list_cli.run("credential.json").await?,
+        }
+    }
+    Ok(())
 }
 
 fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
+    let level = if level > log::LevelFilter::Info {
+        level
+    } else {
+        log::LevelFilter::Info
+    };
+
     let mut builder = env_logger::Builder::new();
 
     builder.filter(None, level);
