@@ -4,14 +4,11 @@
 #![cfg_attr(docsrs, warn(rustdoc::invalid_codeblock_attributes))]
 #![doc = include_str!("../docs/lib.md")]
 
-mod client;
 mod credential;
 mod error;
 mod list;
 pub(crate) mod utils;
 
-pub use client::get_auth;
-pub use client::get_client;
 pub use credential::Credential;
 pub use error::Error;
 pub use list::List;
