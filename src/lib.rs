@@ -8,6 +8,7 @@ mod client;
 mod credential;
 mod error;
 mod list;
+pub(crate) mod utils;
 
 pub use client::get_auth;
 pub use client::get_client;
