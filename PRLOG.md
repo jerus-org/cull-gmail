@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ add command line interface with logging(pr [#12])
 - ✨ add list subcommand(pr [#13])
 - ✨ implement list api to retrieve gmail messages(pr [#14])
+- ✨ implement list functionality for Gmail API(pr [#15])
 
 ### Changed
 
@@ -42,5 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#12]: https://github.com/jerus-org/cull-gmail/pull/12
 [#13]: https://github.com/jerus-org/cull-gmail/pull/13
 [#14]: https://github.com/jerus-org/cull-gmail/pull/14
+[#15]: https://github.com/jerus-org/cull-gmail/pull/15
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...HEAD
 [0.0.1]: https://github.com/jerus-org/cull-gmail/releases/tag/v0.0.1
