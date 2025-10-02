@@ -11,4 +11,5 @@ pub(crate) mod utils;
 
 pub use credential::Credential;
 pub use error::Error;
+pub use list::DEFAULT_MAX_RESULTS;
 pub use list::List;
