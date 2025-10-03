@@ -1,11 +1,11 @@
 use clap::{Parser, Subcommand};
 
 mod label_cli;
-mod list_cli;
+mod message_cli;
 
 use cull_gmail::Error;
 use label_cli::LabelCli;
-use list_cli::ListCli;
+use message_cli::MessageCli;
 use std::error::Error as stdError;
 
 #[derive(Parser, Debug)]
@@ -20,8 +20,8 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Commands {
     /// List messages
-    #[clap(name = "list")]
-    List(ListCli),
+    #[clap(name = "message")]
+    Message(MessageCli),
     /// List labels
     #[clap(name = "label")]
     Labels(LabelCli),
@@ -53,7 +53,7 @@ async fn main() {
 async fn run(args: Cli) -> Result<(), Error> {
     if let Some(cmds) = args.command {
         match cmds {
-            Commands::List(list_cli) => list_cli.run("credential.json").await?,
+            Commands::Message(list_cli) => list_cli.run("credential.json").await?,
             Commands::Labels(label_cli) => label_cli.run("credential.json").await?,
         }
     }
