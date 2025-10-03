@@ -69,8 +69,12 @@ impl List {
     }
 
     /// Add label to the labels collection
-    pub fn add_label(&mut self, label_id: &str) {
-        self.label_ids.push(label_id.to_string())
+    pub fn add_labels(&mut self, label_ids: &[String]) {
+        if !label_ids.is_empty() {
+            for id in label_ids {
+                self.label_ids.push(id.to_string())
+            }
+        }
     }
 
     /// Run the Gmail api as configured
