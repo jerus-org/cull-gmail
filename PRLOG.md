@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - ✨ add query support to list messages(pr [#22])
+- ✨ add label listing subcommand(pr [#23])
 
 ### Changed
 
@@ -69,6 +70,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#20]: https://github.com/jerus-org/cull-gmail/pull/20
 [#21]: https://github.com/jerus-org/cull-gmail/pull/21
 [#22]: https://github.com/jerus-org/cull-gmail/pull/22
+[#23]: https://github.com/jerus-org/cull-gmail/pull/23
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.2...HEAD
 [0.0.2]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/jerus-org/cull-gmail/releases/tag/v0.0.1
