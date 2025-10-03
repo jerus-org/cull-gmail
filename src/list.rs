@@ -18,6 +18,7 @@ pub const DEFAULT_MAX_RESULTS: &str = "10";
 pub struct List {
     hub: Gmail<HttpsConnector<HttpConnector>>,
     max_results: u32,
+    label_ids: Vec<String>,
 }
 
 impl List {
@@ -53,6 +54,7 @@ impl List {
         Ok(List {
             hub: Gmail::new(client, auth),
             max_results: DEFAULT_MAX_RESULTS.parse::<u32>().unwrap(),
+            label_ids: Vec::new(),
         })
     }
 
@@ -64,6 +66,11 @@ impl List {
     /// Report the maximum results value
     pub fn max_results(&self) -> u32 {
         self.max_results
+    }
+
+    /// Add label to the labels collection
+    pub fn add_label(&mut self, label_id: &str) {
+        self.label_ids.push(label_id.to_string())
     }
 
     /// Run the Gmail api as configured
@@ -116,16 +123,24 @@ impl List {
         &self,
         next_page_token: Option<String>,
     ) -> Result<ListMessagesResponse, Error> {
-        let call = self
+        let mut call = self
             .hub
             .users()
             .messages_list("me")
             .max_results(self.max_results);
-        let call = if let Some(page_token) = next_page_token {
-            call.page_token(&page_token)
-        } else {
-            call
-        };
+        // Add any labels specified
+        if !self.label_ids.is_empty() {
+            log::debug!("Setting labels for list: {:#?}", self.label_ids);
+            for id in self.label_ids.as_slice() {
+                call = call.add_label_ids(id);
+            }
+        }
+        // Add a page token if it exists
+        if let Some(page_token) = next_page_token {
+            log::debug!("Setting token for next page.");
+            call = call.page_token(&page_token);
+        }
+
         let (_response, list) = call.doit().await.map_err(Box::new)?;
 
         Ok(list)
