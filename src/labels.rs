@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use google_gmail1::{
     Gmail,
-    api::{Label, ListLabelsResponse},
+    api::Label,
     hyper_rustls::{HttpsConnector, HttpsConnectorBuilder},
     hyper_util::{
         client::legacy::{Client, connect::HttpConnector},
@@ -62,36 +62,11 @@ impl Labels {
         .await
         .unwrap();
 
-        Ok(Labels {
-            hub: Gmail::new(client, auth),
-            label_list: Vec::new(),
-            label_map: HashMap::new(),
-        })
-    }
+        let hub = Gmail::new(client, auth);
 
-    /// Get the labels for the authorised account
-    pub async fn get_labels(&mut self) -> Result<(), Error> {
-        let call = self.hub.users().labels_list("me");
+        let call = hub.users().labels_list("me");
         let (_response, list) = call.doit().await.map_err(Box::new)?;
 
-        self.log_label_names(&list).await?;
-
-        if let Some(labels) = list.labels {
-            let mut label_map = HashMap::new();
-            for label in &labels {
-                if label.id.is_some() && label.name.is_some() {
-                    let label = label.clone();
-                    label_map.insert(label.name.unwrap(), label.id.unwrap());
-                }
-            }
-            self.label_list = labels;
-            self.label_map = label_map;
-        }
-
-        Ok(())
-    }
-
-    async fn log_label_names(&self, list: &ListLabelsResponse) -> Result<(), Error> {
         if let Some(labels) = &list.labels {
             for label in labels {
                 if let Some(name) = &label.name {
@@ -102,7 +77,24 @@ impl Labels {
             }
         }
 
-        Ok(())
+        let (label_list, label_map) = if let Some(labels) = list.labels {
+            let mut label_map = HashMap::new();
+            for label in &labels {
+                if label.id.is_some() && label.name.is_some() {
+                    let label = label.clone();
+                    label_map.insert(label.name.unwrap(), label.id.unwrap());
+                }
+            }
+            (labels, label_map)
+        } else {
+            (Vec::new(), HashMap::new())
+        };
+
+        Ok(Labels {
+            hub,
+            label_list,
+            label_map,
+        })
     }
 
     /// Return the id for the name from the labels map.
