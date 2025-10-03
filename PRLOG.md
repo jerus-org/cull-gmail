@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - ♻️ refactor(labels)-simplify labels struct initialization(pr [#21])
+- ♻️ refactor(cli)-rename list subcommand to message(pr [#24])
 
 ## [0.0.2] - 2025-10-03
 
@@ -71,6 +72,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#21]: https://github.com/jerus-org/cull-gmail/pull/21
 [#22]: https://github.com/jerus-org/cull-gmail/pull/22
 [#23]: https://github.com/jerus-org/cull-gmail/pull/23
+[#24]: https://github.com/jerus-org/cull-gmail/pull/24
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.2...HEAD
 [0.0.2]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/jerus-org/cull-gmail/releases/tag/v0.0.1
