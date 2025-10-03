@@ -24,7 +24,7 @@ impl ListCli {
 
         if !self.labels.is_empty() {
             // add labels if any specified
-            let label_list = Labels::new(credential_file).await?;
+            let label_list = Labels::new(credential_file, false).await?;
 
             log::trace!("labels found and setup {label_list:#?}");
             log::debug!("labels from command line: {:?}", self.labels);
