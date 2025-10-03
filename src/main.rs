@@ -64,6 +64,7 @@ fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
     let mut builder = env_logger::Builder::new();
 
     builder.filter(Some("cull_gmail"), level);
+    // TODO: Provide an option to set wider filter allowing all crates to report
 
     builder.format_timestamp_secs().format_module_path(false);
 
