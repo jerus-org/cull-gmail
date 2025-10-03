@@ -13,6 +13,9 @@ pub struct ListCli {
     /// Labels to filter the message list
     #[arg(short, long)]
     labels: Vec<String>,
+    /// Query string to select messages to list
+    #[arg(short = 'Q', long)]
+    query: Option<String>,
 }
 
 impl ListCli {
@@ -32,6 +35,10 @@ impl ListCli {
                 }
             }
             list.add_labels(label_ids.as_slice());
+        }
+
+        if let Some(query) = self.query.as_ref() {
+            list.set_query(query)
         }
 
         log::trace!("Max results: `{}`", self.max_results);
