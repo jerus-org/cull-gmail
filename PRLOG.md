@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ implement list api to retrieve gmail messages(pr [#14])
 - ✨ implement list functionality for Gmail API(pr [#15])
 - ✨ add max results option to list command(pr [#18])
+- ✨ add pagination to list command(pr [#19])
 
 ### Changed
 
@@ -53,5 +54,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#16]: https://github.com/jerus-org/cull-gmail/pull/16
 [#17]: https://github.com/jerus-org/cull-gmail/pull/17
 [#18]: https://github.com/jerus-org/cull-gmail/pull/18
+[#19]: https://github.com/jerus-org/cull-gmail/pull/19
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...HEAD
 [0.0.1]: https://github.com/jerus-org/cull-gmail/releases/tag/v0.0.1
