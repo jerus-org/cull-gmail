@@ -3,6 +3,9 @@ use thiserror::Error;
 /// Error messages for cull-gmail
 #[derive(Debug, Error)]
 pub enum Error {
+    /// Invalid paging mode option
+    #[error("Invalid paging mode option")]
+    InvalidPagingMode,
     /// Configuration directory not set
     #[error("Configuration directory not set")]
     DirectoryUnset,
