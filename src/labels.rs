@@ -34,7 +34,7 @@ impl std::fmt::Debug for Labels {
 
 impl Labels {
     /// Create a new List struct and add the Gmail api connection.
-    pub async fn new(credential: &str) -> Result<Self, Error> {
+    pub async fn new(credential: &str, show: bool) -> Result<Self, Error> {
         let (config_dir, secret) = {
             let config_dir = crate::utils::assure_config_dir_exists("~/.cull-gmail")?;
 
@@ -67,12 +67,14 @@ impl Labels {
         let call = hub.users().labels_list("me");
         let (_response, list) = call.doit().await.map_err(Box::new)?;
 
-        if let Some(labels) = &list.labels {
-            for label in labels {
-                if let Some(name) = &label.name {
-                    log::info!("{name}");
-                } else {
-                    log::warn!("No name for label {:?}", label.id);
+        if show {
+            if let Some(labels) = &list.labels {
+                for label in labels {
+                    if let Some(name) = &label.name {
+                        log::info!("{name}");
+                    } else {
+                        log::warn!("No name for label {:?}", label.id);
+                    }
                 }
             }
         }
