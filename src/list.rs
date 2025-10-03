@@ -19,6 +19,7 @@ pub struct List {
     hub: Gmail<HttpsConnector<HttpConnector>>,
     max_results: u32,
     label_ids: Vec<String>,
+    query: String,
 }
 
 impl List {
@@ -55,6 +56,7 @@ impl List {
             hub: Gmail::new(client, auth),
             max_results: DEFAULT_MAX_RESULTS.parse::<u32>().unwrap(),
             label_ids: Vec::new(),
+            query: String::new(),
         })
     }
 
@@ -75,6 +77,11 @@ impl List {
                 self.label_ids.push(id.to_string())
             }
         }
+    }
+
+    /// Set the query string
+    pub fn set_query(&mut self, query: &str) {
+        self.query = query.to_string()
     }
 
     /// Run the Gmail api as configured
@@ -138,6 +145,11 @@ impl List {
             for id in self.label_ids.as_slice() {
                 call = call.add_label_ids(id);
             }
+        }
+        // Add query
+        if !self.query.is_empty() {
+            log::debug!("Setting query string `{}`", self.query);
+            call = call.q(&self.query);
         }
         // Add a page token if it exists
         if let Some(page_token) = next_page_token {
