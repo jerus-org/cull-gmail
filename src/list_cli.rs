@@ -4,8 +4,12 @@ use cull_gmail::{Error, List};
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
 pub struct ListCli {
+    /// Maximum results per page
     #[arg(short, long, default_value = cull_gmail::DEFAULT_MAX_RESULTS)]
     max_results: u32,
+    /// Maximum number of pages (0=all)
+    #[arg(short, long, default_value = "1")]
+    pages: u32,
 }
 
 impl ListCli {
@@ -16,6 +20,6 @@ impl ListCli {
         list.set_max_results(self.max_results);
         log::debug!("List max results set to {}", list.max_results());
 
-        list.run().await
+        list.run(self.pages).await
     }
 }
