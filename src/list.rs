@@ -1,5 +1,6 @@
 use google_gmail1::{
     Gmail,
+    api::ListMessagesResponse,
     hyper_rustls::{HttpsConnector, HttpsConnectorBuilder},
     hyper_util::{
         client::legacy::{Client, connect::HttpConnector},
@@ -66,24 +67,79 @@ impl List {
     }
 
     /// Run the Gmail api as configured
-    pub async fn run(&self) -> Result<(), Error> {
-        let (_response, list) = self
+    pub async fn run(&self, pages: u32) -> Result<(), Error> {
+        let log_estimate = |est: &Option<u32>| {
+            if let Some(estimate) = est {
+                log::debug!("Estimated {estimate} messages in total.");
+            } else {
+                log::debug!("Unknown number of messages found");
+            }
+        };
+
+        let list = self.get_messages(None).await?;
+        log_estimate(&list.result_size_estimate);
+        self.log_message_subjects(&list).await?;
+        match pages {
+            1 => {}
+            0 => {
+                let mut list = list;
+                let mut page = 1;
+                loop {
+                    page += 1;
+                    log::debug!("Processing page #{page}");
+                    log_estimate(&list.result_size_estimate);
+                    if list.next_page_token.is_none() {
+                        break;
+                    }
+                    list = self.get_messages(list.next_page_token).await?;
+                    self.log_message_subjects(&list).await?;
+                }
+            }
+            _ => {
+                let mut list = list;
+                for page in 2..=pages {
+                    log::debug!("Processing page #{page}");
+                    log_estimate(&list.result_size_estimate);
+                    if list.next_page_token.is_none() {
+                        break;
+                    }
+                    list = self.get_messages(list.next_page_token).await?;
+                    self.log_message_subjects(&list).await?;
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    async fn get_messages(
+        &self,
+        next_page_token: Option<String>,
+    ) -> Result<ListMessagesResponse, Error> {
+        let call = self
             .hub
             .users()
             .messages_list("me")
-            .max_results(self.max_results)
-            .doit()
-            .await
-            .map_err(Box::new)?;
+            .max_results(self.max_results);
+        let call = if let Some(page_token) = next_page_token {
+            call.page_token(&page_token)
+        } else {
+            call
+        };
+        let (_response, list) = call.doit().await.map_err(Box::new)?;
 
-        if let Some(messages) = list.messages {
+        Ok(list)
+    }
+
+    async fn log_message_subjects(&self, list: &ListMessagesResponse) -> Result<(), Error> {
+        if let Some(messages) = &list.messages {
             for message in messages {
-                if let Some(id) = message.id {
+                if let Some(id) = &message.id {
                     log::trace!("{id}");
                     let (_res, m) = self
                         .hub
                         .users()
-                        .messages_get("me", &id)
+                        .messages_get("me", id)
                         .add_scope("https://www.googleapis.com/auth/gmail.metadata")
                         .format("metadata")
                         .add_metadata_headers("subject")
@@ -112,6 +168,7 @@ impl List {
                 }
             }
         }
+
         Ok(())
     }
 }
