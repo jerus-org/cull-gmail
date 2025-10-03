@@ -1,9 +1,9 @@
 use clap::Parser;
-use cull_gmail::{Error, Labels, List};
+use cull_gmail::{Error, Labels, Message};
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
-pub struct ListCli {
+pub struct MessageCli {
     /// Maximum results per page
     #[arg(short, long, default_value = cull_gmail::DEFAULT_MAX_RESULTS)]
     max_results: u32,
@@ -18,9 +18,9 @@ pub struct ListCli {
     query: Option<String>,
 }
 
-impl ListCli {
+impl MessageCli {
     pub(crate) async fn run(&self, credential_file: &str) -> Result<(), Error> {
-        let mut list = List::new(credential_file).await?;
+        let mut list = Message::new(credential_file).await?;
 
         if !self.labels.is_empty() {
             // add labels if any specified
