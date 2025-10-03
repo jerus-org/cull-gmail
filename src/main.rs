@@ -1,8 +1,10 @@
 use clap::{Parser, Subcommand};
 
+mod label_cli;
 mod list_cli;
 
 use cull_gmail::Error;
+use label_cli::LabelCli;
 use list_cli::ListCli;
 use std::error::Error as stdError;
 
@@ -20,6 +22,9 @@ enum Commands {
     /// List messages
     #[clap(name = "list")]
     List(ListCli),
+    /// List labels
+    #[clap(name = "label")]
+    Labels(LabelCli),
 }
 
 #[tokio::main]
@@ -49,6 +54,7 @@ async fn run(args: Cli) -> Result<(), Error> {
     if let Some(cmds) = args.command {
         match cmds {
             Commands::List(list_cli) => list_cli.run("credential.json").await?,
+            Commands::Labels(label_cli) => label_cli.run("credential.json").await?,
         }
     }
     Ok(())
