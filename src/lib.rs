@@ -6,10 +6,12 @@
 
 mod credential;
 mod error;
+mod labels;
 mod list;
 pub(crate) mod utils;
 
 pub use credential::Credential;
 pub use error::Error;
+pub use labels::Labels;
 pub use list::DEFAULT_MAX_RESULTS;
 pub use list::List;
