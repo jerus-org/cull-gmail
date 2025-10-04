@@ -163,40 +163,46 @@ impl Message {
     }
 
     async fn log_message_subjects(&self, list: &ListMessagesResponse) -> Result<(), Error> {
-        if let Some(messages) = &list.messages {
-            for message in messages {
-                if let Some(id) = &message.id {
-                    log::trace!("{id}");
-                    let (_res, m) = self
-                        .hub
-                        .users()
-                        .messages_get("me", id)
-                        .add_scope("https://www.googleapis.com/auth/gmail.metadata")
-                        .format("metadata")
-                        .add_metadata_headers("subject")
-                        .doit()
-                        .await
-                        .map_err(Box::new)?;
+        let Some(messages) = &list.messages else {
+            return Ok(());
+        };
 
-                    let mut subject = String::new();
-                    if let Some(payload) = m.payload {
-                        if let Some(headers) = payload.headers {
-                            for header in headers {
-                                if header.name.is_some()
-                                    && header.name.unwrap() == "Subject"
-                                    && header.value.is_some()
-                                {
-                                    subject = header.value.unwrap();
-                                    break;
-                                } else {
-                                    continue;
-                                }
-                            }
-                        }
-                    }
+        for message in messages {
+            let Some(id) = &message.id else { continue };
+            log::trace!("{id}");
+            let (_res, m) = self
+                .hub
+                .users()
+                .messages_get("me", id)
+                .add_scope("https://www.googleapis.com/auth/gmail.metadata")
+                .format("metadata")
+                .add_metadata_headers("subject")
+                .doit()
+                .await
+                .map_err(Box::new)?;
 
-                    log::info!("{subject:?}");
+            let mut subject = String::new();
+            let Some(payload) = m.payload else { continue };
+            let Some(headers) = payload.headers else {
+                continue;
+            };
+
+            for header in headers {
+                if header.name.is_some()
+                    && header.name.unwrap() == "Subject"
+                    && header.value.is_some()
+                {
+                    subject = header.value.unwrap();
+                    break;
+                } else {
+                    continue;
                 }
+            }
+
+            if subject.is_empty() {
+                log::info!("***Email with no subject***");
+            } else {
+                log::info!("{subject:?}");
             }
         }
 
