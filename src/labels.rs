@@ -67,30 +67,37 @@ impl Labels {
         let call = hub.users().labels_list("me");
         let (_response, list) = call.doit().await.map_err(Box::new)?;
 
-        if show {
-            if let Some(labels) = &list.labels {
-                for label in labels {
-                    if let Some(name) = &label.name {
-                        log::info!("{name}");
-                    } else {
-                        log::warn!("No name for label {:?}", label.id);
-                    }
+        // if show {
+        //     let Some(labels) = &list.labels else {
+        //         for label in labels {
+        //             if let Some(name) = &label.name {
+        //                 log::info!("{name}");
+        //             } else {
+        //                 log::warn!("No name for label {:?}", label.id);
+        //             }
+        //         }
+        //     }
+        // }
+
+        let Some(label_list) = list.labels else {
+            return Ok(Labels {
+                hub,
+                label_list: Vec::new(),
+                label_map: HashMap::new(),
+            });
+        };
+
+        let mut label_map = HashMap::new();
+        for label in &label_list {
+            if label.id.is_some() && label.name.is_some() {
+                let name = label.name.clone().unwrap();
+                let id = label.id.clone().unwrap();
+                if show {
+                    log::info!("{name}: {id}")
                 }
+                label_map.insert(name, id);
             }
         }
-
-        let (label_list, label_map) = if let Some(labels) = list.labels {
-            let mut label_map = HashMap::new();
-            for label in &labels {
-                if label.id.is_some() && label.name.is_some() {
-                    let label = label.clone();
-                    label_map.insert(label.name.unwrap(), label.id.unwrap());
-                }
-            }
-            (labels, label_map)
-        } else {
-            (Vec::new(), HashMap::new())
-        };
 
         Ok(Labels {
             hub,
