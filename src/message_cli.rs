@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Error, Labels, Message};
+use cull_gmail::{Error, Labels, MessageList};
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
@@ -20,7 +20,7 @@ pub struct MessageCli {
 
 impl MessageCli {
     pub(crate) async fn run(&self, credential_file: &str) -> Result<(), Error> {
-        let mut list = Message::new(credential_file).await?;
+        let mut list = MessageList::new(credential_file).await?;
 
         if !self.labels.is_empty() {
             // add labels if any specified
