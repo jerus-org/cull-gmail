@@ -7,11 +7,11 @@
 mod credential;
 mod error;
 mod labels;
-mod message;
+mod message_list;
 pub(crate) mod utils;
 
 pub use credential::Credential;
 pub use error::Error;
 pub use labels::Labels;
-pub use message::DEFAULT_MAX_RESULTS;
-pub use message::Message;
+pub use message_list::DEFAULT_MAX_RESULTS;
+pub use message_list::MessageList;
