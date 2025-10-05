@@ -15,14 +15,14 @@ use crate::{Credential, Error};
 pub const DEFAULT_MAX_RESULTS: &str = "10";
 
 /// Struct to capture configuration for List API call.
-pub struct Message {
+pub struct MessageList {
     hub: Gmail<HttpsConnector<HttpConnector>>,
     max_results: u32,
     label_ids: Vec<String>,
     query: String,
 }
 
-impl Message {
+impl MessageList {
     /// Create a new List struct and add the Gmail api connection.
     pub async fn new(credential: &str) -> Result<Self, Error> {
         let (config_dir, secret) = {
@@ -52,7 +52,7 @@ impl Message {
         .await
         .unwrap();
 
-        Ok(Message {
+        Ok(MessageList {
             hub: Gmail::new(client, auth),
             max_results: DEFAULT_MAX_RESULTS.parse::<u32>().unwrap(),
             label_ids: Vec::new(),
