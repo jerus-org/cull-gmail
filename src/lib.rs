@@ -8,6 +8,7 @@ mod credential;
 mod error;
 mod labels;
 mod message_list;
+mod trash;
 pub(crate) mod utils;
 
 pub use credential::Credential;
@@ -15,3 +16,4 @@ pub use error::Error;
 pub use labels::Labels;
 pub use message_list::DEFAULT_MAX_RESULTS;
 pub use message_list::MessageList;
+pub use trash::Trash;
