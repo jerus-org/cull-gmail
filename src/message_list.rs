@@ -11,7 +11,11 @@ use google_gmail1::{
     yup_oauth2::{ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
 };
 
-use crate::{Credential, Error};
+mod message_summary;
+
+use message_summary::MessageSummary;
+
+use crate::{Credential, Error, utils::Elide};
 
 /// Default for the maximum number of results to return on a page
 pub const DEFAULT_MAX_RESULTS: &str = "10";
@@ -21,7 +25,7 @@ pub struct MessageList {
     hub: Gmail<HttpsConnector<HttpConnector>>,
     max_results: u32,
     label_ids: Vec<String>,
-    message_ids: Vec<String>,
+    messages: Vec<MessageSummary>,
     query: String,
 }
 
@@ -30,7 +34,7 @@ impl Debug for MessageList {
         f.debug_struct("MessageList")
             .field("max_results", &self.max_results)
             .field("label_ids", &self.label_ids)
-            .field("message_ids", &self.message_ids)
+            .field("messages", &self.messages)
             .field("query", &self.query)
             .finish()
     }
@@ -70,7 +74,7 @@ impl MessageList {
             hub: Gmail::new(client, auth),
             max_results: DEFAULT_MAX_RESULTS.parse::<u32>().unwrap(),
             label_ids: Vec::new(),
-            message_ids: Vec::new(),
+            messages: Vec::new(),
             query: String::new(),
         })
     }
@@ -99,9 +103,18 @@ impl MessageList {
         self.query = query.to_string()
     }
 
+    /// Get the summary of the messages
+    pub(crate) fn messages(&self) -> &Vec<MessageSummary> {
+        &self.messages
+    }
+
     /// Get a reference to the message_ids
     pub fn message_ids(&self) -> Vec<String> {
-        self.message_ids.clone()
+        self.messages
+            .iter()
+            .map(|m| m.id().to_string())
+            .collect::<Vec<_>>()
+            .clone()
     }
 
     /// Get a reference to the message_ids
@@ -180,26 +193,35 @@ impl MessageList {
         }
 
         let (_response, list) = call.doit().await.map_err(Box::new)?;
+        log::trace!(
+            "Estimated {} messages.",
+            list.result_size_estimate.unwrap_or(0)
+        );
 
-        let mut list_ids: Vec<String> = list
+        if list.result_size_estimate.unwrap_or(0) == 0 {
+            log::warn!("Search returned no messages.");
+            return Ok(list);
+        }
+
+        let mut list_ids = list
             .clone()
             .messages
             .unwrap()
             .iter()
-            .map(|item| item.id.clone().unwrap())
+            .flat_map(|item| item.id.as_ref().map(|id| MessageSummary::new(id)))
             .collect();
-        self.message_ids.append(&mut list_ids);
+        self.messages.append(&mut list_ids);
 
         Ok(list)
     }
 
-    async fn log_message_subjects(&self) -> Result<(), Error> {
-        for id in &self.message_ids {
-            log::trace!("{id}");
+    async fn log_message_subjects(&mut self) -> Result<(), Error> {
+        for message in &mut self.messages {
+            log::trace!("{}", message.id());
             let (_res, m) = self
                 .hub
                 .users()
-                .messages_get("me", id)
+                .messages_get("me", message.id())
                 .add_scope("https://www.googleapis.com/auth/gmail.metadata")
                 .format("metadata")
                 .add_metadata_headers("subject")
@@ -228,6 +250,8 @@ impl MessageList {
             if subject.is_empty() {
                 log::info!("***Email with no subject***");
             } else {
+                subject.elide(24);
+                message.set_subject(&subject);
                 log::info!("{subject:?}");
             }
         }
