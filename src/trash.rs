@@ -54,9 +54,9 @@ impl Trash {
             remove_label_ids,
         };
 
-        log::debug!("{batch_request:#?}");
+        log::trace!("{batch_request:#?}");
 
-        let res = self
+        let _res = self
             .message_list
             .hub()
             .users()
@@ -66,11 +66,8 @@ impl Trash {
             .await
             .map_err(Box::new)?;
 
-        log::debug!("{res:#?}");
-
-        for id in self.message_list.message_ids() {
-            // log::info!("Message with subject `{subject}` move to trash.");
-            log::info!("Message with id `{id}` moved to trash.");
+        for m in self.message_list.messages() {
+            log::info!("Message with subject `{}` move to trash.", m.subject());
         }
 
         Ok(())
