@@ -36,3 +36,19 @@ pub(crate) fn assure_config_dir_exists(dir: &str) -> Result<String, Error> {
 
     Ok(expanded_config_dir)
 }
+
+pub(crate) trait Elide {
+    fn elide(&mut self, to: usize) -> &mut Self;
+}
+
+impl Elide for String {
+    fn elide(&mut self, to: usize) -> &mut Self {
+        if self.len() <= to {
+            self
+        } else {
+            let range = to - 4;
+            self.replace_range(range.., " ...");
+            self
+        }
+    }
+}
