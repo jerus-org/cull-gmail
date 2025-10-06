@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use google_gmail1::{
     Gmail,
     api::ListMessagesResponse,
@@ -21,6 +23,17 @@ pub struct MessageList {
     label_ids: Vec<String>,
     message_ids: Vec<String>,
     query: String,
+}
+
+impl Debug for MessageList {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MessageList")
+            .field("max_results", &self.max_results)
+            .field("label_ids", &self.label_ids)
+            .field("message_ids", &self.message_ids)
+            .field("query", &self.query)
+            .finish()
+    }
 }
 
 impl MessageList {
@@ -86,6 +99,21 @@ impl MessageList {
         self.query = query.to_string()
     }
 
+    /// Get a reference to the message_ids
+    pub fn message_ids(&self) -> Vec<String> {
+        self.message_ids.clone()
+    }
+
+    /// Get a reference to the message_ids
+    pub fn label_ids(&self) -> Vec<String> {
+        self.label_ids.clone()
+    }
+
+    /// Get the hub
+    pub fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>> {
+        self.hub.clone()
+    }
+
     /// Run the Gmail api as configured
     pub async fn run(&mut self, pages: u32) -> Result<(), Error> {
         let list = self.messages_list(None).await?;
@@ -117,7 +145,7 @@ impl MessageList {
             }
         }
 
-        if log::max_level() <= log::Level::Info {
+        if log::max_level() >= log::Level::Info {
             self.log_message_subjects().await?;
         }
 
