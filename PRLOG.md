@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - ✨ add message_ids to MessageList struct(pr [#28])
+- ✨ implement trash functionality(pr [#29])
 
 ### Changed
 
@@ -89,6 +90,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#26]: https://github.com/jerus-org/cull-gmail/pull/26
 [#27]: https://github.com/jerus-org/cull-gmail/pull/27
 [#28]: https://github.com/jerus-org/cull-gmail/pull/28
+[#29]: https://github.com/jerus-org/cull-gmail/pull/29
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...HEAD
 [0.0.3]: https://github.com/jerus-org/cull-gmail/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...v0.0.2
