@@ -2,11 +2,14 @@ use clap::{Parser, Subcommand};
 
 mod label_cli;
 mod message_cli;
+mod trash_cli;
 
 use cull_gmail::Error;
 use label_cli::LabelCli;
 use message_cli::MessageCli;
 use std::error::Error as stdError;
+
+use trash_cli::TrashCli;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -25,6 +28,9 @@ enum Commands {
     /// List labels
     #[clap(name = "label")]
     Labels(LabelCli),
+    /// List trash
+    #[clap(name = "trash")]
+    Trash(TrashCli),
 }
 
 #[tokio::main]
@@ -55,6 +61,7 @@ async fn run(args: Cli) -> Result<(), Error> {
         match cmds {
             Commands::Message(list_cli) => list_cli.run("credential.json").await?,
             Commands::Labels(label_cli) => label_cli.run("credential.json").await?,
+            Commands::Trash(trash_cli) => trash_cli.run("credential.json").await?,
         }
     }
     Ok(())
