@@ -19,6 +19,7 @@ pub struct MessageList {
     hub: Gmail<HttpsConnector<HttpConnector>>,
     max_results: u32,
     label_ids: Vec<String>,
+    message_ids: Vec<String>,
     query: String,
 }
 
@@ -56,6 +57,7 @@ impl MessageList {
             hub: Gmail::new(client, auth),
             max_results: DEFAULT_MAX_RESULTS.parse::<u32>().unwrap(),
             label_ids: Vec::new(),
+            message_ids: Vec::new(),
             query: String::new(),
         })
     }
@@ -85,18 +87,8 @@ impl MessageList {
     }
 
     /// Run the Gmail api as configured
-    pub async fn run(&self, pages: u32) -> Result<(), Error> {
-        let log_estimate = |est: &Option<u32>| {
-            if let Some(estimate) = est {
-                log::debug!("Estimated {estimate} messages in total.");
-            } else {
-                log::debug!("Unknown number of messages found");
-            }
-        };
-
-        let list = self.get_messages(None).await?;
-        log_estimate(&list.result_size_estimate);
-        self.log_message_subjects(&list).await?;
+    pub async fn run(&mut self, pages: u32) -> Result<(), Error> {
+        let list = self.messages_list(None).await?;
         match pages {
             1 => {}
             0 => {
@@ -105,33 +97,35 @@ impl MessageList {
                 loop {
                     page += 1;
                     log::debug!("Processing page #{page}");
-                    log_estimate(&list.result_size_estimate);
                     if list.next_page_token.is_none() {
                         break;
                     }
-                    list = self.get_messages(list.next_page_token).await?;
-                    self.log_message_subjects(&list).await?;
+                    list = self.messages_list(list.next_page_token).await?;
+                    // self.log_message_subjects(&list).await?;
                 }
             }
             _ => {
                 let mut list = list;
                 for page in 2..=pages {
                     log::debug!("Processing page #{page}");
-                    log_estimate(&list.result_size_estimate);
                     if list.next_page_token.is_none() {
                         break;
                     }
-                    list = self.get_messages(list.next_page_token).await?;
-                    self.log_message_subjects(&list).await?;
+                    list = self.messages_list(list.next_page_token).await?;
+                    // self.log_message_subjects(&list).await?;
                 }
             }
+        }
+
+        if log::max_level() <= log::Level::Info {
+            self.log_message_subjects().await?;
         }
 
         Ok(())
     }
 
-    async fn get_messages(
-        &self,
+    async fn messages_list(
+        &mut self,
         next_page_token: Option<String>,
     ) -> Result<ListMessagesResponse, Error> {
         let mut call = self
@@ -159,16 +153,20 @@ impl MessageList {
 
         let (_response, list) = call.doit().await.map_err(Box::new)?;
 
+        let mut list_ids: Vec<String> = list
+            .clone()
+            .messages
+            .unwrap()
+            .iter()
+            .map(|item| item.id.clone().unwrap())
+            .collect();
+        self.message_ids.append(&mut list_ids);
+
         Ok(list)
     }
 
-    async fn log_message_subjects(&self, list: &ListMessagesResponse) -> Result<(), Error> {
-        let Some(messages) = &list.messages else {
-            return Ok(());
-        };
-
-        for message in messages {
-            let Some(id) = &message.id else { continue };
+    async fn log_message_subjects(&self) -> Result<(), Error> {
+        for id in &self.message_ids {
             log::trace!("{id}");
             let (_res, m) = self
                 .hub
