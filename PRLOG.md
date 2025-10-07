@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ implement trash functionality(pr [#29])
 - ✨ create message summary struct(pr [#30])
 
+
 ### Changed
 
 - ♻️ refactor(message)-improve subject logging with early returns(pr [#25])
@@ -93,7 +94,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#28]: https://github.com/jerus-org/cull-gmail/pull/28
 [#29]: https://github.com/jerus-org/cull-gmail/pull/29
 [#30]: https://github.com/jerus-org/cull-gmail/pull/30
-[0.0.4]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...v0.0.4
+
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...HEAD
 [0.0.3]: https://github.com/jerus-org/cull-gmail/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/jerus-org/cull-gmail/releases/tag/v0.0.1
