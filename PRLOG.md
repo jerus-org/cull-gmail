@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Add
+### Added
 
 - ✨ feat(cli): add config subcommand for end-of-life rules(pr [#34])
 
