@@ -16,13 +16,12 @@ pub enum Error {
     #[error("Directory creation failed for `{0:?}`")]
     DirectoryCreationFailed((String, Box<std::io::Error>)),
     /// Error from the google_gmail1 crate
-    // #[error("Google Gmail1 says: {0}")]
     #[error(transparent)]
     GoogleGmail1(#[from] Box<google_gmail1::Error>),
-    // /// Error from the google_clis_common crate
-    // #[error("Google CLIs Common says: {0}")]
-    // InvalidOptionsError(google_clis_common::CLIError, i16),
-    // /// Other error
-    // #[error("Error reported: {0}")]
-    // Other(#[from] String),
+    /// Error from std::io
+    #[error(transparent)]
+    StdIO(#[from] std::io::Error),
+    /// Error from toml_de
+    #[error(transparent)]
+    TomlDe(#[from] toml::de::Error),
 }
