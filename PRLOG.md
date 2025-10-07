@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ add message_ids to MessageList struct(pr [#28])
 - ✨ implement trash functionality(pr [#29])
 - ✨ create message summary struct(pr [#30])
+- ✨ add config subcommand for end-of-life rules(pr [#32])
 
 ### Changed
 
@@ -93,6 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#28]: https://github.com/jerus-org/cull-gmail/pull/28
 [#29]: https://github.com/jerus-org/cull-gmail/pull/29
 [#30]: https://github.com/jerus-org/cull-gmail/pull/30
+[#32]: https://github.com/jerus-org/cull-gmail/pull/32
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...HEAD
 [0.0.3]: https://github.com/jerus-org/cull-gmail/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...v0.0.2
