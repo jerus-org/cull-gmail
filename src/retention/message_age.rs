@@ -28,9 +28,9 @@ impl MessageAge {
     pub(crate) fn label(&self) -> String {
         match self {
             MessageAge::Days(v) => format!("retention/{v}-days"),
-            MessageAge::Weeks(v) => format!("retention/:{v}-weeks"),
-            MessageAge::Months(v) => format!("retention/:{v}-months"),
-            MessageAge::Years(v) => format!("retention/:{v}-years"),
+            MessageAge::Weeks(v) => format!("retention/{v}-weeks"),
+            MessageAge::Months(v) => format!("retention/{v}-months"),
+            MessageAge::Years(v) => format!("retention/{v}-years"),
         }
     }
 }
