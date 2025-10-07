@@ -6,7 +6,7 @@ mod message_cli;
 mod trash_cli;
 
 use config_cli::ConfigCli;
-use cull_gmail::Error;
+use cull_gmail::{Config, Error};
 use label_cli::LabelCli;
 use message_cli::MessageCli;
 use std::error::Error as stdError;
@@ -62,9 +62,10 @@ async fn main() {
 }
 
 async fn run(args: Cli) -> Result<(), Error> {
+    let config = get_config()?;
     if let Some(cmds) = args.command {
         match cmds {
-            Commands::Message(list_cli) => list_cli.run("credential.json").await?,
+            Commands::Message(list_cli) => list_cli.run(config.credential_file()).await?,
             Commands::Labels(label_cli) => label_cli.run("credential.json").await?,
             Commands::Trash(trash_cli) => trash_cli.run("credential.json").await?,
             Commands::Config(config_cli) => config_cli.run(),
@@ -88,4 +89,16 @@ fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
     builder.format_timestamp_secs().format_module_path(false);
 
     builder
+}
+
+fn get_config() -> Result<Config, Error> {
+    match Config::load() {
+        Ok(c) => Ok(c),
+        Err(_) => {
+            log::warn!("Configuration not found, creating default config.");
+            let config = Config::new();
+            config.save()?;
+            Ok(config)
+        }
+    }
 }
