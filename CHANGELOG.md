@@ -5,9 +5,35 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.4] - 2025-10-07
+
+Summary: Added[9], Changed[7], Chore[7]
+
+### Added
+
+ - ✨ feat(message_list): create message summary struct
+ - ✨ feat(message_list): improve message handling and logging
+ - ✨ feat(utils): implement string elision trait
+ - ✨ feat(trash): implement trash functionality
+ - ✨ feat(trash): add trash cli
+ - ✨ feat(cli): add trash command
+ - ✨ feat(message_list): enhance message list functionality and debugging
+ - ✨ feat(lib): add trash module for  moving  messages to trash
+ - ✨ feat(message_list): add message_ids to MessageList struct
+
+### Changed
+
+ - ♻️ refactor(trash): improve trash operation logging
+ - ♻️ refactor(message): rename message to message_list
+ - ♻️ refactor(message): rename Message to MessageList
+ - ♻️ refactor(core): rename message module to message_list
+ - ♻️ refactor(labels): remove unused code
+ - ♻️ refactor(labels): improve label listing and mapping
+ - ♻️ refactor(message): improve subject logging with early returns
+
 ## [0.0.3] - 2025-10-04
 
-Summary: Added[7], Changed[6], Chore[4], Fixed[1]
+Summary: Added[7], Changed[6], Chore[5], Fixed[1]
 
 ### Added
 
@@ -26,11 +52,11 @@ Summary: Added[7], Changed[6], Chore[4], Fixed[1]
 ### Changed
 
  - ♻️ refactor(cli): rename list subcommand to message
- - 🔥 refactor(core): remove list module
  - ♻️ refactor(cli): rename list_cli to message_cli
+ - 🔥 refactor(core): remove list module
  - ♻️ refactor(core): rename list module to message
- - ♻️ refactor(labels): simplify and optimize label retrieval - rename function name `add_label` to `add_labels` - add the function of adding multiple labels at once - optimize code for streamlined operation
  - ♻️ refactor(labels): simplify labels struct initialization
+ - ♻️ refactor(labels): simplify and optimize label retrieval - rename function name `add_label` to `add_labels` - add the function of adding multiple labels at once - optimize code for streamlined operation
 
 ## [0.0.2] - 2025-10-03
 
@@ -95,7 +121,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.2...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...HEAD
+[0.0.3]: https://github.com/jerus-org/cull-gmail/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...v0.0.2
 [0.0.1]: https://github.com/jerus-org/cull-gmail/releases/tag/v0.0.1
 
