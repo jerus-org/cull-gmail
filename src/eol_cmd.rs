@@ -8,7 +8,7 @@ pub enum EolCmd {
     #[default]
     /// Move the message to the trash
     Trash,
-    /// Delete the message immediatly
+    /// Delete the message immediately
     Delete,
 }
 
