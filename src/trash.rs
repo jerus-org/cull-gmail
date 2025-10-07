@@ -67,7 +67,7 @@ impl Trash {
             .map_err(Box::new)?;
 
         for m in self.message_list.messages() {
-            log::info!("Message with subject `{}` move to trash.", m.subject());
+            log::info!("Message with subject `{}` moved to trash.", m.subject());
         }
 
         Ok(())
