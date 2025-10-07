@@ -18,6 +18,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 📝 docs(PRLOG)-update PRLOG.md(pr [#33])
 - 📝 docs(PRLOG)-update PRLOG with unreleased changes(pr [#35])
 
+### Fixed
+
+- 🐛 ui: correct grammar errors in eol command and trash messages(pr [#37])
+
 ## [0.0.4] - 2025-10-07
 
 ### Added
@@ -109,7 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#34]: https://github.com/jerus-org/cull-gmail/pull/34
 [#35]: https://github.com/jerus-org/cull-gmail/pull/35
 [#36]: https://github.com/jerus-org/cull-gmail/pull/36
-[#38]: https://github.com/jerus-org/cull-gmail/pull/38
+[#37]: https://github.com/jerus-org/cull-gmail/pull/37
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...HEAD
 [0.0.4]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/jerus-org/cull-gmail/compare/v0.0.2...v0.0.3
