@@ -2,7 +2,7 @@ use std::fmt;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Retention, eol_cmd::EolCmd};
+use crate::{Retention, eol_cmd::EolAction};
 
 /// End of life rules
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -11,7 +11,7 @@ pub(crate) struct EolRule {
     retention: String,
     labels: Vec<String>,
     query: Option<String>,
-    command: String,
+    action: String,
 }
 
 impl fmt::Display for EolRule {
@@ -31,9 +31,16 @@ impl fmt::Display for EolRule {
             if count > 1 {
                 period.push('s');
             }
+
+            let action = match self.action.to_lowercase().as_str() {
+                "trash" => "moves the message to trash",
+                "delete" => "deletes the message",
+                _ => unreachable!(),
+            };
+
             write!(
                 f,
-                "Rule #{} is active on {} and applies when the message is {count} {period} old.",
+                "Rule #{} is active on {} and {action} is {count} {period} old.",
                 self.id,
                 self.labels.join(", ")
             )
@@ -47,7 +54,7 @@ impl EolRule {
     pub(crate) fn new(id: usize) -> Self {
         EolRule {
             id,
-            command: EolCmd::Trash.to_string(),
+            action: EolAction::Trash.to_string(),
             ..Default::default()
         }
     }
@@ -75,6 +82,11 @@ impl EolRule {
 
     pub(crate) fn labels(&self) -> &Vec<String> {
         &self.labels
+    }
+
+    pub(crate) fn set_command(&mut self, value: EolAction) -> &mut Self {
+        self.action = value.to_string();
+        self
     }
 }
 
