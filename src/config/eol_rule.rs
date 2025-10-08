@@ -19,38 +19,18 @@ impl fmt::Display for EolRule {
         if !self.retention.is_empty() {
             let count = &self.retention[2..];
             let count = count.parse::<usize>().unwrap();
-            let period = match self.retention.chars().nth(0) {
-                Some('d') => {
-                    if count == 1 {
-                        "day"
-                    } else {
-                        "days"
-                    }
-                }
-                Some('w') => {
-                    if count == 1 {
-                        "week"
-                    } else {
-                        "weeks"
-                    }
-                }
-                Some('m') => {
-                    if count == 1 {
-                        "month"
-                    } else {
-                        "months"
-                    }
-                }
-                Some('y') => {
-                    if count == 1 {
-                        "year"
-                    } else {
-                        "years"
-                    }
-                }
+            let mut period = match self.retention.chars().nth(0) {
+                Some('d') => "day",
+                Some('w') => "week",
+                Some('m') => "month",
+                Some('y') => "year",
                 Some(_) => unreachable!(),
                 None => unreachable!(),
-            };
+            }
+            .to_string();
+            if count > 1 {
+                period.push('s');
+            }
             write!(
                 f,
                 "Rule #{} is active on {} and applies when the message is {count} {period} old.",
