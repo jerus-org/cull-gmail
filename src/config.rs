@@ -17,7 +17,7 @@ use crate::{Error, MessageAge, Retention, eol_cmd::EolAction};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     credentials: Option<String>,
-    rules: BTreeMap<usize, EolRule>,
+    rules: BTreeMap<String, EolRule>,
 }
 
 impl Default for Config {
@@ -83,7 +83,7 @@ impl Config {
             rule.set_command(EolAction::Delete);
         }
         log::info!("added rule: {rule}");
-        self.rules.insert(rule.id(), rule);
+        self.rules.insert(rule.id().to_string(), rule);
         self
     }
 
@@ -108,7 +108,7 @@ impl Config {
 
     /// Remove a rule by the ID specified
     pub fn remove_rule_by_id(&mut self, id: usize) -> crate::Result<()> {
-        self.rules.remove(&id);
+        self.rules.remove(&id.to_string());
 
         Ok(())
     }
@@ -126,7 +126,7 @@ impl Config {
             return Err(Error::NoRuleFoundForLabel(label.to_string()));
         }
 
-        self.rules.remove(&rule_id);
+        self.rules.remove(&rule_id.to_string());
 
         Ok(())
     }
@@ -150,8 +150,12 @@ impl Config {
             .join(home_dir)
             .join(".cull-gmail/cull-gmail.toml");
 
-        if let Ok(output) = toml::to_string(self) {
-            fs::write(path, output)?;
+        let res = toml::to_string(self);
+        log::trace!("toml conversion result: {res:#?}");
+
+        if let Ok(output) = res {
+            fs::write(&path, output)?;
+            log::trace!("Config saved to {}", path.display());
         }
 
         Ok(())
@@ -163,6 +167,7 @@ impl Config {
         let path = PathBuf::new()
             .join(home_dir)
             .join(".cull-gmail/cull-gmail.toml");
+        log::trace!("Loading config from {}", path.display());
 
         let input = read_to_string(path)?;
         let config = toml::from_str::<Config>(&input)?;
