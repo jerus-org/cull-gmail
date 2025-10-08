@@ -29,10 +29,10 @@ impl Default for Config {
             rules,
         };
 
-        cfg.add_rule(Retention::new(MessageAge::Years(1), true))
-            .add_rule(Retention::new(MessageAge::Weeks(1), true))
-            .add_rule(Retention::new(MessageAge::Months(1), true))
-            .add_rule(Retention::new(MessageAge::Years(5), true));
+        cfg.add_rule(Retention::new(MessageAge::Years(1), true), None)
+            .add_rule(Retention::new(MessageAge::Weeks(1), true), None)
+            .add_rule(Retention::new(MessageAge::Months(1), true), None)
+            .add_rule(Retention::new(MessageAge::Years(5), true), None);
 
         cfg
     }
@@ -51,12 +51,20 @@ impl Config {
     }
 
     /// Add a new rule to the rule set by setting the retention age
-    pub fn add_rule(&mut self, retention: Retention) -> &mut Self {
-        if self
-            .rules
-            .contains_key(retention.age().to_string().as_str())
-        {
+    pub fn add_rule(&mut self, retention: Retention, label: Option<&String>) -> &mut Self {
+        if self.rules.contains_key(&retention.age().to_string()) && label.is_none() {
             log::warn!("rule already exists");
+            return self;
+        }
+
+        let mut current_labels = Vec::new();
+        for rule in self.rules.values() {
+            let mut ls = rule.labels().clone();
+            current_labels.append(&mut ls);
+        }
+
+        if label.is_some() && current_labels.contains(label.unwrap()) {
+            log::warn!("a rule already applies to label {}", label.unwrap());
             return self;
         }
 
@@ -68,6 +76,9 @@ impl Config {
 
         let mut rule = EolRule::new(id);
         rule.set_retention(retention);
+        if let Some(l) = label {
+            rule.add_label(l);
+        }
         log::info!("added rule: {rule}");
         self.rules.insert(rule.retention().to_string(), rule);
         self
