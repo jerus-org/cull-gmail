@@ -63,6 +63,7 @@ async fn main() {
 
 async fn run(args: Cli) -> Result<(), Error> {
     let config = get_config()?;
+    log::trace!("Configuration loaded: {config:#?}");
     if let Some(cmds) = args.command {
         match cmds {
             Commands::Message(list_cli) => list_cli.run(config.credential_file()).await?,
