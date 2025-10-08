@@ -97,4 +97,11 @@ impl Config {
             ""
         }
     }
+
+    /// List the end of life rules set in the configuration
+    pub fn list_rules(&self) {
+        for rule in &self.rules {
+            println!("{rule}");
+        }
+    }
 }
