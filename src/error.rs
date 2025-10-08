@@ -19,8 +19,8 @@ pub enum Error {
     #[error("No rule for label {0}")]
     NoRuleFoundForLabel(String),
     /// Label not found in the rule set
-    #[error("Label not found in the rule set")]
-    LabelNotFoundInRules,
+    #[error("Label `{0}` not found in the rule set")]
+    LabelNotFoundInRules(String),
     /// Directory creation failed for `{0}`
     #[error("Directory creation failed for `{0:?}`")]
     DirectoryCreationFailed((String, Box<std::io::Error>)),
