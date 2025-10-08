@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ feat(cli): add config subcommand for end-of-life rules(pr [#34])
 - ✨ implement configuration file handling(pr [#36])
 - ✨ add function to list rules(pr [#39])
+- ✨ implement add command(pr [#40])
 
 ### Changed
 
@@ -115,6 +116,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#36]: https://github.com/jerus-org/cull-gmail/pull/36
 [#37]: https://github.com/jerus-org/cull-gmail/pull/37
 [#39]: https://github.com/jerus-org/cull-gmail/pull/39
+[#40]: https://github.com/jerus-org/cull-gmail/pull/40
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...HEAD
 [0.0.4]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/jerus-org/cull-gmail/compare/v0.0.2...v0.0.3
