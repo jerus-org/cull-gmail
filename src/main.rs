@@ -68,7 +68,7 @@ async fn run(args: Cli) -> Result<(), Error> {
             Commands::Message(list_cli) => list_cli.run(config.credential_file()).await?,
             Commands::Labels(label_cli) => label_cli.run(config.credential_file()).await?,
             Commands::Trash(trash_cli) => trash_cli.run(config.credential_file()).await?,
-            Commands::Rules(config_cli) => config_cli.run(config),
+            Commands::Rules(config_cli) => config_cli.run(config)?,
         }
     }
     Ok(())
