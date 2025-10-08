@@ -19,10 +19,12 @@ impl RmCli {
 
         if let Some(id) = self.id {
             config.remove_rule_by_id(id)?;
+            config.save()?;
         }
 
         if let Some(label) = &self.label {
             config.remove_rule_by_label(label)?;
+            config.save()?;
         }
 
         Ok(())
