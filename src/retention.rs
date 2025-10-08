@@ -19,7 +19,8 @@ impl Default for Retention {
 }
 
 impl Retention {
-    pub(crate) fn new(age: MessageAge, generate_label: bool) -> Self {
+    /// Create a new retention struct
+    pub fn new(age: MessageAge, generate_label: bool) -> Self {
         Retention {
             age,
             generate_label,
