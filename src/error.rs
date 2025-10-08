@@ -12,6 +12,15 @@ pub enum Error {
     /// Expansion of home directory in `{0}` failed
     #[error("Expansion of home directory in `{0}` failed")]
     HomeExpansionFailed(String),
+    /// No rule selector specified (e.g. --label)
+    #[error("No rule selector specified (e.g. --label)")]
+    NoRuleSelector,
+    /// No rule for label
+    #[error("No rule for label {0}")]
+    NoRuleFoundForLabel(String),
+    /// Label not found in the rule set
+    #[error("Label not found in the rule set")]
+    LabelNotFoundInRules,
     /// Directory creation failed for `{0}`
     #[error("Directory creation failed for `{0:?}`")]
     DirectoryCreationFailed((String, Box<std::io::Error>)),
