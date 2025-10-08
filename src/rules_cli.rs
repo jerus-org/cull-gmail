@@ -2,8 +2,10 @@ use clap::{Parser, Subcommand};
 use cull_gmail::{Config, Error};
 
 mod add_cli;
+mod rm_cli;
 
 use add_cli::AddCli;
+use rm_cli::RmCli;
 
 #[derive(Debug, Parser)]
 pub struct RulesCli {
@@ -17,7 +19,7 @@ impl RulesCli {
         match &self.command {
             RulesCommands::List => config.list_rules(),
             RulesCommands::Add(add_cli) => add_cli.run(config),
-            RulesCommands::Remove => todo!(),
+            RulesCommands::Remove(rm_cli) => rm_cli.run(config),
             RulesCommands::Update => todo!(),
         }
     }
@@ -33,7 +35,7 @@ pub enum RulesCommands {
     Add(AddCli),
     /// Remove a rule from the config file
     #[clap(name = "remove", alias = "rm")]
-    Remove,
+    Remove(RmCli),
     /// Update a rule in the config file
     #[clap(name = "update")]
     Update,
