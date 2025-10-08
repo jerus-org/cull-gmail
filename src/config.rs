@@ -17,7 +17,7 @@ use crate::{Error, MessageAge, Retention, eol_cmd::EolAction};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     credentials: Option<String>,
-    rules: BTreeMap<String, EolRule>,
+    rules: BTreeMap<usize, EolRule>,
 }
 
 impl Default for Config {
@@ -57,11 +57,6 @@ impl Config {
         label: Option<&String>,
         delete: bool,
     ) -> &mut Self {
-        if self.rules.contains_key(&retention.age().to_string()) && label.is_none() {
-            log::warn!("rule already exists");
-            return self;
-        }
-
         let mut current_labels = Vec::new();
         for rule in self.rules.values() {
             let mut ls = rule.labels().clone();
@@ -88,8 +83,64 @@ impl Config {
             rule.set_command(EolAction::Delete);
         }
         log::info!("added rule: {rule}");
-        self.rules.insert(rule.retention().to_string(), rule);
+        self.rules.insert(rule.id(), rule);
         self
+    }
+
+    /// Get the labels from the rules
+    pub fn labels(&self) -> Vec<String> {
+        let mut labels = Vec::new();
+        for rule in self.rules.values() {
+            labels.append(&mut rule.labels().clone());
+        }
+        labels
+    }
+
+    /// Find the id of the rule that contains a label
+    fn find_label(&self, label: &str) -> usize {
+        let rules_by_label = self.get_rules_by_label();
+        if let Some(rule) = rules_by_label.get(label) {
+            rule.id()
+        } else {
+            0
+        }
+    }
+
+    /// Remove a rule by the ID specified
+    pub fn remove_rule_by_id(&mut self, id: usize) -> crate::Result<()> {
+        self.rules.remove(&id);
+
+        Ok(())
+    }
+
+    /// Remove a rule by the Label specified
+    pub fn remove_rule_by_label(&mut self, label: &str) -> crate::Result<()> {
+        let labels = self.labels();
+
+        if labels.contains(&label.to_string()) {
+            return Err(Error::LabelNotFoundInRules);
+        }
+
+        let rule_id = self.find_label(label);
+        if rule_id == 0 {
+            return Err(Error::NoRuleFoundForLabel(label.to_string()));
+        }
+
+        self.rules.remove(&rule_id);
+
+        Ok(())
+    }
+
+    fn get_rules_by_label(&self) -> BTreeMap<String, EolRule> {
+        let mut rbl = BTreeMap::new();
+
+        for rule in self.rules.values() {
+            for label in rule.labels() {
+                rbl.insert(label, rule.clone());
+            }
+        }
+
+        rbl
     }
 
     /// Save the current configuration to the file
