@@ -12,8 +12,8 @@ pub enum Error {
     /// Expansion of home directory in `{0}` failed
     #[error("Expansion of home directory in `{0}` failed")]
     HomeExpansionFailed(String),
-    /// No rule selector specified (e.g. --label)
-    #[error("No rule selector specified (e.g. --label)")]
+    /// No rule selector specified (i.e. --id or --label)
+    #[error("No rule selector specified (i.e. --id or --label)")]
     NoRuleSelector,
     /// No rule for label
     #[error("No rule for label {0}")]
