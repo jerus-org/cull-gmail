@@ -25,6 +25,17 @@ impl Display for MessageAge {
 }
 
 impl MessageAge {
+    /// Create a new MessageAge enum
+    pub fn new(period: &str, count: usize) -> Self {
+        match period.to_lowercase().as_str() {
+            "days" => MessageAge::Days(count),
+            "weeks" => MessageAge::Weeks(count),
+            "months" => MessageAge::Months(count),
+            "years" => MessageAge::Years(count),
+            _ => unreachable!(),
+        }
+    }
+
     pub(crate) fn label(&self) -> String {
         match self {
             MessageAge::Days(v) => format!("retention/{v}-days"),
