@@ -30,16 +30,18 @@ pub struct AddCli {
     /// Count of the period
     #[arg(short, long, default_value = "1")]
     count: usize,
-    /// Flag to indicate that a label should be generated
+    /// Optional specific label; if not specified one will be generated
     #[arg(short, long)]
-    generate: bool,
+    label: Option<String>,
 }
 
 impl AddCli {
     pub fn run(&self, mut config: Config) -> Result<(), Error> {
+        let generate = self.label.is_none();
         let message_age = MessageAge::new(self.period.to_string().as_str(), self.count);
-        let retention = Retention::new(message_age, self.generate);
-        config.add_rule(retention);
+        let retention = Retention::new(message_age, generate);
+
+        config.add_rule(retention, self.label.as_ref());
         config.save()
     }
 }
