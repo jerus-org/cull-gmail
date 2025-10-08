@@ -4,7 +4,7 @@ use std::fmt;
 /// - Trash - move the message to the trash to be automatically deleted by Google
 /// - Delete - delete the message immediately without allowing rescue from trash
 #[derive(Debug, Default)]
-pub enum EolCmd {
+pub enum EolAction {
     #[default]
     /// Move the message to the trash
     Trash,
@@ -12,11 +12,11 @@ pub enum EolCmd {
     Delete,
 }
 
-impl fmt::Display for EolCmd {
+impl fmt::Display for EolAction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            EolCmd::Trash => write!(f, "trash"),
-            EolCmd::Delete => write!(f, "delete"),
+            EolAction::Trash => write!(f, "trash"),
+            EolAction::Delete => write!(f, "delete"),
         }
     }
 }
