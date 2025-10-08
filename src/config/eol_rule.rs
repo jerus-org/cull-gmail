@@ -1,15 +1,15 @@
-use std::fmt;
+use std::{collections::BTreeSet, fmt};
 
 use serde::{Deserialize, Serialize};
 
 use crate::{Retention, eol_cmd::EolAction};
 
 /// End of life rules
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub(crate) struct EolRule {
     id: usize,
     retention: String,
-    labels: Vec<String>,
+    labels: BTreeSet<String>,
     query: Option<String>,
     action: String,
 }
@@ -42,7 +42,11 @@ impl fmt::Display for EolRule {
                 f,
                 "Rule #{} is active on {} and {action} is {count} {period} old.",
                 self.id,
-                self.labels.join(", ")
+                self.labels
+                    .iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ")
             )
         } else {
             write!(f, "Complete retention rule not set.")
@@ -72,16 +76,20 @@ impl EolRule {
     }
 
     pub(crate) fn add_label(&mut self, value: &str) -> &mut Self {
-        self.labels.push(value.to_string());
+        self.labels.insert(value.to_string());
         self
+    }
+
+    pub(crate) fn remove_label(&mut self, value: &str) {
+        self.labels.remove(value);
     }
 
     pub(crate) fn id(&self) -> usize {
         self.id
     }
 
-    pub(crate) fn labels(&self) -> &Vec<String> {
-        &self.labels
+    pub(crate) fn labels(&self) -> Vec<String> {
+        self.labels.iter().map(|i| i.to_string()).collect()
     }
 
     pub(crate) fn set_command(&mut self, value: EolAction) -> &mut Self {
