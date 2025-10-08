@@ -33,6 +33,9 @@ pub struct AddCli {
     /// Optional specific label; if not specified one will be generated
     #[arg(short, long)]
     label: Option<String>,
+    /// Immediate delete instead of move to trash
+    #[arg(long)]
+    delete: bool,
 }
 
 impl AddCli {
@@ -41,7 +44,7 @@ impl AddCli {
         let message_age = MessageAge::new(self.period.to_string().as_str(), self.count);
         let retention = Retention::new(message_age, generate);
 
-        config.add_rule(retention, self.label.as_ref());
+        config.add_rule(retention, self.label.as_ref(), self.delete);
         config.save()
     }
 }
