@@ -11,7 +11,7 @@ mod eol_rule;
 
 use eol_rule::EolRule;
 
-use crate::{Error, MessageAge, Retention};
+use crate::{Error, MessageAge, Retention, eol_cmd::EolAction};
 
 /// Configuration file for the program
 #[derive(Debug, Serialize, Deserialize)]
@@ -29,10 +29,10 @@ impl Default for Config {
             rules,
         };
 
-        cfg.add_rule(Retention::new(MessageAge::Years(1), true), None)
-            .add_rule(Retention::new(MessageAge::Weeks(1), true), None)
-            .add_rule(Retention::new(MessageAge::Months(1), true), None)
-            .add_rule(Retention::new(MessageAge::Years(5), true), None);
+        cfg.add_rule(Retention::new(MessageAge::Years(1), true), None, false)
+            .add_rule(Retention::new(MessageAge::Weeks(1), true), None, false)
+            .add_rule(Retention::new(MessageAge::Months(1), true), None, false)
+            .add_rule(Retention::new(MessageAge::Years(5), true), None, false);
 
         cfg
     }
@@ -51,7 +51,12 @@ impl Config {
     }
 
     /// Add a new rule to the rule set by setting the retention age
-    pub fn add_rule(&mut self, retention: Retention, label: Option<&String>) -> &mut Self {
+    pub fn add_rule(
+        &mut self,
+        retention: Retention,
+        label: Option<&String>,
+        delete: bool,
+    ) -> &mut Self {
         if self.rules.contains_key(&retention.age().to_string()) && label.is_none() {
             log::warn!("rule already exists");
             return self;
@@ -78,6 +83,9 @@ impl Config {
         rule.set_retention(retention);
         if let Some(l) = label {
             rule.add_label(l);
+        }
+        if delete {
+            rule.set_command(EolAction::Delete);
         }
         log::info!("added rule: {rule}");
         self.rules.insert(rule.retention().to_string(), rule);
