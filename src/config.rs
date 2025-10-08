@@ -1,4 +1,5 @@
 use std::{
+    collections::BTreeMap,
     env,
     fs::{self, read_to_string},
     path::PathBuf,
@@ -16,12 +17,12 @@ use crate::{Error, MessageAge, Retention};
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Config {
     credentials: Option<String>,
-    rules: Vec<EolRule>,
+    rules: BTreeMap<String, EolRule>,
 }
 
 impl Default for Config {
     fn default() -> Self {
-        let rules = Vec::new();
+        let rules = BTreeMap::new();
 
         let mut cfg = Self {
             credentials: Some("credential.json".to_string()),
@@ -51,7 +52,15 @@ impl Config {
 
     /// Add a new rule to the rule set by setting the retention age
     pub fn add_rule(&mut self, retention: Retention) -> &mut Self {
-        let id = if let Some(max) = self.rules.iter().max_by_key(|r| r.id()) {
+        if self
+            .rules
+            .contains_key(retention.age().to_string().as_str())
+        {
+            log::warn!("rule already exists");
+            return self;
+        }
+
+        let id = if let Some((_, max)) = self.rules.iter().max_by_key(|(_, r)| r.id()) {
             max.id() + 1
         } else {
             1
@@ -59,7 +68,8 @@ impl Config {
 
         let mut rule = EolRule::new(id);
         rule.set_retention(retention);
-        self.rules.push(rule);
+        log::info!("added rule: {rule}");
+        self.rules.insert(rule.retention().to_string(), rule);
         self
     }
 
@@ -100,7 +110,7 @@ impl Config {
 
     /// List the end of life rules set in the configuration
     pub fn list_rules(&self) -> Result<(), Error> {
-        for rule in &self.rules {
+        for rule in self.rules.values() {
             println!("{rule}");
         }
         Ok(())
