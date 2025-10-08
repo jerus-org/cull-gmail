@@ -72,6 +72,10 @@ impl EolRule {
     pub(crate) fn id(&self) -> usize {
         self.id
     }
+
+    pub(crate) fn labels(&self) -> &Vec<String> {
+        &self.labels
+    }
 }
 
 #[cfg(test)]
