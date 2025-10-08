@@ -109,7 +109,7 @@ impl Config {
     /// Remove a rule by the ID specified
     pub fn remove_rule_by_id(&mut self, id: usize) -> crate::Result<()> {
         self.rules.remove(&id.to_string());
-
+        log::info!("Rule `{id}` has been removed.");
         Ok(())
     }
 
@@ -117,8 +117,8 @@ impl Config {
     pub fn remove_rule_by_label(&mut self, label: &str) -> crate::Result<()> {
         let labels = self.labels();
 
-        if labels.contains(&label.to_string()) {
-            return Err(Error::LabelNotFoundInRules);
+        if !labels.contains(&label.to_string()) {
+            return Err(Error::LabelNotFoundInRules(label.to_string()));
         }
 
         let rule_id = self.find_label(label);
@@ -128,6 +128,7 @@ impl Config {
 
         self.rules.remove(&rule_id.to_string());
 
+        log::info!("Rule containing the label `{label}` has been removed.");
         Ok(())
     }
 
