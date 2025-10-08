@@ -60,6 +60,10 @@ impl EolRule {
         self
     }
 
+    pub(crate) fn retention(&self) -> &str {
+        &self.retention
+    }
+
     pub(crate) fn add_label(&mut self, value: &str) -> &mut Self {
         self.labels.push(value.to_string());
         self
