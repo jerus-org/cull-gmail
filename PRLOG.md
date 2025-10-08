@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ implement add command(pr [#40])
 - ✨ enhance rule management with BTreeMap(pr [#41])
 - ✨ add support for labels to retention rules(pr [#42])
+- ✨ add delete flag for retention rules(pr [#43])
 
 ### Changed
 
@@ -121,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#40]: https://github.com/jerus-org/cull-gmail/pull/40
 [#41]: https://github.com/jerus-org/cull-gmail/pull/41
 [#42]: https://github.com/jerus-org/cull-gmail/pull/42
+[#43]: https://github.com/jerus-org/cull-gmail/pull/43
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...HEAD
 [0.0.4]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/jerus-org/cull-gmail/compare/v0.0.2...v0.0.3
