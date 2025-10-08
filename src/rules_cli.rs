@@ -1,25 +1,26 @@
 use clap::{Parser, Subcommand};
+use cull_gmail::Config;
 
 #[derive(Debug, Parser)]
-pub struct ConfigCli {
+pub struct RulesCli {
     /// Configuration commands
     #[command(subcommand)]
-    command: ConfigCommands,
+    command: RulesCommands,
 }
 
-impl ConfigCli {
-    pub fn run(&self) {
+impl RulesCli {
+    pub fn run(&self, config: Config) {
         match self.command {
-            ConfigCommands::List => todo!(),
-            ConfigCommands::Add => todo!(),
-            ConfigCommands::Remove => todo!(),
-            ConfigCommands::Update => todo!(),
+            RulesCommands::List => config.list_rules(),
+            RulesCommands::Add => todo!(),
+            RulesCommands::Remove => todo!(),
+            RulesCommands::Update => todo!(),
         }
     }
 }
 
 #[derive(Debug, Subcommand)]
-pub enum ConfigCommands {
+pub enum RulesCommands {
     /// List the rules configured and saved in the config file
     #[clap(name = "list")]
     List,
