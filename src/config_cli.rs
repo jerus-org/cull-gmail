@@ -22,11 +22,14 @@ pub struct ConfigCli {
     #[clap(flatten)]
     logging: clap_verbosity_flag::Verbosity,
     #[command(subcommand)]
-    command: Option<Commands>,
+    command: Commands,
 }
 
 impl ConfigCli {
-    pub fn run(&self, _config: Config) -> Result<()> {
-        Ok(())
+    pub fn run(&self, config: Config) -> Result<()> {
+        match &self.command {
+            Commands::Rules(rules_cli) => rules_cli.run(config),
+            Commands::Label(label_cli) => label_cli.run(config),
+        }
     }
 }
