@@ -6,7 +6,7 @@
 
 mod config;
 mod credential;
-mod eol_cmd;
+mod eol_action;
 mod error;
 mod labels;
 mod message_list;
@@ -17,6 +17,7 @@ pub(crate) mod utils;
 
 pub use config::Config;
 pub use credential::Credential;
+pub use eol_action::EolAction;
 pub use error::Error;
 pub use labels::Labels;
 pub use message_list::DEFAULT_MAX_RESULTS;
