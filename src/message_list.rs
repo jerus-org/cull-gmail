@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use crate::{Labels, Result};
+
 use google_gmail1::{
     Gmail,
     api::ListMessagesResponse,
@@ -15,7 +17,7 @@ mod message_summary;
 
 use message_summary::MessageSummary;
 
-use crate::{Credential, Error, utils::Elide};
+use crate::{Credential, utils::Elide};
 
 /// Default for the maximum number of results to return on a page
 pub const DEFAULT_MAX_RESULTS: &str = "10";
@@ -42,7 +44,7 @@ impl Debug for MessageList {
 
 impl MessageList {
     /// Create a new List struct and add the Gmail api connection.
-    pub async fn new(credential: &str) -> Result<Self, Error> {
+    pub async fn new(credential: &str) -> Result<Self> {
         let (config_dir, secret) = {
             let config_dir = crate::utils::assure_config_dir_exists("~/.cull-gmail")?;
 
@@ -90,7 +92,24 @@ impl MessageList {
     }
 
     /// Add label to the labels collection
-    pub fn add_labels(&mut self, label_ids: &[String]) {
+    pub async fn add_labels(&mut self, credential_file: &str, labels: &[String]) -> Result<()> {
+        // add labels if any specified
+        let label_list = Labels::new(credential_file, false).await?;
+
+        log::trace!("labels found and setup {label_list:#?}");
+        log::debug!("labels from command line: {labels:?}");
+        let mut label_ids = Vec::new();
+        for label in labels {
+            if let Some(id) = label_list.get_label_id(label) {
+                label_ids.push(id)
+            }
+        }
+        self.add_labels_ids(label_ids.as_slice());
+        Ok(())
+    }
+
+    /// Add label to the labels collection
+    fn add_labels_ids(&mut self, label_ids: &[String]) {
         if !label_ids.is_empty() {
             for id in label_ids {
                 self.label_ids.push(id.to_string())
@@ -128,7 +147,7 @@ impl MessageList {
     }
 
     /// Run the Gmail api as configured
-    pub async fn run(&mut self, pages: u32) -> Result<(), Error> {
+    pub async fn run(&mut self, pages: u32) -> Result<()> {
         let list = self.messages_list(None).await?;
         match pages {
             1 => {}
@@ -168,7 +187,7 @@ impl MessageList {
     async fn messages_list(
         &mut self,
         next_page_token: Option<String>,
-    ) -> Result<ListMessagesResponse, Error> {
+    ) -> Result<ListMessagesResponse> {
         let mut call = self
             .hub
             .users()
@@ -215,7 +234,7 @@ impl MessageList {
         Ok(list)
     }
 
-    async fn log_message_subjects(&mut self) -> Result<(), Error> {
+    async fn log_message_subjects(&mut self) -> Result<()> {
         for message in &mut self.messages {
             log::trace!("{}", message.id());
             let (_res, m) = self
