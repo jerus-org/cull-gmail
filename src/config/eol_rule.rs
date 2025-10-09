@@ -33,14 +33,14 @@ impl fmt::Display for EolRule {
             }
 
             let action = match self.action.to_lowercase().as_str() {
-                "trash" => "moves the message to trash",
-                "delete" => "deletes the message",
+                "trash" => "move the message to trash",
+                "delete" => "delete the message",
                 _ => unreachable!(),
             };
 
             write!(
                 f,
-                "Rule #{} is active on {} and {action} is {count} {period} old.",
+                "Rule #{} is active on `{}` to {action} if it is more than {count} {period} old.",
                 self.id,
                 self.labels
                     .iter()
