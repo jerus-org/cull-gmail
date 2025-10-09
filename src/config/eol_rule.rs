@@ -6,7 +6,7 @@ use crate::{Retention, eol_cmd::EolAction};
 
 /// End of life rules
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
-pub(crate) struct EolRule {
+pub struct EolRule {
     id: usize,
     retention: String,
     labels: BTreeSet<String>,
@@ -88,7 +88,7 @@ impl EolRule {
         self.id
     }
 
-    pub(crate) fn labels(&self) -> Vec<String> {
+    pub fn labels(&self) -> Vec<String> {
         self.labels.iter().map(|i| i.to_string()).collect()
     }
 
