@@ -2,7 +2,7 @@ use google_gmail1::api::BatchDeleteMessagesRequest;
 
 use crate::{MessageList, Result};
 
-/// Struct for trashing messages
+/// Struct for deleting messages
 #[derive(Debug)]
 pub struct Delete {
     message_list: MessageList,
@@ -15,27 +15,12 @@ impl Delete {
         Ok(Delete { message_list })
     }
 
-    /// Set the maximum results
-    pub fn set_max_results(&mut self, value: u32) {
-        self.message_list.set_max_results(value);
+    /// return the message list struct
+    pub fn message_list(&mut self) -> &mut MessageList {
+        &mut self.message_list
     }
 
-    /// Report the maximum results value
-    pub fn max_results(&self) -> u32 {
-        self.message_list.max_results()
-    }
-
-    /// Add label to the labels collection
-    pub async fn add_labels(&mut self, credential: &str, labels: &[String]) -> Result<()> {
-        self.message_list.add_labels(credential, labels).await
-    }
-
-    /// Set the query string
-    pub fn set_query(&mut self, query: &str) {
-        self.message_list.set_query(query)
-    }
-
-    /// Run the trash cli
+    /// Prepare the message list for delete to be completed on execute by batch_delete
     pub async fn prepare(&mut self, pages: u32) -> Result<()> {
         self.message_list.run(pages).await
     }
