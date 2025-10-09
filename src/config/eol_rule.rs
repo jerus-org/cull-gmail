@@ -108,7 +108,7 @@ mod test {
         let mut rule = EolRule::new(1);
         rule.set_retention(retention);
         assert_eq!(
-            "Rule #1 is active on retention/5-years and moves the message to trash is 5 years old."
+            "Rule #1 is active on `retention/5-years` to move the message to trash if it is more than 5 years old."
                 .to_string(),
             rule.to_string()
         );
@@ -120,7 +120,7 @@ mod test {
         let mut rule = EolRule::new(2);
         rule.set_retention(retention);
         assert_eq!(
-            "Rule #2 is active on retention/1-months and moves the message to trash is 1 month old."
+            "Rule #2 is active on `retention/1-months` to move the message to trash if it is more than 1 month old."
                 .to_string(),
             rule.to_string()
         );
@@ -132,7 +132,7 @@ mod test {
         let mut rule = EolRule::new(3);
         rule.set_retention(retention);
         assert_eq!(
-            "Rule #3 is active on retention/13-weeks and moves the message to trash is 13 weeks old."
+            "Rule #3 is active on `retention/13-weeks` to move the message to trash if it is more than 13 weeks old."
                 .to_string(),
             rule.to_string()
         );
@@ -144,7 +144,7 @@ mod test {
         let mut rule = EolRule::new(4);
         rule.set_retention(retention);
         assert_eq!(
-            "Rule #4 is active on retention/365-days and moves the message to trash is 365 days old."
+            "Rule #4 is active on `retention/365-days` to move the message to trash if it is more than 365 days old."
                 .to_string(),
             rule.to_string()
         );
