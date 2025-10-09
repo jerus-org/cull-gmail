@@ -1,8 +1,8 @@
 use std::{env, fs, io};
 
-use crate::Error;
+use crate::{Error, Result};
 
-pub(crate) fn assure_config_dir_exists(dir: &str) -> Result<String, Error> {
+pub(crate) fn assure_config_dir_exists(dir: &str) -> Result<String> {
     let trdir = dir.trim();
     if trdir.is_empty() {
         return Err(Error::DirectoryUnset);
