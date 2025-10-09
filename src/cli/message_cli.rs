@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Error, Labels, MessageList};
+use cull_gmail::{MessageList, Result};
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
@@ -19,22 +19,11 @@ pub struct MessageCli {
 }
 
 impl MessageCli {
-    pub(crate) async fn run(&self, credential_file: &str) -> Result<(), Error> {
+    pub(crate) async fn run(&self, credential_file: &str) -> Result<()> {
         let mut list = MessageList::new(credential_file).await?;
 
         if !self.labels.is_empty() {
-            // add labels if any specified
-            let label_list = Labels::new(credential_file, false).await?;
-
-            log::trace!("labels found and setup {label_list:#?}");
-            log::debug!("labels from command line: {:?}", self.labels);
-            let mut label_ids = Vec::new();
-            for label in &self.labels {
-                if let Some(id) = label_list.get_label_id(label) {
-                    label_ids.push(id)
-                }
-            }
-            list.add_labels(label_ids.as_slice());
+            list.add_labels(credential_file, &self.labels).await?;
         }
 
         if let Some(query) = self.query.as_ref() {
