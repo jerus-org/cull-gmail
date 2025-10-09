@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- ✨ implement commands dispatching(pr [#49])
+
 ### Changed
 
 - ♻️ refactor(cli)-consolidate rules and labels under config subcommand(pr [#48])
@@ -138,6 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#46]: https://github.com/jerus-org/cull-gmail/pull/46
 [#47]: https://github.com/jerus-org/cull-gmail/pull/47
 [#48]: https://github.com/jerus-org/cull-gmail/pull/48
+[#49]: https://github.com/jerus-org/cull-gmail/pull/49
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.5...HEAD
 [0.0.5]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...v0.0.4
