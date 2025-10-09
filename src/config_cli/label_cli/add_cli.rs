@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use cull_gmail::{Config, Result};
+use cull_gmail::{Config, Error, Result};
 
 #[derive(Debug, Parser)]
 pub struct AddCli {
@@ -13,7 +13,11 @@ pub struct AddCli {
 }
 
 impl AddCli {
-    pub fn run(&self, _config: Config) -> Result<()> {
-        Ok(())
+    pub fn run(&self, mut config: Config) -> Result<()> {
+        if config.get_rule(self.id).is_none() {
+            return Err(Error::RuleNotFound(self.id));
+        }
+
+        config.add_label_to_rule(self.id, &self.label)
     }
 }
