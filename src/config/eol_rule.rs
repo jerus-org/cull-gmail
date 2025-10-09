@@ -2,7 +2,7 @@ use std::{collections::BTreeSet, fmt};
 
 use serde::{Deserialize, Serialize};
 
-use crate::{Retention, eol_cmd::EolAction};
+use crate::{Retention, eol_action::EolAction};
 
 /// End of life rules
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
@@ -92,7 +92,7 @@ impl EolRule {
         self.labels.iter().map(|i| i.to_string()).collect()
     }
 
-    pub(crate) fn set_command(&mut self, value: EolAction) -> &mut Self {
+    pub(crate) fn set_command(&mut self, value: &EolAction) -> &mut Self {
         self.action = value.to_string();
         self
     }
