@@ -92,7 +92,7 @@ impl EolRule {
         self.labels.iter().map(|i| i.to_string()).collect()
     }
 
-    pub(crate) fn set_command(&mut self, value: &EolAction) -> &mut Self {
+    pub(crate) fn set_action(&mut self, value: &EolAction) -> &mut Self {
         self.action = value.to_string();
         self
     }

@@ -85,7 +85,7 @@ impl Config {
             rule.add_label(l);
         }
         if delete {
-            rule.set_command(&EolAction::Delete);
+            rule.set_action(&EolAction::Delete);
         }
         log::info!("added rule: {rule}");
         self.rules.insert(rule.id().to_string(), rule);
@@ -178,7 +178,7 @@ impl Config {
         let Some(rule) = self.rules.get_mut(id.to_string().as_str()) else {
             return Err(Error::RuleNotFound(id));
         };
-        rule.set_command(action);
+        rule.set_action(action);
         self.save()?;
         println!("Action set to `{action}` on rule `#{id}`");
 

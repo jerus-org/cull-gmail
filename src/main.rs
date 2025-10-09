@@ -20,11 +20,11 @@ struct Cli {
     #[clap(flatten)]
     logging: clap_verbosity_flag::Verbosity,
     #[command(subcommand)]
-    command: Option<Commands>,
+    sub_command: Option<SubCmds>,
 }
 
 #[derive(Subcommand, Debug)]
-enum Commands {
+enum SubCmds {
     /// List messages
     #[clap(name = "message")]
     Message(MessageCli),
@@ -65,12 +65,12 @@ async fn main() {
 async fn run(args: Cli) -> Result<(), Error> {
     let config = get_config()?;
     log::trace!("Configuration loaded: {config:#?}");
-    if let Some(cmds) = args.command {
+    if let Some(cmds) = args.sub_command {
         match cmds {
-            Commands::Message(list_cli) => list_cli.run(config.credential_file()).await?,
-            Commands::Labels(label_cli) => label_cli.run(config.credential_file()).await?,
-            Commands::Trash(trash_cli) => trash_cli.run(config.credential_file()).await?,
-            Commands::Config(config_cli) => config_cli.run(config)?,
+            SubCmds::Message(list_cli) => list_cli.run(config.credential_file()).await?,
+            SubCmds::Labels(label_cli) => label_cli.run(config.credential_file()).await?,
+            SubCmds::Trash(trash_cli) => trash_cli.run(config.credential_file()).await?,
+            SubCmds::Config(config_cli) => config_cli.run(config)?,
         }
     }
     Ok(())
