@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Error, Labels, Trash};
+use cull_gmail::{Error, Trash};
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
@@ -24,17 +24,7 @@ impl TrashCli {
 
         if !self.labels.is_empty() {
             // add labels if any specified
-            let label_list = Labels::new(credential_file, false).await?;
-
-            log::trace!("labels found and setup {label_list:#?}");
-            log::debug!("labels from command line: {:?}", self.labels);
-            let mut label_ids = Vec::new();
-            for label in &self.labels {
-                if let Some(id) = label_list.get_label_id(label) {
-                    label_ids.push(id)
-                }
-            }
-            list.add_labels(label_ids.as_slice());
+            list.add_labels(credential_file, &self.labels).await?;
         }
 
         if let Some(query) = self.query.as_ref() {
