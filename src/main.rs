@@ -1,17 +1,18 @@
 use clap::{Parser, Subcommand};
 
+mod config_cli;
 mod label_cli;
 mod message_cli;
-mod rules_cli;
 mod trash_cli;
 
 use cull_gmail::{Config, Error};
+
+use config_cli::ConfigCli;
 use label_cli::LabelCli;
 use message_cli::MessageCli;
-use rules_cli::RulesCli;
-use std::error::Error as stdError;
-
 use trash_cli::TrashCli;
+
+use std::error::Error as stdError;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -33,9 +34,9 @@ enum Commands {
     /// Move messages to trash
     #[clap(name = "trash")]
     Trash(TrashCli),
-    /// Configure end-of-life rules
-    #[clap(name = "rules")]
-    Rules(RulesCli),
+    /// Configure rules and labels
+    #[clap(name = "config")]
+    Config(ConfigCli),
 }
 
 #[tokio::main]
@@ -69,7 +70,7 @@ async fn run(args: Cli) -> Result<(), Error> {
             Commands::Message(list_cli) => list_cli.run(config.credential_file()).await?,
             Commands::Labels(label_cli) => label_cli.run(config.credential_file()).await?,
             Commands::Trash(trash_cli) => trash_cli.run(config.credential_file()).await?,
-            Commands::Rules(config_cli) => config_cli.run(config)?,
+            Commands::Config(config_cli) => config_cli.run(config)?,
         }
     }
     Ok(())
