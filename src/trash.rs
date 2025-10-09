@@ -15,24 +15,9 @@ impl Trash {
         Ok(Trash { message_list })
     }
 
-    /// Set the maximum results
-    pub fn set_max_results(&mut self, value: u32) {
-        self.message_list.set_max_results(value);
-    }
-
-    /// Report the maximum results value
-    pub fn max_results(&self) -> u32 {
-        self.message_list.max_results()
-    }
-
-    /// Add label to the labels collection
-    pub async fn add_labels(&mut self, credential: &str, labels: &[String]) -> Result<()> {
-        self.message_list.add_labels(credential, labels).await
-    }
-
-    /// Set the query string
-    pub fn set_query(&mut self, query: &str) {
-        self.message_list.set_query(query)
+    /// return the message list struct
+    pub fn message_list(&mut self) -> &mut MessageList {
+        &mut self.message_list
     }
 
     /// Run the trash cli
