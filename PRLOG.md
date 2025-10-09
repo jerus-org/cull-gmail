@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - 🐛 label_cli: display labels by rule id(pr [#50])
+- 🐛 config: correct grammar in EolRule display(pr [#53])
 
 ## [0.0.5] - 2025-10-08
 
@@ -152,6 +153,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#50]: https://github.com/jerus-org/cull-gmail/pull/50
 [#51]: https://github.com/jerus-org/cull-gmail/pull/51
 [#52]: https://github.com/jerus-org/cull-gmail/pull/52
+[#53]: https://github.com/jerus-org/cull-gmail/pull/53
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.5...HEAD
 [0.0.5]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...v0.0.4
