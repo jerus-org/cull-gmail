@@ -1,13 +1,15 @@
 use clap::{Parser, Subcommand};
 
 mod config_cli;
+mod delete_cli;
 mod label_cli;
 mod message_cli;
 mod trash_cli;
 
-use cull_gmail::{Config, Error};
+use cull_gmail::{Config, Result};
 
 use config_cli::ConfigCli;
+use delete_cli::DeleteCli;
 use label_cli::LabelCli;
 use message_cli::MessageCli;
 use trash_cli::TrashCli;
@@ -20,11 +22,14 @@ struct Cli {
     #[clap(flatten)]
     logging: clap_verbosity_flag::Verbosity,
     #[command(subcommand)]
-    sub_command: Option<SubCmds>,
+    sub_command: SubCmds,
 }
 
 #[derive(Subcommand, Debug)]
 enum SubCmds {
+    /// Configure rules and labels
+    #[clap(name = "config")]
+    Config(ConfigCli),
     /// List messages
     #[clap(name = "message")]
     Message(MessageCli),
@@ -34,9 +39,9 @@ enum SubCmds {
     /// Move messages to trash
     #[clap(name = "trash")]
     Trash(TrashCli),
-    /// Configure rules and labels
-    #[clap(name = "config")]
-    Config(ConfigCli),
+    /// Move messages to trash
+    #[clap(name = "delete")]
+    Delete(DeleteCli),
 }
 
 #[tokio::main]
@@ -62,18 +67,16 @@ async fn main() {
     });
 }
 
-async fn run(args: Cli) -> Result<(), Error> {
+async fn run(args: Cli) -> Result<()> {
     let config = get_config()?;
     log::trace!("Configuration loaded: {config:#?}");
-    if let Some(cmds) = args.sub_command {
-        match cmds {
-            SubCmds::Message(list_cli) => list_cli.run(config.credential_file()).await?,
-            SubCmds::Labels(label_cli) => label_cli.run(config.credential_file()).await?,
-            SubCmds::Trash(trash_cli) => trash_cli.run(config.credential_file()).await?,
-            SubCmds::Config(config_cli) => config_cli.run(config)?,
-        }
+    match args.sub_command {
+        SubCmds::Config(config_cli) => config_cli.run(config),
+        SubCmds::Message(list_cli) => list_cli.run(config.credential_file()).await,
+        SubCmds::Labels(label_cli) => label_cli.run(config.credential_file()).await,
+        SubCmds::Trash(trash_cli) => trash_cli.run(config.credential_file()).await,
+        SubCmds::Delete(delete_cli) => delete_cli.run(config.credential_file()).await,
     }
-    Ok(())
 }
 
 fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
@@ -93,7 +96,7 @@ fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
     builder
 }
 
-fn get_config() -> Result<Config, Error> {
+fn get_config() -> Result<Config> {
     match Config::load() {
         Ok(c) => Ok(c),
         Err(_) => {
