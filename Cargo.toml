@@ -45,4 +45,4 @@ path = "src/lib.rs"
 
 [[bin]]
 name = "cull-gmail"
-path = "src/main.rs"
+path = "src/cli/main.rs"
