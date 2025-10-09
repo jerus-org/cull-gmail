@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ add label functionality to rules(pr [#51])
 - ✨ add remove label from rule(pr [#52])
 - ✨ implement action subcommand(pr [#54])
+- ✨ implement batch delete functionality(pr [#57])
 
 ### Changed
 
@@ -160,6 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#54]: https://github.com/jerus-org/cull-gmail/pull/54
 [#55]: https://github.com/jerus-org/cull-gmail/pull/55
 [#56]: https://github.com/jerus-org/cull-gmail/pull/56
+[#57]: https://github.com/jerus-org/cull-gmail/pull/57
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.5...HEAD
 [0.0.5]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...v0.0.4
