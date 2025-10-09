@@ -15,10 +15,15 @@ impl ListCli {
             return Err(Error::RuleNotFound(self.id));
         };
 
-        for label in rule.labels() {
-            log::info!("Label in rule: `{label}`");
+        print!("Labels in rule: ");
+        for (i, label) in rule.labels().iter().enumerate() {
+            if i != 0 {
+                print!(", {label}");
+            } else {
+                print!("`{label}");
+            }
         }
-
+        println!("`");
         Ok(())
     }
 }
