@@ -1,6 +1,6 @@
 use google_gmail1::api::BatchModifyMessagesRequest;
 
-use crate::{Error, MessageList};
+use crate::{MessageList, Result};
 
 /// Struct for trashing messages
 #[derive(Debug)]
@@ -10,7 +10,7 @@ pub struct Trash {
 
 impl Trash {
     /// Create a new Trash struct
-    pub async fn new(credential: &str) -> Result<Self, Error> {
+    pub async fn new(credential: &str) -> Result<Self> {
         let message_list = MessageList::new(credential).await?;
         Ok(Trash { message_list })
     }
@@ -26,8 +26,8 @@ impl Trash {
     }
 
     /// Add label to the labels collection
-    pub fn add_labels(&mut self, label_ids: &[String]) {
-        self.message_list.add_labels(label_ids)
+    pub async fn add_labels(&mut self, credential: &str, labels: &[String]) -> Result<()> {
+        self.message_list.add_labels(credential, labels).await
     }
 
     /// Set the query string
@@ -36,14 +36,14 @@ impl Trash {
     }
 
     /// Run the trash cli
-    pub async fn run(&mut self, pages: u32) -> Result<(), Error> {
+    pub async fn run(&mut self, pages: u32) -> Result<()> {
         self.message_list.run(pages).await?;
         self.batch_move_to_trash().await?;
 
         Ok(())
     }
 
-    async fn batch_move_to_trash(&self) -> Result<(), Error> {
+    async fn batch_move_to_trash(&self) -> Result<()> {
         let add_label_ids = Some(Vec::from(["TRASH".to_string()]));
         let ids = Some(self.message_list.message_ids());
         let remove_label_ids = Some(self.message_list.label_ids());
