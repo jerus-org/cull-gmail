@@ -24,16 +24,21 @@ impl TrashCli {
 
         if !self.labels.is_empty() {
             // add labels if any specified
-            list.add_labels(credential_file, &self.labels).await?;
+            list.message_list()
+                .add_labels(credential_file, &self.labels)
+                .await?;
         }
 
         if let Some(query) = self.query.as_ref() {
-            list.set_query(query)
+            list.message_list().set_query(query)
         }
 
         log::trace!("Max results: `{}`", self.max_results);
-        list.set_max_results(self.max_results);
-        log::debug!("List max results set to {}", list.max_results());
+        list.message_list().set_max_results(self.max_results);
+        log::debug!(
+            "List max results set to {}",
+            list.message_list().max_results()
+        );
 
         list.run(self.pages).await
     }
