@@ -50,6 +50,11 @@ impl Config {
         self
     }
 
+    /// Get the contents of an existing rule
+    pub fn get_rule(&self, id: usize) -> Option<EolRule> {
+        self.rules.get(&id.to_string()).cloned()
+    }
+
     /// Add a new rule to the rule set by setting the retention age
     pub fn add_rule(
         &mut self,
