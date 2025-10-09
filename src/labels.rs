@@ -11,7 +11,7 @@ use google_gmail1::{
     yup_oauth2::{ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
 };
 
-use crate::{Credential, Error};
+use crate::{Credential, Result};
 
 /// Default for the maximum number of results to return on a page
 pub const DEFAULT_MAX_RESULTS: &str = "10";
@@ -34,7 +34,7 @@ impl std::fmt::Debug for Labels {
 
 impl Labels {
     /// Create a new List struct and add the Gmail api connection.
-    pub async fn new(credential: &str, show: bool) -> Result<Self, Error> {
+    pub async fn new(credential: &str, show: bool) -> Result<Self> {
         let (config_dir, secret) = {
             let config_dir = crate::utils::assure_config_dir_exists("~/.cull-gmail")?;
 
