@@ -55,7 +55,7 @@ Or by configuring the dependencies manually in `Cargo.toml`:
 
 ```toml
 [dependencies]
-cull-gmail = "0.0.5"
+cull-gmail = "0.0.6"
 ```
 
 ## cull-gmail CLI

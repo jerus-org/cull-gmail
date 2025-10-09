@@ -5,19 +5,88 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.6] - 2025-10-09
+
+Summary: Added[23], Changed[26], Chore[11], Fixed[7]
+
+### Added
+
+ - ✨ feat(gh-release): add delete module
+ - ✨ feat(delete): implement batch delete functionality
+ - ✨ feat(cli): add delete subcommand
+ - ✨ feat(cli): add delete subcommand
+ - ✨ feat(rules_cli): implement add command for managing retention rules
+ - ✨ feat(cli): add remove label subcommand
+ - ✨ feat(cli): add list labels subcommand
+ - ✨ feat(label): implement add label command
+ - ✨ feat(message_list): add label support
+ - ✨ feat(message): add label support to message listing
+ - ✨ feat(config): add functionality to set action on rule
+ - ✨ feat(config_cli): implement action subcommand
+ - ✨ feat(cli): add action subcommand
+ - ✨ feat(config): add remove label from rule
+ - ✨ feat(config): add label functionality to rules
+ - ✨ feat(error): add RuleNotFound error
+ - ✨ feat(config): add get_rule function to retrieve existing rules
+ - ✨ feat(cli): implement commands dispatching
+ - ✨ feat(label_cli): implement label listing subcommand
+ - ✨ feat(cli): implement label subcommand
+ - ✨ feat(config): add cli config - introduce cli config with clap - add subcommand rules and label
+ - ✨ feat(label): implement add label subcommand
+ - ✨ feat(label_cli): implement remove label subcommand
+
+### Fixed
+
+ - 🐛 fix(config): correct typo in eol_cmd module name
+ - 🐛 fix(eol_rule): correct grammar in rule descriptions
+ - 🐛 fix(config): correct grammar in EolRule display
+ - 🐛 fix(remove_cli): handle rule not found when removing label
+ - 🐛 fix(cli): correct output format for label list
+ - 🐛 fix(label_cli): fix add label logic
+ - 🐛 fix(label_cli): display labels by rule id
+
+### Changed
+
+ - ♻️ refactor(trash): encapsulate message list operations
+ - ♻️ refactor(cli): improve delete command structure
+ - ♻️ refactor(delete): rename struct and methods for deleting messages
+ - ♻️ refactor(trash): encapsulate message list
+ - ♻️ refactor(cli): move rm_cli to new directory
+ - ♻️ refactor(trash): streamline label handling in trash listing
+ - ♻️ refactor(utils): improve config directory handling
+ - ♻️ refactor(cli): move rules_cli to config_cli
+ - ♻️ refactor(labels): simplify error handling in labels module
+ - ♻️ refactor(cli): rename label_cli module
+ - ♻️ refactor(cli): rename action_cli module
+ - ♻️ refactor(cli): rename trash_cli to cli
+ - ♻️ refactor(cli): rename message_cli to cli
+ - ♻️ refactor(trash): simplify error handling and label management
+ - ♻️ refactor(cli): move label_cli to cli directory
+ - ♻️ refactor(cli): move config_cli to cli directory
+ - ♻️ refactor(cli): move main.rs to cli folder - move main.rs to cli folder for better structure
+ - ♻️ refactor(project): move main.rs to cli directory
+ - ♻️ refactor(cli): rename command to sub_command for clarity
+ - ♻️ refactor(core): rename eol_cmd module to eol_action
+ - ♻️ refactor(core): rename eol_cmd to eol_action - clarifies the file's purpose as defining actions related to EOL handling rather than just commands
+ - ♻️ refactor(config): make EolRule fields public
+ - ♻️ refactor(cli): consolidate rules and labels under config subcommand
+ - ♻️ refactor(cli): rename add_cli to rules_cli
+ - ♻️ refactor(cli): rename rm_cli to rules_cli
+ - ♻️ refactor(cli): restructure rules CLI
+
 ## [0.0.5] - 2025-10-08
 
-Summary: Added[28], Build[1], Changed[6], Chore[15], Documentation[5], Fixed[10]
+Summary: Added[28], Build[1], Changed[6], Chore[16], Documentation[5], Fixed[10]
 
 ### Added
 
  - ✨ feat(cli): implement trace logging for configuration
- - ✨ feat(rules_cli): implement rm_cli subcommand
- - ✨ feat(rules_cli): add remove command to rules cli
  - ✨ feat(rules_cli): implement rule removal
  - ✨ feat(lib): introduce Result type alias for error handling
  - ✨ feat(error): add custom error types for rule selection
  - ✨ feat(config): enhance rule management and label handling
+ - ✨ feat(rules_cli): implement rm_cli subcommand
+ - ✨ feat(rules_cli): add remove command to rules cli
  - ✨ feat(rules_cli): add option to immediately delete rules
  - ✨ feat(config): add delete flag for retention rules
  - ✨ feat(rules_cli): add optional label for retention rules
@@ -31,20 +100,20 @@ Summary: Added[28], Build[1], Changed[6], Chore[15], Documentation[5], Fixed[10]
  - ✨ feat(config): add result type to list_rules function
  - ✨ feat(config): implement display for eolrule struct
  - ✨ feat(config): add function to list rules
- - ✨ feat(config): add EolRule struct for managing end-of-life rules
- - ✨ feat(eol_cmd): introduce EolCmd enum for message disposal
- - ✨ feat(retention): introduce message age enum
- - ✨ feat(lib): add config and retention modules
- - ✨ feat(build): add toml dependency
- - ✨ feat(cli): load configuration for message command
- - ✨ feat(retention): implement data retention policy
  - ✨ feat(config): implement configuration file management
+ - ✨ feat(retention): introduce message age enum
+ - ✨ feat(config): add EolRule struct for managing end-of-life rules
+ - ✨ feat(retention): implement data retention policy
+ - ✨ feat(cli): load configuration for message command
+ - ✨ feat(lib): add config and retention modules
+ - ✨ feat(eol_cmd): introduce EolCmd enum for message disposal
+ - ✨ feat(build): add toml dependency
 
 ### Fixed
 
  - 🐛 fix(rm_cli): rule removal save
- - 🐛 fix(error): improve error message for missing labels
  - 🐛 fix(config): improve rule removal and logging
+ - 🐛 fix(error): improve error message for missing labels
  - 🐛 fix(error): refine error message for rule selector
  - 🐛 fix(eol_rule): correct rule description in to_string method
  - 🐛 fix(rules): fix config_cli.run to return a Result
@@ -178,7 +247,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/jerus-org/cull-gmail/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/jerus-org/cull-gmail/compare/v0.0.1...v0.0.2
