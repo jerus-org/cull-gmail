@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ✨ implement commands dispatching(pr [#49])
 - ✨ add label functionality to rules(pr [#51])
+- ✨ add remove label from rule(pr [#52])
 
 ### Changed
 
@@ -150,6 +151,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#49]: https://github.com/jerus-org/cull-gmail/pull/49
 [#50]: https://github.com/jerus-org/cull-gmail/pull/50
 [#51]: https://github.com/jerus-org/cull-gmail/pull/51
+[#52]: https://github.com/jerus-org/cull-gmail/pull/52
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.5...HEAD
 [0.0.5]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...v0.0.4
