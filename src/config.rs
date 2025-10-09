@@ -11,7 +11,7 @@ mod eol_rule;
 
 use eol_rule::EolRule;
 
-use crate::{Error, MessageAge, Result, Retention, eol_cmd::EolAction};
+use crate::{EolAction, Error, MessageAge, Result, Retention};
 
 /// Configuration file for the program
 #[derive(Debug, Serialize, Deserialize)]
@@ -85,7 +85,7 @@ impl Config {
             rule.add_label(l);
         }
         if delete {
-            rule.set_command(EolAction::Delete);
+            rule.set_command(&EolAction::Delete);
         }
         log::info!("added rule: {rule}");
         self.rules.insert(rule.id().to_string(), rule);
@@ -169,6 +169,18 @@ impl Config {
         rule.remove_label(label);
         self.save()?;
         println!("Label `{label}` removed from rule `#{id}`");
+
+        Ok(())
+    }
+
+    /// Set the action on the rule identified by the id
+    pub fn set_action_on_rule(&mut self, id: usize, action: &EolAction) -> Result<()> {
+        let Some(rule) = self.rules.get_mut(id.to_string().as_str()) else {
+            return Err(Error::RuleNotFound(id));
+        };
+        rule.set_command(action);
+        self.save()?;
+        println!("Action set to `{action}` on rule `#{id}`");
 
         Ok(())
     }
