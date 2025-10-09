@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use cull_gmail::{Config, Result};
+use cull_gmail::{Config, Error, Result};
 
 #[derive(Debug, Parser)]
 pub struct RemoveCli {
@@ -13,7 +13,11 @@ pub struct RemoveCli {
 }
 
 impl RemoveCli {
-    pub fn run(&self, _config: Config) -> Result<()> {
-        Ok(())
+    pub fn run(&self, mut config: Config) -> Result<()> {
+        if config.get_rule(self.id).is_none() {
+            return Err(Error::RuleNotFound(self.id));
+        }
+
+        config.remove_label_from_rule(self.id, &self.label)
     }
 }
