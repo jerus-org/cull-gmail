@@ -11,7 +11,7 @@ mod eol_rule;
 
 use eol_rule::EolRule;
 
-use crate::{Error, MessageAge, Retention, eol_cmd::EolAction};
+use crate::{Error, MessageAge, Result, Retention, eol_cmd::EolAction};
 
 /// Configuration file for the program
 #[derive(Debug, Serialize, Deserialize)]
@@ -114,7 +114,7 @@ impl Config {
     /// Remove a rule by the ID specified
     pub fn remove_rule_by_id(&mut self, id: usize) -> crate::Result<()> {
         self.rules.remove(&id.to_string());
-        log::info!("Rule `{id}` has been removed.");
+        println!("Rule `{id}` has been removed.");
         Ok(())
     }
 
@@ -149,8 +149,20 @@ impl Config {
         rbl
     }
 
+    /// Add a label to the rule identified by the id
+    pub fn add_label_to_rule(&mut self, id: usize, label: &str) -> Result<()> {
+        let Some(rule) = self.rules.get_mut(id.to_string().as_str()) else {
+            return Err(Error::RuleNotFound(id));
+        };
+        rule.add_label(label);
+        self.save()?;
+        println!("Label `{label}` added to rule `#{id}`");
+
+        Ok(())
+    }
+
     /// Save the current configuration to the file
-    pub fn save(&self) -> Result<(), Error> {
+    pub fn save(&self) -> Result<()> {
         let home_dir = env::home_dir().unwrap();
         let path = PathBuf::new()
             .join(home_dir)
@@ -168,7 +180,7 @@ impl Config {
     }
 
     /// Load the current configuration
-    pub fn load() -> Result<Config, Error> {
+    pub fn load() -> Result<Config> {
         let home_dir = env::home_dir().unwrap();
         let path = PathBuf::new()
             .join(home_dir)
@@ -190,7 +202,7 @@ impl Config {
     }
 
     /// List the end of life rules set in the configuration
-    pub fn list_rules(&self) -> Result<(), Error> {
+    pub fn list_rules(&self) -> Result<()> {
         for rule in self.rules.values() {
             println!("{rule}");
         }
