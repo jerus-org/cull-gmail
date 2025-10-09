@@ -28,19 +28,22 @@ impl DeleteCli {
         if !self.labels.is_empty() {
             // add labels if any specified
             messages_to_delete
+                .message_list()
                 .add_labels(credential_file, &self.labels)
                 .await?;
         }
 
         if let Some(query) = self.query.as_ref() {
-            messages_to_delete.set_query(query)
+            messages_to_delete.message_list().set_query(query)
         }
 
         log::trace!("Max results: `{}`", self.max_results);
-        messages_to_delete.set_max_results(self.max_results);
+        messages_to_delete
+            .message_list()
+            .set_max_results(self.max_results);
         log::debug!(
             "List max results set to {}",
-            messages_to_delete.max_results()
+            messages_to_delete.message_list().max_results()
         );
 
         messages_to_delete.prepare(self.pages).await?;
