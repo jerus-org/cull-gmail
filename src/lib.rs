@@ -6,6 +6,7 @@
 
 mod config;
 mod credential;
+mod delete;
 mod eol_action;
 mod error;
 mod labels;
@@ -17,6 +18,7 @@ pub(crate) mod utils;
 
 pub use config::Config;
 pub use credential::Credential;
+pub use delete::Delete;
 pub use eol_action::EolAction;
 pub use error::Error;
 pub use labels::Labels;
