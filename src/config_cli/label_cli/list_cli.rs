@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use cull_gmail::{Config, Result};
+use cull_gmail::{Config, Error, Result};
 
 #[derive(Debug, Parser)]
 pub struct ListCli {
@@ -10,7 +10,15 @@ pub struct ListCli {
 }
 
 impl ListCli {
-    pub fn run(&self, _config: Config) -> Result<()> {
+    pub fn run(&self, config: Config) -> Result<()> {
+        let Some(rule) = config.get_rule(self.id) else {
+            return Err(Error::RuleNotFound(self.id));
+        };
+
+        for label in rule.labels() {
+            log::info!("Label in rule: `{label}`");
+        }
+
         Ok(())
     }
 }
