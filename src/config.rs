@@ -161,6 +161,18 @@ impl Config {
         Ok(())
     }
 
+    /// Remove a label from the rule identified by the id
+    pub fn remove_label_from_rule(&mut self, id: usize, label: &str) -> Result<()> {
+        let Some(rule) = self.rules.get_mut(id.to_string().as_str()) else {
+            return Err(Error::RuleNotFound(id));
+        };
+        rule.remove_label(label);
+        self.save()?;
+        println!("Label `{label}` removed from rule `#{id}`");
+
+        Ok(())
+    }
+
     /// Save the current configuration to the file
     pub fn save(&self) -> Result<()> {
         let home_dir = env::home_dir().unwrap();
