@@ -84,7 +84,8 @@ impl EolRule {
         self.labels.remove(value);
     }
 
-    pub(crate) fn id(&self) -> usize {
+    /// Return the id for the rule
+    pub fn id(&self) -> usize {
         self.id
     }
 
@@ -95,6 +96,40 @@ impl EolRule {
     pub(crate) fn set_action(&mut self, value: &EolAction) -> &mut Self {
         self.action = value.to_string();
         self
+    }
+
+    /// Report the action
+    pub fn action(&self) -> Option<EolAction> {
+        EolAction::parse(&self.action)
+    }
+
+    /// Describe the action that will be peformed by the rule and its conditions
+    pub fn describe(&self) -> String {
+        let count = &self.retention[2..];
+        let count = count.parse::<usize>().unwrap();
+        let mut period = match self.retention.chars().nth(0) {
+            Some('d') => "day",
+            Some('w') => "week",
+            Some('m') => "month",
+            Some('y') => "year",
+            Some(_) => unreachable!(),
+            None => unreachable!(),
+        }
+        .to_string();
+        if count > 1 {
+            period.push('s');
+        }
+
+        let action = match self.action.to_lowercase().as_str() {
+            "trash" => "move the message to trash",
+            "delete" => "delete the message",
+            _ => unreachable!(),
+        };
+
+        format!(
+            "Rule #{}, to {action} if it is more than {count} {period} old.",
+            self.id,
+        )
     }
 }
 
