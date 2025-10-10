@@ -29,7 +29,7 @@ pub struct AddCli {
     period: Period,
     /// Count of the period
     #[arg(short, long, default_value = "1")]
-    count: usize,
+    count: i64,
     /// Optional specific label; if not specified one will be generated
     #[arg(short, long)]
     label: Option<String>,
