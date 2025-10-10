@@ -137,7 +137,8 @@ impl Config {
         Ok(())
     }
 
-    fn get_rules_by_label(&self) -> BTreeMap<String, EolRule> {
+    /// Get a map of the rules indexed by labels
+    pub fn get_rules_by_label(&self) -> BTreeMap<String, EolRule> {
         let mut rbl = BTreeMap::new();
 
         for rule in self.rules.values() {
