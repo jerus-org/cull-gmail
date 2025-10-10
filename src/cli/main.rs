@@ -4,6 +4,7 @@ mod config_cli;
 mod delete_cli;
 mod label_cli;
 mod message_cli;
+mod run_cli;
 mod trash_cli;
 
 use cull_gmail::{Config, Result};
@@ -12,6 +13,7 @@ use config_cli::ConfigCli;
 use delete_cli::DeleteCli;
 use label_cli::LabelCli;
 use message_cli::MessageCli;
+use run_cli::RunCli;
 use trash_cli::TrashCli;
 
 use std::error::Error as stdError;
@@ -39,9 +41,12 @@ enum SubCmds {
     /// Move messages to trash
     #[clap(name = "trash")]
     Trash(TrashCli),
-    /// Move messages to trash
+    /// Delete messages
     #[clap(name = "delete")]
     Delete(DeleteCli),
+    /// Run the rules from the rules configuration
+    #[clap(name = "run")]
+    Run(RunCli),
 }
 
 #[tokio::main]
@@ -76,6 +81,7 @@ async fn run(args: Cli) -> Result<()> {
         SubCmds::Labels(label_cli) => label_cli.run(config.credential_file()).await,
         SubCmds::Trash(trash_cli) => trash_cli.run(config.credential_file()).await,
         SubCmds::Delete(delete_cli) => delete_cli.run(config.credential_file()).await,
+        SubCmds::Run(run_cli) => run_cli.run(config.credential_file()).await,
     }
 }
 
