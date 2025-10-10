@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 
 mod eol_rule;
 
-use eol_rule::EolRule;
+pub use eol_rule::EolRule;
 
 use crate::{EolAction, Error, MessageAge, Result, Retention};
 
