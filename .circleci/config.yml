@@ -64,6 +64,39 @@ jobs:
           steps:
             - sonarcloud/scan
 
+  idiomatic_rust:
+    description: |
+      Use clippy to validate that all rust code follows idiomatic code standards
+    executor:
+      name: rust-env
+    parameters:
+      docker_tag_suffix:
+        default: ""
+        description: The suffix to append to the docker tag
+        type: string
+      lint_flags:
+        default: ""
+        description: Additional lint flags to pass to clippy
+        type: string
+      min_rust_version:
+        description: "Required: The minimum version of the rust compiler to use"
+        type: string
+    steps:
+      - checkout:
+          method: blobless
+      - run:
+          command: cargo --version
+          name: Check rust version for code
+      - run:
+          command: |
+            cargo clippy \
+             --all \
+             --tests \
+             --all-features \
+             -- -D warnings \
+             << parameters.lint_flags >>
+          name: Check idiomatic code use with Clippy
+
 workflows:
   check_last_commit:
     when:
@@ -103,7 +136,7 @@ workflows:
           min_rust_version: << pipeline.parameters.min-rust-version >>
       - toolkit/common_tests:
           min_rust_version: << pipeline.parameters.min-rust-version >>
-      - toolkit/idiomatic_rust:
+      - idiomatic_rust:
           min_rust_version: << pipeline.parameters.min-rust-version >>
       - security:
           context: SonarCloud
@@ -116,7 +149,7 @@ workflows:
           requires:
             - toolkit/required_builds
             - toolkit/test_doc_build
-            - toolkit/idiomatic_rust
+            - idiomatic_rust
             - security
             - toolkit/common_tests
           context:
