@@ -22,7 +22,7 @@ parameters:
 
 orbs:
   toolkit: jerus-org/circleci-toolkit@2.13.4
-  sonarcloud: sonarsource/sonarcloud@3.0.1
+  sonarcloud: sonarsource/sonarcloud@2.0.0
 
 executors:
   rust-env:
