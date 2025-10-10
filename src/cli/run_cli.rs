@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Config, EolAction, Result};
+use cull_gmail::{Config, EolAction, Processor, Result};
 
 #[derive(Debug, Parser)]
 pub struct RunCli {}
@@ -16,14 +16,32 @@ impl RunCli {
 
             log::info!("Executing rule `#{}` for label `{label}`", rule.describe());
 
-            let Some(action) = rule.action() else {
+            let processor = Processor::new(config.credential_file(), rule);
+
+            let Some(action) = processor.action() else {
                 log::warn!("no valid action specified for rule #{}", rule.id());
                 continue;
             };
 
             match action {
-                EolAction::Trash => log::info!("trashing older messages"),
-                EolAction::Delete => log::info!("deleting older messages"),
+                EolAction::Trash => {
+                    log::info!("trashing older messages");
+                    match processor.trash_messages(&label).await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            log::warn!("action failed for label {label} with error {e}");
+                        }
+                    }
+                }
+                EolAction::Delete => {
+                    log::info!("deleting older messages");
+                    match processor.delete_messages(&label).await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            log::warn!("action failed for label {label} with error {e}");
+                        }
+                    }
+                }
             }
         }
 
