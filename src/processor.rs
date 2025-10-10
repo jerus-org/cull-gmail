@@ -37,9 +37,10 @@ impl<'a> Processor<'a> {
             return Err(Error::LableNotFoundInMailbox(label.to_string()));
         }
 
-        messages_to_trash
-            .message_list()
-            .set_query(&self.rule.eol_query());
+        let Some(query) = self.rule.eol_query() else {
+            return Err(Error::NoQueryStringCalculated(self.rule.id()));
+        };
+        messages_to_trash.message_list().set_query(&query);
 
         log::info!("{messages_to_trash:?}");
         log::info!("Ready to run");
@@ -59,9 +60,10 @@ impl<'a> Processor<'a> {
             return Err(Error::LableNotFoundInMailbox(label.to_string()));
         }
 
-        messages_to_delete
-            .message_list()
-            .set_query(&self.rule.eol_query());
+        let Some(query) = self.rule.eol_query() else {
+            return Err(Error::NoQueryStringCalculated(self.rule.id()));
+        };
+        messages_to_delete.message_list().set_query(&query);
 
         log::info!("{messages_to_delete:?}");
         log::info!("Ready to run");
