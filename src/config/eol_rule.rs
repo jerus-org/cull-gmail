@@ -1,8 +1,9 @@
 use std::{collections::BTreeSet, fmt};
 
+use chrono::{Datelike, Local, TimeDelta, TimeZone};
 use serde::{Deserialize, Serialize};
 
-use crate::{Retention, eol_action::EolAction};
+use crate::{MessageAge, Retention, eol_action::EolAction};
 
 /// End of life rules
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
@@ -133,8 +134,51 @@ impl EolRule {
         )
     }
 
-    pub(crate) fn eol_query(&self) -> String {
-        format!("before: {}", chrono::Local::now().format("%Y-%m-%d"))
+    pub(crate) fn eol_query(&self) -> Option<String> {
+        let today = chrono::Local::now();
+        let message_age = MessageAge::parse(&self.retention)?;
+
+        let deadline = match message_age {
+            MessageAge::Days(c) => {
+                let delta = TimeDelta::days(c);
+                today.checked_sub_signed(delta).unwrap()
+            }
+            MessageAge::Weeks(c) => {
+                let delta = TimeDelta::weeks(c);
+                today.checked_sub_signed(delta).unwrap()
+            }
+            MessageAge::Months(c) => {
+                let day = today.day();
+                let month = today.month();
+                let year = today.year();
+                let mut years = c as i32 / 12;
+                let months = c % 12;
+                let mut new_month = month - months as u32;
+
+                if new_month < 1 {
+                    years += 1;
+                    new_month += 12;
+                }
+
+                let new_year = year - years;
+
+                Local
+                    .with_ymd_and_hms(new_year, new_month, day, 0, 0, 0)
+                    .unwrap()
+            }
+            MessageAge::Years(c) => {
+                let day = today.day();
+                let month = today.month();
+                let year = today.year();
+                let new_year = year - c as i32;
+
+                Local
+                    .with_ymd_and_hms(new_year, month, day, 0, 0, 0)
+                    .unwrap()
+            }
+        };
+
+        Some(format!("before: {}", deadline.format("%Y-%m-%d")))
     }
 }
 
