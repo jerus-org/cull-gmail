@@ -89,6 +89,7 @@ impl EolRule {
         self.id
     }
 
+    /// List the labels in the rules
     pub fn labels(&self) -> Vec<String> {
         self.labels.iter().map(|i| i.to_string()).collect()
     }
