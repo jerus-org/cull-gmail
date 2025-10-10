@@ -132,6 +132,10 @@ impl EolRule {
             self.id,
         )
     }
+
+    pub(crate) fn eol_query(&self) -> String {
+        format!("before: {}", chrono::Local::now().format("%Y-%m-%d"))
+    }
 }
 
 #[cfg(test)]
