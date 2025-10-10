@@ -1,25 +1,32 @@
 // use crate::EolRule;
 
-use crate::{Delete, Result, Trash, config::EolRule};
+use crate::{Delete, EolAction, Result, Trash, config::EolRule};
 
 /// Rule processor
 #[derive(Debug)]
-pub struct Processor {
+pub struct Processor<'a> {
     credential_file: String,
-    rule: EolRule,
+    rule: &'a EolRule,
     execute: bool,
 }
 
-impl Processor {
-    fn new(credential_file: String, rule: EolRule) -> Self {
+impl<'a> Processor<'a> {
+    /// Initialise a new processor
+    pub fn new(credential_file: &str, rule: &'a EolRule) -> Self {
         Processor {
-            credential_file,
+            credential_file: credential_file.to_string(),
             rule,
             execute: false,
         }
     }
 
-    async fn trash_messages(&self, label: &str) -> Result<()> {
+    /// The action set in the rule  
+    pub fn action(&self) -> Option<EolAction> {
+        self.rule.action()
+    }
+
+    /// Trash the messages
+    pub async fn trash_messages(&self, label: &str) -> Result<()> {
         let mut messages_to_trash = Trash::new(&self.credential_file).await?;
 
         messages_to_trash
@@ -34,7 +41,8 @@ impl Processor {
         messages_to_trash.run(0).await
     }
 
-    async fn delete_messages(&self, label: &str) -> Result<()> {
+    /// Delete the messages
+    pub async fn delete_messages(&self, label: &str) -> Result<()> {
         let mut messages_to_delete = Delete::new(&self.credential_file).await?;
 
         messages_to_delete
