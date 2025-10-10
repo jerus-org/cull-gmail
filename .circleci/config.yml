@@ -22,11 +22,47 @@ parameters:
 
 orbs:
   toolkit: jerus-org/circleci-toolkit@2.13.4
+  sonarcloud: sonarsource/sonarcloud@3.0.1
 
 executors:
   rust-env:
     docker:
       - image: jerusdp/ci-rust:<<pipeline.parameters.min-rust-version>>
+  base-env:
+    docker:
+      - image: jerusdp/ci-rust:base
+
+jobs:
+  security:
+    description: |
+      Perform security checks on the code
+    executor:
+      name: base-env
+    parameters:
+      cargo_audit:
+        default: true
+        description: Don't run the cargo audit scan
+        type: boolean
+      ignore_advisories:
+        default: ""
+        description: List of advisories to ignore each prefixed with "--ignore "
+        type: string
+      sonarcloud:
+        default: true
+        description: Don't run the sonarcloud scan
+        type: boolean
+    steps:
+      - checkout:
+          method: blobless
+      - when:
+          condition: << parameters.cargo_audit >>
+          steps:
+            - toolkit/cargo_audit:
+                ignore_advisories: << parameters.ignore_advisories >>
+      - when:
+          condition: << parameters.sonarcloud >>
+          steps:
+            - sonarcloud/scan
 
 workflows:
   check_last_commit:
@@ -69,7 +105,7 @@ workflows:
           min_rust_version: << pipeline.parameters.min-rust-version >>
       - toolkit/idiomatic_rust:
           min_rust_version: << pipeline.parameters.min-rust-version >>
-      - toolkit/security:
+      - security:
           context: SonarCloud
           ignore_advisories: RUSTSEC-2025-0066
       - toolkit/update_prlog:
@@ -81,7 +117,7 @@ workflows:
             - toolkit/required_builds
             - toolkit/test_doc_build
             - toolkit/idiomatic_rust
-            - toolkit/security
+            - security
             - toolkit/common_tests
           context:
             - release
