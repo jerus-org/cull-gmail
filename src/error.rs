@@ -18,6 +18,9 @@ pub enum Error {
     /// No rule for label
     #[error("No rule for label {0}")]
     NoRuleFoundForLabel(String),
+    /// No rule for label
+    #[error("No query string calculated for rule #{0}")]
+    NoQueryStringCalculated(usize),
     /// No label found in the mailbox
     #[error("Label {0} not found in the mailbox")]
     LableNotFoundInMailbox(String),
