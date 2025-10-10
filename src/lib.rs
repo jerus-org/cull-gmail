@@ -11,6 +11,7 @@ mod eol_action;
 mod error;
 mod labels;
 mod message_list;
+mod processor;
 mod retention;
 mod trash;
 
@@ -24,6 +25,7 @@ pub use error::Error;
 pub use labels::Labels;
 pub use message_list::DEFAULT_MAX_RESULTS;
 pub use message_list::MessageList;
+pub use processor::Processor;
 pub use retention::MessageAge;
 pub use retention::Retention;
 pub use trash::Trash;
