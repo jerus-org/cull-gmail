@@ -20,3 +20,14 @@ impl fmt::Display for EolAction {
         }
     }
 }
+
+impl EolAction {
+    /// Parse a string to a valid  `EolAction` variant or return `None`.
+    pub fn parse(str: &str) -> Option<EolAction> {
+        match str.to_lowercase().as_str() {
+            "trash" => Some(EolAction::Trash),
+            "delete" => Some(EolAction::Delete),
+            _ => None,
+        }
+    }
+}
