@@ -190,13 +190,19 @@ impl EolRule {
 mod test {
     use chrono::{Local, TimeZone};
 
-    use crate::{Retention, config::eol_rule::EolRule};
+    use crate::{MessageAge, Retention, config::eol_rule::EolRule};
+
+    fn build_test_rule(age: MessageAge) -> EolRule {
+        let retention = Retention::new(age, true);
+        let mut rule = EolRule::new(1);
+        rule.set_retention(retention);
+        rule
+    }
 
     #[test]
     fn test_display_for_eol_rule_5_years() {
-        let retention = Retention::new(crate::MessageAge::Years(5), true);
-        let mut rule = EolRule::new(1);
-        rule.set_retention(retention);
+        let rule = build_test_rule(crate::MessageAge::Years(5));
+
         assert_eq!(
             "Rule #1 is active on `retention/5-years` to move the message to trash if it is more than 5 years old."
                 .to_string(),
@@ -206,11 +212,10 @@ mod test {
 
     #[test]
     fn test_display_for_eol_rule_1_month() {
-        let retention = Retention::new(crate::MessageAge::Months(1), true);
-        let mut rule = EolRule::new(2);
-        rule.set_retention(retention);
+        let rule = build_test_rule(crate::MessageAge::Months(1));
+
         assert_eq!(
-            "Rule #2 is active on `retention/1-months` to move the message to trash if it is more than 1 month old."
+            "Rule #1 is active on `retention/1-months` to move the message to trash if it is more than 1 month old."
                 .to_string(),
             rule.to_string()
         );
@@ -218,11 +223,10 @@ mod test {
 
     #[test]
     fn test_display_for_eol_rule_13_weeks() {
-        let retention = Retention::new(crate::MessageAge::Weeks(13), true);
-        let mut rule = EolRule::new(3);
-        rule.set_retention(retention);
+        let rule = build_test_rule(crate::MessageAge::Weeks(13));
+
         assert_eq!(
-            "Rule #3 is active on `retention/13-weeks` to move the message to trash if it is more than 13 weeks old."
+            "Rule #1 is active on `retention/13-weeks` to move the message to trash if it is more than 13 weeks old."
                 .to_string(),
             rule.to_string()
         );
@@ -230,11 +234,10 @@ mod test {
 
     #[test]
     fn test_display_for_eol_rule_365_days() {
-        let retention = Retention::new(crate::MessageAge::Days(365), true);
-        let mut rule = EolRule::new(4);
-        rule.set_retention(retention);
+        let rule = build_test_rule(crate::MessageAge::Days(365));
+
         assert_eq!(
-            "Rule #4 is active on `retention/365-days` to move the message to trash if it is more than 365 days old."
+            "Rule #1 is active on `retention/365-days` to move the message to trash if it is more than 365 days old."
                 .to_string(),
             rule.to_string()
         );
@@ -242,9 +245,7 @@ mod test {
 
     #[test]
     fn test_eol_query_for_eol_rule_5_years() {
-        let retention = Retention::new(crate::MessageAge::Years(5), true);
-        let mut rule = EolRule::new(1);
-        rule.set_retention(retention);
+        let rule = build_test_rule(crate::MessageAge::Years(5));
 
         let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
         let query = rule.calculate_for_date(test_today).unwrap();
@@ -254,9 +255,7 @@ mod test {
 
     #[test]
     fn test_eol_query_for_eol_rule_1_month() {
-        let retention = Retention::new(crate::MessageAge::Months(1), true);
-        let mut rule = EolRule::new(2);
-        rule.set_retention(retention);
+        let rule = build_test_rule(crate::MessageAge::Months(1));
 
         let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
         let query = rule.calculate_for_date(test_today).unwrap();
@@ -266,9 +265,7 @@ mod test {
 
     #[test]
     fn test_eol_query_for_eol_rule_13_weeks() {
-        let retention = Retention::new(crate::MessageAge::Weeks(13), true);
-        let mut rule = EolRule::new(3);
-        rule.set_retention(retention);
+        let rule = build_test_rule(crate::MessageAge::Weeks(13));
 
         let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
         let query = rule.calculate_for_date(test_today).unwrap();
@@ -278,9 +275,7 @@ mod test {
 
     #[test]
     fn test_eol_query_for_eol_rule_365_days() {
-        let retention = Retention::new(crate::MessageAge::Days(365), true);
-        let mut rule = EolRule::new(4);
-        rule.set_retention(retention);
+        let rule = build_test_rule(crate::MessageAge::Days(365));
 
         let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
         let query = rule.calculate_for_date(test_today).unwrap();
