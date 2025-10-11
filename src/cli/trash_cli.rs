@@ -40,6 +40,7 @@ impl TrashCli {
             list.message_list().max_results()
         );
 
-        list.run(self.pages).await
+        list.prepare(self.pages).await?;
+        list.batch_trash().await
     }
 }
