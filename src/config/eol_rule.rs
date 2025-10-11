@@ -1,6 +1,6 @@
 use std::{collections::BTreeSet, fmt};
 
-use chrono::{Datelike, Local, TimeDelta, TimeZone};
+use chrono::{DateTime, Datelike, Local, TimeDelta, TimeZone};
 use serde::{Deserialize, Serialize};
 
 use crate::{MessageAge, Retention, eol_action::EolAction};
@@ -136,6 +136,10 @@ impl EolRule {
 
     pub(crate) fn eol_query(&self) -> Option<String> {
         let today = chrono::Local::now();
+        self.calculate_for_date(today)
+    }
+
+    fn calculate_for_date(&self, today: DateTime<Local>) -> Option<String> {
         let message_age = MessageAge::parse(&self.retention)?;
 
         let deadline = match message_age {
@@ -184,6 +188,8 @@ impl EolRule {
 
 #[cfg(test)]
 mod test {
+    use chrono::{Local, TimeZone};
+
     use crate::{Retention, config::eol_rule::EolRule};
 
     #[test]
@@ -232,5 +238,53 @@ mod test {
                 .to_string(),
             rule.to_string()
         );
+    }
+
+    #[test]
+    fn test_eol_query_for_eol_rule_5_years() {
+        let retention = Retention::new(crate::MessageAge::Years(5), true);
+        let mut rule = EolRule::new(1);
+        rule.set_retention(retention);
+
+        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
+        let query = rule.calculate_for_date(test_today).unwrap();
+
+        assert_eq!("before: 2020-09-15", query);
+    }
+
+    #[test]
+    fn test_eol_query_for_eol_rule_1_month() {
+        let retention = Retention::new(crate::MessageAge::Months(1), true);
+        let mut rule = EolRule::new(2);
+        rule.set_retention(retention);
+
+        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
+        let query = rule.calculate_for_date(test_today).unwrap();
+
+        assert_eq!("before: 2025-08-15", query);
+    }
+
+    #[test]
+    fn test_eol_query_for_eol_rule_13_weeks() {
+        let retention = Retention::new(crate::MessageAge::Weeks(13), true);
+        let mut rule = EolRule::new(3);
+        rule.set_retention(retention);
+
+        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
+        let query = rule.calculate_for_date(test_today).unwrap();
+
+        assert_eq!("before: 2025-06-16", query);
+    }
+
+    #[test]
+    fn test_eol_query_for_eol_rule_365_days() {
+        let retention = Retention::new(crate::MessageAge::Days(365), true);
+        let mut rule = EolRule::new(4);
+        rule.set_retention(retention);
+
+        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
+        let query = rule.calculate_for_date(test_today).unwrap();
+
+        assert_eq!("before: 2024-09-15", query);
     }
 }
