@@ -105,7 +105,7 @@ impl EolRule {
         EolAction::parse(&self.action)
     }
 
-    /// Describe the action that will be peformed by the rule and its conditions
+    /// Describe the action that will be performed by the rule and its conditions
     pub fn describe(&self) -> String {
         let count = &self.retention[2..];
         let count = count.parse::<usize>().unwrap();
