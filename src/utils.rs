@@ -46,9 +46,17 @@ impl Elide for String {
         if self.len() <= to {
             self
         } else {
-            let range = to - 4;
+            let range = get_start_boundary(self.clone(), to - 4);
             self.replace_range(range.., " ...");
             self
         }
     }
+}
+
+fn get_start_boundary(string: String, mut start: usize) -> usize {
+    while !string.is_char_boundary(start) {
+        start -= 1;
+    }
+
+    start
 }
