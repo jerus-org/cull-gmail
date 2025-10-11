@@ -23,7 +23,7 @@ pub enum Error {
     NoQueryStringCalculated(usize),
     /// No label found in the mailbox
     #[error("Label {0} not found in the mailbox")]
-    LableNotFoundInMailbox(String),
+    LabelNotFoundInMailbox(String),
     /// Rule not found for ID
     #[error("No rule for id {0}")]
     RuleNotFound(usize),
