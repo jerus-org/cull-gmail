@@ -34,7 +34,7 @@ impl<'a> Processor<'a> {
             .await?;
 
         if messages_to_trash.message_list().label_ids().is_empty() {
-            return Err(Error::LableNotFoundInMailbox(label.to_string()));
+            return Err(Error::LabelNotFoundInMailbox(label.to_string()));
         }
 
         let Some(query) = self.rule.eol_query() else {
@@ -63,7 +63,7 @@ impl<'a> Processor<'a> {
             .await?;
 
         if messages_to_delete.message_list().label_ids().is_empty() {
-            return Err(Error::LableNotFoundInMailbox(label.to_string()));
+            return Err(Error::LabelNotFoundInMailbox(label.to_string()));
         }
 
         let Some(query) = self.rule.eol_query() else {
