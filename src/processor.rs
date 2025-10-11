@@ -44,7 +44,13 @@ impl<'a> Processor<'a> {
 
         log::info!("{messages_to_trash:?}");
         log::info!("Ready to run");
-        messages_to_trash.run(0).await
+        messages_to_trash.prepare(0).await?;
+        if self.execute {
+            log::warn!("***executing final delete messages***");
+            messages_to_trash.batch_trash().await
+        } else {
+            Ok(())
+        }
     }
 
     /// Delete the messages
