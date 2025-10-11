@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ add run cli command(pr [#59])
 - ✨ increase default max results(pr [#60])
 
+### Fixed
+
+- 🐛 utils: correct string elision boundary calculation(pr [#61])
+
 ## [0.0.6] - 2025-10-09
 
 ### Added
@@ -171,6 +175,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#57]: https://github.com/jerus-org/cull-gmail/pull/57
 [#59]: https://github.com/jerus-org/cull-gmail/pull/59
 [#60]: https://github.com/jerus-org/cull-gmail/pull/60
+[#61]: https://github.com/jerus-org/cull-gmail/pull/61
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.6...HEAD
 [0.0.6]: https://github.com/jerus-org/cull-gmail/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...v0.0.5
