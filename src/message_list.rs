@@ -20,7 +20,7 @@ use message_summary::MessageSummary;
 use crate::{Credential, utils::Elide};
 
 /// Default for the maximum number of results to return on a page
-pub const DEFAULT_MAX_RESULTS: &str = "10";
+pub const DEFAULT_MAX_RESULTS: &str = "200";
 
 /// Struct to capture configuration for List API call.
 pub struct MessageList {
