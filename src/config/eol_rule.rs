@@ -18,26 +18,7 @@ pub struct EolRule {
 impl fmt::Display for EolRule {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if !self.retention.is_empty() {
-            let count = &self.retention[2..];
-            let count = count.parse::<usize>().unwrap();
-            let mut period = match self.retention.chars().nth(0) {
-                Some('d') => "day",
-                Some('w') => "week",
-                Some('m') => "month",
-                Some('y') => "year",
-                Some(_) => unreachable!(),
-                None => unreachable!(),
-            }
-            .to_string();
-            if count > 1 {
-                period.push('s');
-            }
-
-            let action = match self.action.to_lowercase().as_str() {
-                "trash" => "move the message to trash",
-                "delete" => "delete the message",
-                _ => unreachable!(),
-            };
+            let (action, count, period) = self.get_action_period_count_strings();
 
             write!(
                 f,
@@ -107,6 +88,15 @@ impl EolRule {
 
     /// Describe the action that will be performed by the rule and its conditions
     pub fn describe(&self) -> String {
+        let (action, count, period) = self.get_action_period_count_strings();
+        format!(
+            "Rule #{}, to {action} if it is more than {count} {period} old.",
+            self.id,
+        )
+    }
+
+    /// Describe the action that will be performed by the rule and its conditions
+    fn get_action_period_count_strings(&self) -> (String, usize, String) {
         let count = &self.retention[2..];
         let count = count.parse::<usize>().unwrap();
         let mut period = match self.retention.chars().nth(0) {
@@ -128,10 +118,7 @@ impl EolRule {
             _ => unreachable!(),
         };
 
-        format!(
-            "Rule #{}, to {action} if it is more than {count} {period} old.",
-            self.id,
-        )
+        (action.to_string(), count, period)
     }
 
     pub(crate) fn eol_query(&self) -> Option<String> {
