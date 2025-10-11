@@ -6,6 +6,9 @@ pub struct RunCli {
     /// Skip any rules that apply the action `trash`
     #[clap(short = 't', long)]
     skip_trash: bool,
+    /// Skip any rules that apply the action `delete`
+    #[clap(short = 'd', long)]
+    skip_delete: bool,
 }
 
 impl RunCli {
@@ -42,12 +45,16 @@ impl RunCli {
                     }
                 }
                 EolAction::Delete => {
-                    log::info!("deleting older messages");
-                    match processor.delete_messages(&label).await {
-                        Ok(_) => {}
-                        Err(e) => {
-                            log::warn!("action failed for label {label} with error {e}");
+                    if !self.skip_delete {
+                        log::info!("deleting older messages");
+                        match processor.delete_messages(&label).await {
+                            Ok(_) => {}
+                            Err(e) => {
+                                log::warn!("action failed for label {label} with error {e}");
+                            }
                         }
+                    } else {
+                        log::warn!("Rule with `delete` action for label `{label}` skipped.");
                     }
                 }
             }
