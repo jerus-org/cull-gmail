@@ -30,36 +30,40 @@ impl RunCli {
                 continue;
             };
 
-            match action {
-                EolAction::Trash => {
-                    if !self.skip_trash {
-                        log::info!("trashing older messages");
-                        match processor.trash_messages(&label).await {
-                            Ok(_) => {}
-                            Err(e) => {
-                                log::warn!("action failed for label {label} with error {e}");
-                            }
-                        }
-                    } else {
-                        log::warn!("Rule with `trash` action for label `{label}` skipped.");
-                    }
-                }
-                EolAction::Delete => {
-                    if !self.skip_delete {
-                        log::info!("deleting older messages");
-                        match processor.delete_messages(&label).await {
-                            Ok(_) => {}
-                            Err(e) => {
-                                log::warn!("action failed for label {label} with error {e}");
-                            }
-                        }
-                    } else {
-                        log::warn!("Rule with `delete` action for label `{label}` skipped.");
-                    }
-                }
-            }
+            self.execute_action(processor, action, &label).await;
         }
 
         Ok(())
+    }
+
+    async fn execute_action<'a>(&self, processor: Processor<'a>, action: EolAction, label: &str) {
+        match action {
+            EolAction::Trash => {
+                if !self.skip_trash {
+                    log::info!("trashing older messages");
+                    match processor.trash_messages(label).await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            log::warn!("action failed for label {label} with error {e}");
+                        }
+                    }
+                } else {
+                    log::warn!("Rule with `trash` action for label `{label}` skipped.");
+                }
+            }
+            EolAction::Delete => {
+                if !self.skip_delete {
+                    log::info!("deleting older messages");
+                    match processor.delete_messages(label).await {
+                        Ok(_) => {}
+                        Err(e) => {
+                            log::warn!("action failed for label {label} with error {e}");
+                        }
+                    }
+                } else {
+                    log::warn!("Rule with `delete` action for label `{label}` skipped.");
+                }
+            }
+        }
     }
 }
