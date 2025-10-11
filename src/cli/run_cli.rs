@@ -2,7 +2,11 @@ use clap::Parser;
 use cull_gmail::{Config, EolAction, Processor, Result};
 
 #[derive(Debug, Parser)]
-pub struct RunCli {}
+pub struct RunCli {
+    /// Skip any rules that apply the action `trash`
+    #[clap(short = 't', long)]
+    skip_trash: bool,
+}
 
 impl RunCli {
     pub async fn run(&self, config: Config) -> Result<()> {
@@ -25,12 +29,16 @@ impl RunCli {
 
             match action {
                 EolAction::Trash => {
-                    log::info!("trashing older messages");
-                    match processor.trash_messages(&label).await {
-                        Ok(_) => {}
-                        Err(e) => {
-                            log::warn!("action failed for label {label} with error {e}");
+                    if !self.skip_trash {
+                        log::info!("trashing older messages");
+                        match processor.trash_messages(&label).await {
+                            Ok(_) => {}
+                            Err(e) => {
+                                log::warn!("action failed for label {label} with error {e}");
+                            }
                         }
+                    } else {
+                        log::warn!("Rule with `trash` action for label `{label}` skipped.");
                     }
                 }
                 EolAction::Delete => {
