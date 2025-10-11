@@ -55,11 +55,3 @@ impl Elide for String {
         }
     }
 }
-
-fn get_start_boundary(string: String, mut start: usize) -> usize {
-    while !string.is_char_boundary(start) {
-        start -= 1;
-    }
-
-    start
-}
