@@ -20,12 +20,16 @@ impl Trash {
         &mut self.message_list
     }
 
-    /// Run the trash cli
-    pub async fn run(&mut self, pages: u32) -> Result<()> {
+    /// Prepare the trash cli
+    pub async fn prepare(&mut self, pages: u32) -> Result<()> {
         self.message_list.run(pages).await?;
-        self.batch_move_to_trash().await?;
 
         Ok(())
+    }
+
+    /// Move the messages to trash
+    pub async fn batch_trash(&self) -> Result<()> {
+        self.batch_move_to_trash().await
     }
 
     async fn batch_move_to_trash(&self) -> Result<()> {
