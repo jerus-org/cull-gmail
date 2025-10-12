@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ✨ add run cli command(pr [#59])
 - ✨ increase default max results(pr [#60])
+- ✨ add execute flag to run action(pr [#62])
 
 ### Fixed
 
@@ -176,6 +177,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#59]: https://github.com/jerus-org/cull-gmail/pull/59
 [#60]: https://github.com/jerus-org/cull-gmail/pull/60
 [#61]: https://github.com/jerus-org/cull-gmail/pull/61
+[#62]: https://github.com/jerus-org/cull-gmail/pull/62
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.6...HEAD
 [0.0.6]: https://github.com/jerus-org/cull-gmail/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...v0.0.5
