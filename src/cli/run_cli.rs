@@ -3,11 +3,14 @@ use cull_gmail::{Config, EolAction, Processor, Result};
 
 #[derive(Debug, Parser)]
 pub struct RunCli {
+    /// Execute the action
+    #[clap(short, long, display_order = 1, help_heading = "Action")]
+    execute: bool,
     /// Skip any rules that apply the action `trash`
-    #[clap(short = 't', long, display_order = 1, help_heading = "Skip Action")]
+    #[clap(short = 't', long, display_order = 2, help_heading = "Skip Action")]
     skip_trash: bool,
     /// Skip any rules that apply the action `delete`
-    #[clap(short = 'd', long, display_order = 2, help_heading = "Skip Action")]
+    #[clap(short = 'd', long, display_order = 3, help_heading = "Skip Action")]
     skip_delete: bool,
 }
 
