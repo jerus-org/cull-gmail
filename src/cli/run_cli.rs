@@ -26,7 +26,8 @@ impl RunCli {
 
             log::info!("Executing rule `#{}` for label `{label}`", rule.describe());
 
-            let processor = Processor::new(config.credential_file(), rule);
+            let mut builder = Processor::builder(config.credential_file(), rule);
+            let processor = builder.set_execute(self.execute).build();
 
             let Some(action) = processor.action() else {
                 log::warn!("no valid action specified for rule #{}", rule.id());
