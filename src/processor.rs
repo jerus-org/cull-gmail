@@ -10,10 +10,35 @@ pub struct Processor<'a> {
     execute: bool,
 }
 
+/// Rule processor builder
+#[derive(Debug)]
+pub struct ProcessorBuilder<'a> {
+    credential_file: String,
+    rule: &'a EolRule,
+    execute: bool,
+}
+
+impl<'a> ProcessorBuilder<'a> {
+    /// Set the execute flag
+    pub fn set_execute(&mut self, value: bool) -> &mut Self {
+        self.execute = value;
+        self
+    }
+
+    /// Build the Processor
+    pub fn build(&'_ self) -> Processor<'_> {
+        Processor {
+            credential_file: self.credential_file.clone(),
+            rule: self.rule,
+            execute: self.execute,
+        }
+    }
+}
+
 impl<'a> Processor<'a> {
     /// Initialise a new processor
-    pub fn new(credential_file: &str, rule: &'a EolRule) -> Self {
-        Processor {
+    pub fn builder(credential_file: &str, rule: &'a EolRule) -> ProcessorBuilder<'a> {
+        ProcessorBuilder {
             credential_file: credential_file.to_string(),
             rule,
             execute: false,
@@ -23,11 +48,6 @@ impl<'a> Processor<'a> {
     /// The action set in the rule  
     pub fn action(&self) -> Option<EolAction> {
         self.rule.action()
-    }
-
-    /// Set the execute flag
-    pub fn set_execute(&mut self, value: bool) {
-        self.execute = value
     }
 
     /// Trash the messages
