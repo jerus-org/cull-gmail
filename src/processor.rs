@@ -25,6 +25,11 @@ impl<'a> Processor<'a> {
         self.rule.action()
     }
 
+    /// Set the execute flag
+    pub fn set_execute(&mut self, value: bool) {
+        self.execute = value
+    }
+
     /// Trash the messages
     pub async fn trash_messages(&self, label: &str) -> Result<()> {
         let mut messages_to_trash = Trash::new(&self.credential_file).await?;
@@ -46,9 +51,10 @@ impl<'a> Processor<'a> {
         log::info!("Ready to run");
         messages_to_trash.prepare(0).await?;
         if self.execute {
-            log::warn!("***executing final delete messages***");
+            log::info!("***executing final delete messages***");
             messages_to_trash.batch_trash().await
         } else {
+            log::warn!("Execution stopped for dry run");
             Ok(())
         }
     }
@@ -75,9 +81,11 @@ impl<'a> Processor<'a> {
         log::info!("Ready to run");
         messages_to_delete.prepare(0).await?;
         if self.execute {
-            log::warn!("***executing final delete messages***");
+            log::info!("***executing final delete messages***");
             messages_to_delete.batch_delete().await
         } else {
+            log::warn!("Execution stopped for dry run");
+
             Ok(())
         }
     }
