@@ -7,7 +7,7 @@ mod message_cli;
 mod run_cli;
 mod trash_cli;
 
-use cull_gmail::{Config, Result};
+use cull_gmail::{Config, GmailClient, Result};
 
 use config_cli::ConfigCli;
 use delete_cli::DeleteCli;
@@ -75,10 +75,13 @@ async fn main() {
 async fn run(args: Cli) -> Result<()> {
     let config = get_config()?;
     log::trace!("Configuration loaded: {config:#?}");
+
+    let client = GmailClient::new(config.credential_file()).await?;
+
     match args.sub_command {
         SubCmds::Config(config_cli) => config_cli.run(config),
         SubCmds::Message(list_cli) => list_cli.run(config.credential_file()).await,
-        SubCmds::Labels(label_cli) => label_cli.run(config.credential_file()).await,
+        SubCmds::Labels(label_cli) => label_cli.run(client).await,
         SubCmds::Trash(trash_cli) => trash_cli.run(config.credential_file()).await,
         SubCmds::Delete(delete_cli) => delete_cli.run(config.credential_file()).await,
         SubCmds::Run(run_cli) => run_cli.run(config).await,
