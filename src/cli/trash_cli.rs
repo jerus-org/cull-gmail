@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Error, GmailClient, Trash};
+use cull_gmail::{Delete, Error, GmailClient, MessageList, Trash};
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
@@ -19,26 +19,21 @@ pub struct TrashCli {
 }
 
 impl TrashCli {
-    pub(crate) async fn run(&self, client: &GmailClient) -> Result<(), Error> {
-        let mut list = Trash::new(client).await?;
-
+    pub(crate) async fn run(&self, client: &mut GmailClient) -> Result<(), Error> {
         if !self.labels.is_empty() {
             // add labels if any specified
-            list.message_list().add_labels(client, &self.labels).await?;
+            client.add_labels(&self.labels).await?;
         }
 
         if let Some(query) = self.query.as_ref() {
-            list.message_list().set_query(query)
+            client.set_query(query)
         }
 
         log::trace!("Max results: `{}`", self.max_results);
-        list.message_list().set_max_results(self.max_results);
-        log::debug!(
-            "List max results set to {}",
-            list.message_list().max_results()
-        );
+        client.set_max_results(self.max_results);
+        log::debug!("List max results set to {}", client.max_results());
 
-        list.prepare(self.pages).await?;
-        list.batch_trash().await
+        client.prepare(self.pages).await?;
+        client.batch_trash().await
     }
 }
