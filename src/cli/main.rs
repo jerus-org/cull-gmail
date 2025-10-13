@@ -83,7 +83,7 @@ async fn run(args: Cli) -> Result<()> {
         SubCmds::Message(list_cli) => list_cli.run(config.credential_file()).await,
         SubCmds::Labels(label_cli) => label_cli.run(client).await,
         SubCmds::Trash(trash_cli) => trash_cli.run(config.credential_file()).await,
-        SubCmds::Delete(delete_cli) => delete_cli.run(config.credential_file()).await,
+        SubCmds::Delete(delete_cli) => delete_cli.run(&client).await,
         SubCmds::Run(run_cli) => run_cli.run(config).await,
     }
 }
