@@ -19,7 +19,6 @@ pub(crate) mod utils;
 
 pub use config::Config;
 pub use credential::Credential;
-pub use delete::Delete;
 pub use eol_action::EolAction;
 pub use error::Error;
 pub use gmail_client::DEFAULT_MAX_RESULTS;
