@@ -1,5 +1,5 @@
 #[derive(Debug, Clone)]
-pub(crate) struct MessageSummary {
+pub struct MessageSummary {
     id: String,
     subject: Option<String>,
 }
