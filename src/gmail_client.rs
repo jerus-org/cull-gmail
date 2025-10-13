@@ -28,6 +28,7 @@ pub struct GmailClient {
     pub(crate) label_ids: Vec<String>,
     pub(crate) query: String,
     pub(crate) messages: Vec<MessageSummary>,
+    pub(crate) rule: Option<crate::EolAction>,
 }
 
 impl std::fmt::Debug for GmailClient {
@@ -78,6 +79,7 @@ impl GmailClient {
             label_ids: Vec::new(),
             query: String::new(),
             messages: Vec::new(),
+            rule: None,
         })
     }
 
