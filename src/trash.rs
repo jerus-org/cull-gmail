@@ -1,41 +1,28 @@
 use google_gmail1::api::BatchModifyMessagesRequest;
 
-use crate::{GmailClient, MessageList, Result};
+use crate::{GmailClient, Result, message_list::MessageList};
 
-/// Struct for trashing messages
-#[derive(Debug)]
-pub struct Trash {
-    message_list: MessageList,
+// /// Struct for trashing messages
+// #[derive(Debug)]
+// pub struct Trash {
+//     message_list: MessageList,
+// }
+
+pub(crate) trait Trash {
+    async fn batch_move_to_trash(&self) -> Result<()>;
+    async fn batch_trash(&self) -> Result<()>;
 }
 
-impl Trash {
-    /// Create a new Trash struct
-    pub async fn new(client: &GmailClient) -> Result<Self> {
-        let message_list = MessageList::new(client).await?;
-        Ok(Trash { message_list })
-    }
-
-    /// return the message list struct
-    pub fn message_list(&mut self) -> &mut MessageList {
-        &mut self.message_list
-    }
-
-    /// Prepare the trash cli
-    pub async fn prepare(&mut self, pages: u32) -> Result<()> {
-        self.message_list.run(pages).await?;
-
-        Ok(())
-    }
-
+impl Trash for GmailClient {
     /// Move the messages to trash
-    pub async fn batch_trash(&self) -> Result<()> {
+    async fn batch_trash(&self) -> Result<()> {
         self.batch_move_to_trash().await
     }
 
     async fn batch_move_to_trash(&self) -> Result<()> {
         let add_label_ids = Some(Vec::from(["TRASH".to_string()]));
-        let ids = Some(self.message_list.message_ids());
-        let remove_label_ids = Some(self.message_list.label_ids());
+        let ids = Some(self.message_ids());
+        let remove_label_ids = Some(self.label_ids());
 
         let batch_request = BatchModifyMessagesRequest {
             add_label_ids,
@@ -46,7 +33,6 @@ impl Trash {
         log::trace!("{batch_request:#?}");
 
         let _res = self
-            .message_list
             .hub()
             .users()
             .messages_batch_modify(batch_request, "me")
@@ -55,7 +41,7 @@ impl Trash {
             .await
             .map_err(Box::new)?;
 
-        for m in self.message_list.messages() {
+        for m in self.messages() {
             log::info!("Message with subject `{}` moved to trash.", m.subject());
         }
 
