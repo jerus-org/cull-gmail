@@ -56,6 +56,8 @@ use crate::{
 
 /// Rules processor to apply the configured rules to the mailbox.
 pub trait RuleProcessor {
+    /// Set the execute flag in the client
+    fn set_execute(&mut self, value: bool);
     /// Delete messages
     fn delete_messages(
         &mut self,
@@ -83,8 +85,13 @@ impl RuleProcessor for GmailClient {
     // }
 
     /// Add Action to the Client for processing
-    fn set_rule(&mut self, rule: EolRule) {
-        self.rule = Some(rule);
+    fn set_rule(&mut self, value: EolRule) {
+        self.rule = Some(value);
+    }
+
+    /// Set the execute flag
+    fn set_execute(&mut self, value: bool) {
+        self.execute = value;
     }
 
     /// The action set in the rule  
