@@ -8,9 +8,12 @@ use crate::{GmailClient, Result, message_list::MessageList};
 //     message_list: MessageList,
 // }
 
-pub(crate) trait Trash {
-    async fn batch_move_to_trash(&self) -> Result<()>;
-    async fn batch_trash(&self) -> Result<()>;
+/// Methods for GmailClient to batch move messages to trash
+pub trait Trash {
+    /// Batch move to trash
+    fn batch_move_to_trash(&self) -> impl std::future::Future<Output = Result<()>> + Send;
+    /// Batch trash
+    fn batch_trash(&self) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
 impl Trash for GmailClient {
