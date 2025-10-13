@@ -19,21 +19,19 @@ pub struct MessageCli {
 }
 
 impl MessageCli {
-    pub(crate) async fn run(&self, client: &GmailClient) -> Result<()> {
-        let mut list = MessageList::new(client).await?;
-
+    pub(crate) async fn run(&self, client: &mut GmailClient) -> Result<()> {
         if !self.labels.is_empty() {
-            list.add_labels(client, &self.labels).await?;
+            client.add_labels(&self.labels).await?;
         }
 
         if let Some(query) = self.query.as_ref() {
-            list.set_query(query)
+            client.set_query(query)
         }
 
         log::trace!("Max results: `{}`", self.max_results);
-        list.set_max_results(self.max_results);
-        log::debug!("List max results set to {}", list.max_results());
+        client.set_max_results(self.max_results);
+        log::debug!("List max results set to {}", client.max_results());
 
-        list.run(self.pages).await
+        client.run(self.pages).await
     }
 }
