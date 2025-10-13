@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Config, EolAction, GmailClient, Processor, Result};
+use cull_gmail::{Config, EolAction, GmailClient, Result, RuleProcessor};
 
 #[derive(Debug, Parser)]
 pub struct RunCli {
@@ -26,7 +26,7 @@ impl RunCli {
 
             log::info!("Executing rule `#{}` for label `{label}`", rule.describe());
 
-            let mut builder = Processor::builder(client, rule);
+            let mut builder = RuleProcessor::builder(client, rule);
             let processor = builder.set_execute(self.execute).build();
 
             let Some(action) = processor.action() else {
@@ -40,7 +40,12 @@ impl RunCli {
         Ok(())
     }
 
-    async fn execute_action<'a>(&self, processor: Processor<'a>, action: EolAction, label: &str) {
+    async fn execute_action<'a>(
+        &self,
+        processor: RuleProcessor<'a>,
+        action: EolAction,
+        label: &str,
+    ) {
         match action {
             EolAction::Trash => {
                 if !self.skip_trash {
