@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Error, Trash};
+use cull_gmail::{Error, GmailClient, Trash};
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
@@ -19,14 +19,12 @@ pub struct TrashCli {
 }
 
 impl TrashCli {
-    pub(crate) async fn run(&self, credential_file: &str) -> Result<(), Error> {
-        let mut list = Trash::new(credential_file).await?;
+    pub(crate) async fn run(&self, client: &GmailClient) -> Result<(), Error> {
+        let mut list = Trash::new(client).await?;
 
         if !self.labels.is_empty() {
             // add labels if any specified
-            list.message_list()
-                .add_labels(credential_file, &self.labels)
-                .await?;
+            list.message_list().add_labels(client, &self.labels).await?;
         }
 
         if let Some(query) = self.query.as_ref() {
