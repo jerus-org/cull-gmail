@@ -1,40 +1,33 @@
 use google_gmail1::api::BatchDeleteMessagesRequest;
 
-use crate::{GmailClient, MessageList, Result};
+use crate::{GmailClient, Result, message_list::MessageList};
 
-/// Struct for deleting messages
-#[derive(Debug)]
-pub struct Delete {
-    message_list: MessageList,
+// /// Struct for deleting messages
+// #[derive(Debug)]
+// pub struct Delete {
+//     message_list: MessageList,
+// }
+
+pub(crate) trait Delete {
+    async fn batch_delete(&self) -> Result<()>;
+    async fn prepare(&mut self, pages: u32) -> Result<()>;
 }
 
-impl Delete {
-    /// Create a new Delete struct
-    pub async fn new(client: &GmailClient) -> Result<Self> {
-        let message_list = MessageList::new(client).await?;
-        Ok(Delete { message_list })
-    }
-
-    /// return the message list struct
-    pub fn message_list(&mut self) -> &mut MessageList {
-        &mut self.message_list
-    }
-
+impl Delete for GmailClient {
     /// Prepare the message list for delete to be completed on execute by batch_delete
-    pub async fn prepare(&mut self, pages: u32) -> Result<()> {
-        self.message_list.run(pages).await
+    async fn prepare(&mut self, pages: u32) -> Result<()> {
+        self.run(pages).await
     }
 
     /// Run the batch delete on the selected messages
-    pub async fn batch_delete(&self) -> Result<()> {
-        let ids = Some(self.message_list.message_ids());
+    async fn batch_delete(&self) -> Result<()> {
+        let ids = Some(self.message_ids());
 
         let batch_request = BatchDeleteMessagesRequest { ids };
 
         log::trace!("{batch_request:#?}");
 
         let _res = self
-            .message_list
             .hub()
             .users()
             .messages_batch_delete(batch_request, "me")
@@ -43,7 +36,7 @@ impl Delete {
             .await
             .map_err(Box::new)?;
 
-        for m in self.message_list.messages() {
+        for m in self.messages() {
             log::info!("Message with subject `{}` deleted.", m.subject());
         }
 
