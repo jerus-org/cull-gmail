@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Delete, GmailClient, Result};
+use cull_gmail::{Delete, GmailClient, MessageList, Result};
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
@@ -22,34 +22,24 @@ pub struct DeleteCli {
 }
 
 impl DeleteCli {
-    pub(crate) async fn run(&self, client: &GmailClient) -> Result<()> {
-        let mut messages_to_delete = Delete::new(client).await?;
-
+    pub(crate) async fn run(&self, client: &mut GmailClient) -> Result<()> {
         if !self.labels.is_empty() {
             // add labels if any specified
-            messages_to_delete
-                .message_list()
-                .add_labels(client, &self.labels)
-                .await?;
+            client.add_labels(&self.labels).await?;
         }
 
         if let Some(query) = self.query.as_ref() {
-            messages_to_delete.message_list().set_query(query)
+            client.set_query(query)
         }
 
         log::trace!("Max results: `{}`", self.max_results);
-        messages_to_delete
-            .message_list()
-            .set_max_results(self.max_results);
-        log::debug!(
-            "List max results set to {}",
-            messages_to_delete.message_list().max_results()
-        );
+        client.set_max_results(self.max_results);
+        log::debug!("List max results set to {}", client.max_results());
 
-        messages_to_delete.prepare(self.pages).await?;
+        client.prepare(self.pages).await?;
 
         if self.execute {
-            messages_to_delete.batch_delete().await?;
+            client.batch_delete().await?;
             log::info!("Messages deleted.");
         } else {
             log::info!("Messages not deleted.");
