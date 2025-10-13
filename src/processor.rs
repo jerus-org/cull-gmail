@@ -1,21 +1,41 @@
 // use crate::EolRule;
 
-use crate::{Delete, EolAction, Error, Result, Trash, config::EolRule};
+use std::fmt;
+
+use crate::{Delete, EolAction, Error, GmailClient, Result, Trash, config::EolRule};
 
 /// Rule processor
-#[derive(Debug)]
+#[derive()]
 pub struct Processor<'a> {
-    credential_file: String,
+    client: GmailClient,
     rule: &'a EolRule,
     execute: bool,
 }
 
+impl<'a> fmt::Debug for Processor<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Processor")
+            .field("rule", &self.rule)
+            .field("execute", &self.execute)
+            .finish()
+    }
+}
+
 /// Rule processor builder
-#[derive(Debug)]
+#[derive()]
 pub struct ProcessorBuilder<'a> {
-    credential_file: String,
+    client: GmailClient,
     rule: &'a EolRule,
     execute: bool,
+}
+
+impl<'a> fmt::Debug for ProcessorBuilder<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ProcessorBuilder")
+            .field("rule", &self.rule)
+            .field("execute", &self.execute)
+            .finish()
+    }
 }
 
 impl<'a> ProcessorBuilder<'a> {
@@ -28,7 +48,7 @@ impl<'a> ProcessorBuilder<'a> {
     /// Build the Processor
     pub fn build(&'_ self) -> Processor<'_> {
         Processor {
-            credential_file: self.credential_file.clone(),
+            client: self.client.clone(),
             rule: self.rule,
             execute: self.execute,
         }
@@ -37,9 +57,9 @@ impl<'a> ProcessorBuilder<'a> {
 
 impl<'a> Processor<'a> {
     /// Initialise a new processor
-    pub fn builder(credential_file: &str, rule: &'a EolRule) -> ProcessorBuilder<'a> {
+    pub fn builder(client: GmailClient, rule: &'a EolRule) -> ProcessorBuilder<'a> {
         ProcessorBuilder {
-            credential_file: credential_file.to_string(),
+            client: client.clone(),
             rule,
             execute: false,
         }
@@ -52,10 +72,10 @@ impl<'a> Processor<'a> {
 
     /// Trash the messages
     pub async fn trash_messages(&self, label: &str) -> Result<()> {
-        let mut messages_to_trash = Trash::new(&self.credential_file).await?;
+        let mut messages_to_trash = Trash::new(&self.client).await?;
         messages_to_trash
             .message_list()
-            .add_labels(&self.credential_file, &[label.to_string()])
+            .add_labels(&self.client, &[label.to_string()])
             .await?;
 
         if messages_to_trash.message_list().label_ids().is_empty() {
@@ -81,11 +101,11 @@ impl<'a> Processor<'a> {
 
     /// Delete the messages
     pub async fn delete_messages(&self, label: &str) -> Result<()> {
-        let mut messages_to_delete = Delete::new(&self.credential_file).await?;
+        let mut messages_to_delete = Delete::new(&self.client).await?;
 
         messages_to_delete
             .message_list()
-            .add_labels(&self.credential_file, &[label.to_string()])
+            .add_labels(&self.client, &[label.to_string()])
             .await?;
 
         if messages_to_delete.message_list().label_ids().is_empty() {
