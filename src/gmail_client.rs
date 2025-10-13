@@ -14,7 +14,7 @@ mod message_summary;
 
 pub(crate) use message_summary::MessageSummary;
 
-use crate::{Credential, Error, Result};
+use crate::{Credential, Error, Result, config::EolRule};
 
 /// Default for the maximum number of results to return on a page
 pub const DEFAULT_MAX_RESULTS: &str = "200";
@@ -28,7 +28,8 @@ pub struct GmailClient {
     pub(crate) label_ids: Vec<String>,
     pub(crate) query: String,
     pub(crate) messages: Vec<MessageSummary>,
-    pub(crate) rule: Option<crate::EolAction>,
+    pub(crate) rule: Option<EolRule>,
+    pub(crate) execute: bool,
 }
 
 impl std::fmt::Debug for GmailClient {
@@ -80,6 +81,7 @@ impl GmailClient {
             query: String::new(),
             messages: Vec::new(),
             rule: None,
+            execute: false,
         })
     }
 
