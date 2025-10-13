@@ -24,7 +24,7 @@ pub use error::Error;
 pub use gmail_client::DEFAULT_MAX_RESULTS;
 pub use gmail_client::GmailClient;
 pub(crate) use gmail_client::MessageSummary;
-pub use processor::Processor;
+pub use processor::RuleProcessor;
 pub use retention::MessageAge;
 pub use retention::Retention;
 
