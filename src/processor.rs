@@ -3,8 +3,8 @@
 use std::fmt;
 
 use crate::{
-    EolAction, Error, GmailClient, Result, Trash, config::EolRule, delete::Delete,
-    message_list::MessageList,
+    EolAction, Error, GmailClient, Result, config::EolRule, delete::Delete,
+    message_list::MessageList, trash::Trash,
 };
 
 /// Rule processor
@@ -74,28 +74,24 @@ impl<'a> Processor<'a> {
     }
 
     /// Trash the messages
-    pub async fn trash_messages(&self, label: &str) -> Result<()> {
-        let mut messages_to_trash = Trash::new(&self.client).await?;
-        messages_to_trash
-            .message_list()
-            .add_labels(&[label.to_string()])
-            .await?;
+    pub async fn trash_messages(&mut self, label: &str) -> Result<()> {
+        self.client.add_labels(&[label.to_string()]).await?;
 
-        if messages_to_trash.message_list().label_ids().is_empty() {
+        if self.client.label_ids().is_empty() {
             return Err(Error::LabelNotFoundInMailbox(label.to_string()));
         }
 
         let Some(query) = self.rule.eol_query() else {
             return Err(Error::NoQueryStringCalculated(self.rule.id()));
         };
-        messages_to_trash.message_list().set_query(&query);
+        self.client.set_query(&query);
 
-        log::info!("{messages_to_trash:?}");
+        log::info!("{:?}", self.client.messages());
         log::info!("Ready to run");
-        messages_to_trash.prepare(0).await?;
+        self.client.prepare(0).await?;
         if self.execute {
             log::info!("***executing final delete messages***");
-            messages_to_trash.batch_trash().await
+            self.client.batch_trash().await
         } else {
             log::warn!("Execution stopped for dry run");
             Ok(())
