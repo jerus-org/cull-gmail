@@ -15,7 +15,7 @@ pub struct RunCli {
 }
 
 impl RunCli {
-    pub async fn run(&self, client: &GmailClient, config: Config) -> Result<()> {
+    pub async fn run(&self, client: &mut GmailClient, config: Config) -> Result<()> {
         let rules = config.get_rules_by_label();
 
         for label in config.labels() {
@@ -25,32 +25,26 @@ impl RunCli {
             };
 
             log::info!("Executing rule `#{}` for label `{label}`", rule.describe());
+            client.set_rule(rule.clone());
+            client.set_execute(self.execute);
 
-            let mut builder = RuleProcessor::builder(client, rule);
-            let processor = builder.set_execute(self.execute).build();
-
-            let Some(action) = processor.action() else {
+            let Some(action) = client.action() else {
                 log::warn!("no valid action specified for rule #{}", rule.id());
                 continue;
             };
 
-            self.execute_action(processor, action, &label).await;
+            self.execute_action(client, action, &label).await;
         }
 
         Ok(())
     }
 
-    async fn execute_action<'a>(
-        &self,
-        processor: RuleProcessor<'a>,
-        action: EolAction,
-        label: &str,
-    ) {
+    async fn execute_action(&self, client: &mut GmailClient, action: EolAction, label: &str) {
         match action {
             EolAction::Trash => {
                 if !self.skip_trash {
                     log::info!("trashing older messages");
-                    match processor.trash_messages(label).await {
+                    match client.trash_messages(label).await {
                         Ok(_) => {}
                         Err(e) => {
                             log::warn!("action failed for label {label} with error {e}");
@@ -63,7 +57,7 @@ impl RunCli {
             EolAction::Delete => {
                 if !self.skip_delete {
                     log::info!("deleting older messages");
-                    match processor.delete_messages(label).await {
+                    match client.delete_messages(label).await {
                         Ok(_) => {}
                         Err(e) => {
                             log::warn!("action failed for label {label} with error {e}");
