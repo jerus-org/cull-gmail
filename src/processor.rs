@@ -57,7 +57,7 @@ impl<'a> ProcessorBuilder<'a> {
 
 impl<'a> Processor<'a> {
     /// Initialise a new processor
-    pub fn builder(client: GmailClient, rule: &'a EolRule) -> ProcessorBuilder<'a> {
+    pub fn builder(client: &GmailClient, rule: &'a EolRule) -> ProcessorBuilder<'a> {
         ProcessorBuilder {
             client: client.clone(),
             rule,
