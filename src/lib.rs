@@ -27,7 +27,6 @@ pub(crate) use gmail_client::MessageSummary;
 pub use processor::Processor;
 pub use retention::MessageAge;
 pub use retention::Retention;
-pub use trash::Trash;
 
 /// Type alias for result with crate Error
 pub type Result<O> = std::result::Result<O, Error>;
