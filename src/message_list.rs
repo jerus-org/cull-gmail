@@ -1,65 +1,54 @@
-use std::fmt::Debug;
-
-use crate::{GmailClient, Result};
+use crate::{GmailClient, MessageSummary, Result};
 
 use google_gmail1::{
     Gmail, api::ListMessagesResponse, hyper_rustls::HttpsConnector,
     hyper_util::client::legacy::connect::HttpConnector,
 };
 
-mod message_summary;
-
-use message_summary::MessageSummary;
-
 use crate::utils::Elide;
 
-/// Default for the maximum number of results to return on a page
-pub const DEFAULT_MAX_RESULTS: &str = "200";
-
-/// Struct to capture configuration for List API call.
-pub struct MessageList {
-    hub: Gmail<HttpsConnector<HttpConnector>>,
-    max_results: u32,
-    label_ids: Vec<String>,
-    messages: Vec<MessageSummary>,
-    query: String,
+pub(crate) trait MessageList {
+    async fn log_message_subjects(&mut self) -> Result<()>;
+    async fn messages_list(
+        &mut self,
+        next_page_token: Option<String>,
+    ) -> Result<ListMessagesResponse>;
+    async fn run(&mut self, pages: u32) -> Result<()>;
+    fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>>;
+    fn label_ids(&self) -> Vec<String>;
+    fn message_ids(&self) -> Vec<String>;
+    fn messages(&self) -> &Vec<MessageSummary>;
+    fn set_query(&mut self, query: &str);
+    fn add_labels_ids(&mut self, label_ids: &[String]);
+    async fn add_labels(&mut self, client: &GmailClient, labels: &[String]) -> Result<()>;
+    fn max_results(&self) -> u32;
+    fn set_max_results(&mut self, value: u32);
 }
 
-impl Debug for MessageList {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("MessageList")
-            .field("max_results", &self.max_results)
-            .field("label_ids", &self.label_ids)
-            .field("messages", &self.messages)
-            .field("query", &self.query)
-            .finish()
-    }
-}
-
-impl MessageList {
-    /// Create a new List struct and add the Gmail api connection.
-    pub async fn new(client: &GmailClient) -> Result<Self> {
-        Ok(MessageList {
-            hub: client.hub(),
-            max_results: DEFAULT_MAX_RESULTS.parse::<u32>().unwrap(),
-            label_ids: Vec::new(),
-            messages: Vec::new(),
-            query: String::new(),
-        })
-    }
+impl MessageList for GmailClient {
+    // /// Create a new List struct and add the Gmail api connection.
+    // async fn new(client: &GmailClient) -> Result<Self> {
+    //     Ok(MessageList {
+    //         hub: client.hub(),
+    //         max_results: DEFAULT_MAX_RESULTS.parse::<u32>().unwrap(),
+    //         label_ids: Vec::new(),
+    //         messages: Vec::new(),
+    //         query: String::new(),
+    //     })
+    // }
 
     /// Set the maximum results
-    pub fn set_max_results(&mut self, value: u32) {
+    fn set_max_results(&mut self, value: u32) {
         self.max_results = value;
     }
 
     /// Report the maximum results value
-    pub fn max_results(&self) -> u32 {
+    fn max_results(&self) -> u32 {
         self.max_results
     }
 
     /// Add label to the labels collection
-    pub async fn add_labels(&mut self, client: &GmailClient, labels: &[String]) -> Result<()> {
+    async fn add_labels(&mut self, client: &GmailClient, labels: &[String]) -> Result<()> {
         log::debug!("labels from command line: {labels:?}");
         let mut label_ids = Vec::new();
         for label in labels {
@@ -81,17 +70,17 @@ impl MessageList {
     }
 
     /// Set the query string
-    pub fn set_query(&mut self, query: &str) {
+    fn set_query(&mut self, query: &str) {
         self.query = query.to_string()
     }
 
     /// Get the summary of the messages
-    pub(crate) fn messages(&self) -> &Vec<MessageSummary> {
+    fn messages(&self) -> &Vec<MessageSummary> {
         &self.messages
     }
 
     /// Get a reference to the message_ids
-    pub fn message_ids(&self) -> Vec<String> {
+    fn message_ids(&self) -> Vec<String> {
         self.messages
             .iter()
             .map(|m| m.id().to_string())
@@ -100,17 +89,17 @@ impl MessageList {
     }
 
     /// Get a reference to the message_ids
-    pub fn label_ids(&self) -> Vec<String> {
+    fn label_ids(&self) -> Vec<String> {
         self.label_ids.clone()
     }
 
     /// Get the hub
-    pub fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>> {
-        self.hub.clone()
+    fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>> {
+        self.hub().clone()
     }
 
     /// Run the Gmail api as configured
-    pub async fn run(&mut self, pages: u32) -> Result<()> {
+    async fn run(&mut self, pages: u32) -> Result<()> {
         let list = self.messages_list(None).await?;
         match pages {
             1 => {}
@@ -151,8 +140,8 @@ impl MessageList {
         &mut self,
         next_page_token: Option<String>,
     ) -> Result<ListMessagesResponse> {
-        let mut call = self
-            .hub
+        let hub = self.hub();
+        let mut call = hub
             .users()
             .messages_list("me")
             .max_results(self.max_results);
@@ -198,10 +187,10 @@ impl MessageList {
     }
 
     async fn log_message_subjects(&mut self) -> Result<()> {
+        let hub = self.hub();
         for message in &mut self.messages {
             log::trace!("{}", message.id());
-            let (_res, m) = self
-                .hub
+            let (_res, m) = hub
                 .users()
                 .messages_get("me", message.id())
                 .add_scope("https://www.googleapis.com/auth/gmail.metadata")
