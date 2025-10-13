@@ -7,21 +7,37 @@ use google_gmail1::{
 
 use crate::utils::Elide;
 
-pub(crate) trait MessageList {
-    async fn log_message_subjects(&mut self) -> Result<()>;
-    async fn messages_list(
+/// Methods to select lists of messages from the mailbox
+pub trait MessageList {
+    /// Log the initial characters of the subjects of the message in the list
+    fn log_message_subjects(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
+    /// List of messages
+    fn messages_list(
         &mut self,
         next_page_token: Option<String>,
-    ) -> Result<ListMessagesResponse>;
-    async fn run(&mut self, pages: u32) -> Result<()>;
+    ) -> impl std::future::Future<Output = Result<ListMessagesResponse>> + Send;
+    /// Run something
+    fn run(&mut self, pages: u32) -> impl std::future::Future<Output = Result<()>> + Send;
+    /// Return the gmail hub
     fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>>;
+    /// Return the list of label_ids
     fn label_ids(&self) -> Vec<String>;
+    /// Return the list of message ids
     fn message_ids(&self) -> Vec<String>;
+    /// Return a summary of the messages (id and summary)
     fn messages(&self) -> &Vec<MessageSummary>;
+    /// Set the query for the message list
     fn set_query(&mut self, query: &str);
+    /// Add label ids to the list of labels for the message list
     fn add_labels_ids(&mut self, label_ids: &[String]);
-    async fn add_labels(&mut self, labels: &[String]) -> Result<()>;
+    /// Add labels to the list of labels for the message list
+    fn add_labels(
+        &mut self,
+        labels: &[String],
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
+    /// Report the max results value set
     fn max_results(&self) -> u32;
+    /// Set the max_results value
     fn set_max_results(&mut self, value: u32);
 }
 
