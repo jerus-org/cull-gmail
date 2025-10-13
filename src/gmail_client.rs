@@ -16,6 +16,7 @@ use crate::{Credential, Error, MessageList, Result};
 pub const DEFAULT_MAX_RESULTS: &str = "200";
 
 /// Struct to capture configuration for List API call.
+#[derive(Clone)]
 pub struct GmailClient {
     hub: Gmail<HttpsConnector<HttpConnector>>,
     label_map: BTreeMap<String, String>,
@@ -110,7 +111,8 @@ impl GmailClient {
         self.hub.clone()
     }
 
-    pub async fn get_messages(&self) -> Result<MessageList> {
-        MessageList::new(&self).await
+    /// Get the message list
+    pub async fn get_message_list(&self) -> Result<MessageList> {
+        MessageList::new(self).await
     }
 }
