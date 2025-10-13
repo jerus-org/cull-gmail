@@ -2,15 +2,17 @@ use google_gmail1::api::BatchDeleteMessagesRequest;
 
 use crate::{GmailClient, Result, message_list::MessageList};
 
-// /// Struct for deleting messages
 // #[derive(Debug)]
 // pub struct Delete {
 //     message_list: MessageList,
 // }
 
-pub(crate) trait Delete {
-    async fn batch_delete(&self) -> Result<()>;
-    async fn prepare(&mut self, pages: u32) -> Result<()>;
+/// Methods to process items
+pub trait Delete {
+    /// Batch delete of messages
+    fn batch_delete(&self) -> impl std::future::Future<Output = Result<()>> + Send;
+    /// Prepare a list of messages to trash or delete
+    fn prepare(&mut self, pages: u32) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
 impl Delete for GmailClient {
