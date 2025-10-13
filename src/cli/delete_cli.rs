@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Delete, Result};
+use cull_gmail::{Delete, GmailClient, Result};
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
@@ -22,14 +22,14 @@ pub struct DeleteCli {
 }
 
 impl DeleteCli {
-    pub(crate) async fn run(&self, credential_file: &str) -> Result<()> {
-        let mut messages_to_delete = Delete::new(credential_file).await?;
+    pub(crate) async fn run(&self, client: &GmailClient) -> Result<()> {
+        let mut messages_to_delete = Delete::new(client).await?;
 
         if !self.labels.is_empty() {
             // add labels if any specified
             messages_to_delete
                 .message_list()
-                .add_labels(credential_file, &self.labels)
+                .add_labels(client, &self.labels)
                 .await?;
         }
 
