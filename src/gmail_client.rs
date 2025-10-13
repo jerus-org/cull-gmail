@@ -10,7 +10,11 @@ use google_gmail1::{
     yup_oauth2::{ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
 };
 
-use crate::{Credential, Error, MessageList, Result};
+mod message_summary;
+
+pub(crate) use message_summary::MessageSummary;
+
+use crate::{Credential, Error, Result};
 
 /// Default for the maximum number of results to return on a page
 pub const DEFAULT_MAX_RESULTS: &str = "200";
@@ -20,6 +24,10 @@ pub const DEFAULT_MAX_RESULTS: &str = "200";
 pub struct GmailClient {
     hub: Gmail<HttpsConnector<HttpConnector>>,
     label_map: BTreeMap<String, String>,
+    pub(crate) max_results: u32,
+    pub(crate) label_ids: Vec<String>,
+    pub(crate) query: String,
+    pub(crate) messages: Vec<MessageSummary>,
 }
 
 impl std::fmt::Debug for GmailClient {
@@ -63,7 +71,14 @@ impl GmailClient {
         let hub = Gmail::new(client, auth);
         let label_map = GmailClient::get_label_map(&hub).await?;
 
-        Ok(GmailClient { hub, label_map })
+        Ok(GmailClient {
+            hub,
+            label_map,
+            max_results: DEFAULT_MAX_RESULTS.parse::<u32>().unwrap(),
+            label_ids: Vec::new(),
+            query: String::new(),
+            messages: Vec::new(),
+        })
     }
 
     /// Create a new List struct and add the Gmail api connection.
@@ -111,8 +126,8 @@ impl GmailClient {
         self.hub.clone()
     }
 
-    /// Get the message list
-    pub async fn get_message_list(&self) -> Result<MessageList> {
-        MessageList::new(self).await
-    }
+    // /// Get the message list
+    // pub async fn get_message_list(&self) -> Result<MessageList> {
+    //     MessageList::new(self).await
+    // }
 }
