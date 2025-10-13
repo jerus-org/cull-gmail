@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{MessageList, Result};
+use cull_gmail::{GmailClient, MessageList, Result};
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
@@ -19,11 +19,11 @@ pub struct MessageCli {
 }
 
 impl MessageCli {
-    pub(crate) async fn run(&self, credential_file: &str) -> Result<()> {
-        let mut list = MessageList::new(credential_file).await?;
+    pub(crate) async fn run(&self, client: &GmailClient) -> Result<()> {
+        let mut list = MessageList::new(client).await?;
 
         if !self.labels.is_empty() {
-            list.add_labels(credential_file, &self.labels).await?;
+            list.add_labels(client, &self.labels).await?;
         }
 
         if let Some(query) = self.query.as_ref() {
