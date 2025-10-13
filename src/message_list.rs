@@ -59,7 +59,7 @@ impl MessageList {
     }
 
     /// Add label to the labels collection
-    pub async fn add_labels(&mut self, client: GmailClient, labels: &[String]) -> Result<()> {
+    pub async fn add_labels(&mut self, client: &GmailClient, labels: &[String]) -> Result<()> {
         log::debug!("labels from command line: {labels:?}");
         let mut label_ids = Vec::new();
         for label in labels {
