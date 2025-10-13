@@ -20,7 +20,7 @@ pub(crate) trait MessageList {
     fn messages(&self) -> &Vec<MessageSummary>;
     fn set_query(&mut self, query: &str);
     fn add_labels_ids(&mut self, label_ids: &[String]);
-    async fn add_labels(&mut self, client: &GmailClient, labels: &[String]) -> Result<()>;
+    async fn add_labels(&mut self, labels: &[String]) -> Result<()>;
     fn max_results(&self) -> u32;
     fn set_max_results(&mut self, value: u32);
 }
@@ -48,11 +48,11 @@ impl MessageList for GmailClient {
     }
 
     /// Add label to the labels collection
-    async fn add_labels(&mut self, client: &GmailClient, labels: &[String]) -> Result<()> {
+    async fn add_labels(&mut self, labels: &[String]) -> Result<()> {
         log::debug!("labels from command line: {labels:?}");
         let mut label_ids = Vec::new();
         for label in labels {
-            if let Some(id) = client.get_label_id(label) {
+            if let Some(id) = self.get_label_id(label) {
                 label_ids.push(id)
             }
         }
