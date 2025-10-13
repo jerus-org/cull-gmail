@@ -1,23 +1,17 @@
 use std::fmt::Debug;
 
-use crate::{Labels, Result};
+use crate::{GmailClient, Result};
 
 use google_gmail1::{
-    Gmail,
-    api::ListMessagesResponse,
-    hyper_rustls::{HttpsConnector, HttpsConnectorBuilder},
-    hyper_util::{
-        client::legacy::{Client, connect::HttpConnector},
-        rt::TokioExecutor,
-    },
-    yup_oauth2::{ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
+    Gmail, api::ListMessagesResponse, hyper_rustls::HttpsConnector,
+    hyper_util::client::legacy::connect::HttpConnector,
 };
 
 mod message_summary;
 
 use message_summary::MessageSummary;
 
-use crate::{Credential, utils::Elide};
+use crate::utils::Elide;
 
 /// Default for the maximum number of results to return on a page
 pub const DEFAULT_MAX_RESULTS: &str = "200";
@@ -44,36 +38,9 @@ impl Debug for MessageList {
 
 impl MessageList {
     /// Create a new List struct and add the Gmail api connection.
-    pub async fn new(credential: &str) -> Result<Self> {
-        let (config_dir, secret) = {
-            let config_dir = crate::utils::assure_config_dir_exists("~/.cull-gmail")?;
-
-            let secret: ApplicationSecret = Credential::load_json_file(credential).into();
-            (config_dir, secret)
-        };
-
-        let executor = TokioExecutor::new();
-        let connector = HttpsConnectorBuilder::new()
-            .with_native_roots()
-            .unwrap()
-            .https_or_http()
-            .enable_http1()
-            .build();
-
-        let client = Client::builder(executor.clone()).build(connector.clone());
-
-        let auth = InstalledFlowAuthenticator::with_client(
-            secret,
-            InstalledFlowReturnMethod::HTTPRedirect,
-            Client::builder(executor).build(connector),
-        )
-        .persist_tokens_to_disk(format!("{config_dir}/gmail1"))
-        .build()
-        .await
-        .unwrap();
-
+    pub async fn new(client: &GmailClient) -> Result<Self> {
         Ok(MessageList {
-            hub: Gmail::new(client, auth),
+            hub: client.hub(),
             max_results: DEFAULT_MAX_RESULTS.parse::<u32>().unwrap(),
             label_ids: Vec::new(),
             messages: Vec::new(),
@@ -92,15 +59,11 @@ impl MessageList {
     }
 
     /// Add label to the labels collection
-    pub async fn add_labels(&mut self, credential_file: &str, labels: &[String]) -> Result<()> {
-        // add labels if any specified
-        let label_list = Labels::new(credential_file, false).await?;
-
-        log::trace!("labels found and setup {label_list:#?}");
+    pub async fn add_labels(&mut self, client: GmailClient, labels: &[String]) -> Result<()> {
         log::debug!("labels from command line: {labels:?}");
         let mut label_ids = Vec::new();
         for label in labels {
-            if let Some(id) = label_list.get_label_id(label) {
+            if let Some(id) = client.get_label_id(label) {
                 label_ids.push(id)
             }
         }
