@@ -28,5 +28,9 @@ pub use processor::Processor;
 pub use retention::MessageAge;
 pub use retention::Retention;
 
+pub use delete::Delete;
+pub use message_list::MessageList;
+pub use trash::Trash;
+
 /// Type alias for result with crate Error
 pub type Result<O> = std::result::Result<O, Error>;
