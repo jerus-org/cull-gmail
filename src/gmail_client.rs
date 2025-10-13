@@ -10,7 +10,7 @@ use google_gmail1::{
     yup_oauth2::{ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
 };
 
-use crate::{Credential, Error, Result};
+use crate::{Credential, Error, MessageList, Result};
 
 /// Default for the maximum number of results to return on a page
 pub const DEFAULT_MAX_RESULTS: &str = "200";
@@ -103,5 +103,14 @@ impl GmailClient {
         for (name, id) in self.label_map.iter() {
             log::info!("{name}: {id}")
         }
+    }
+
+    /// Get the hub from the client
+    pub(crate) fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>> {
+        self.hub.clone()
+    }
+
+    pub async fn get_messages(&self) -> Result<MessageList> {
+        MessageList::new(&self).await
     }
 }
