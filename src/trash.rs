@@ -1,6 +1,6 @@
 use google_gmail1::api::BatchModifyMessagesRequest;
 
-use crate::{MessageList, Result};
+use crate::{GmailClient, MessageList, Result};
 
 /// Struct for trashing messages
 #[derive(Debug)]
@@ -10,8 +10,8 @@ pub struct Trash {
 
 impl Trash {
     /// Create a new Trash struct
-    pub async fn new(credential: &str) -> Result<Self> {
-        let message_list = MessageList::new(credential).await?;
+    pub async fn new(client: &GmailClient) -> Result<Self> {
+        let message_list = MessageList::new(client).await?;
         Ok(Trash { message_list })
     }
 
