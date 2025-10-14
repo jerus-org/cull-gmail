@@ -7,16 +7,22 @@ use crate::message_trait::Message;
 #[derive(Debug, Parser)]
 pub struct MessageCli {
     /// Maximum results per page
-    #[arg(short, long, default_value = cull_gmail::DEFAULT_MAX_RESULTS)]
+    #[arg(short, long,display_order = 1, help_heading = "Config", default_value = cull_gmail::DEFAULT_MAX_RESULTS)]
     max_results: u32,
     /// Maximum number of pages (0=all)
-    #[arg(short, long, default_value = "1")]
+    #[arg(
+        short,
+        long,
+        display_order = 1,
+        help_heading = "Config",
+        default_value = "1"
+    )]
     pages: u32,
     /// Labels to filter the message list
-    #[arg(short, long)]
+    #[arg(short, long, display_order = 1, help_heading = "Config")]
     labels: Vec<String>,
     /// Query string to select messages to list
-    #[arg(short = 'Q', long)]
+    #[arg(short = 'Q', long, display_order = 1, help_heading = "Config")]
     query: Option<String>,
 }
 
