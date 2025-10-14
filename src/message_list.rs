@@ -142,10 +142,6 @@ impl MessageList for GmailClient {
             }
         }
 
-        if log::max_level() >= log::Level::Info {
-            self.log_message_subjects().await?;
-        }
-
         Ok(())
     }
 
