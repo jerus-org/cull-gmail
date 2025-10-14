@@ -17,7 +17,7 @@ pub trait MessageList {
         next_page_token: Option<String>,
     ) -> impl std::future::Future<Output = Result<ListMessagesResponse>> + Send;
     /// Run something
-    fn run(&mut self, pages: u32) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn get_messages(&mut self, pages: u32) -> impl std::future::Future<Output = Result<()>> + Send;
     /// Return the gmail hub
     fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>>;
     /// Return the list of label_ids
@@ -31,10 +31,7 @@ pub trait MessageList {
     /// Add label ids to the list of labels for the message list
     fn add_labels_ids(&mut self, label_ids: &[String]);
     /// Add labels to the list of labels for the message list
-    fn add_labels(
-        &mut self,
-        labels: &[String],
-    ) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn add_labels(&mut self, labels: &[String]) -> Result<()>;
     /// Report the max results value set
     fn max_results(&self) -> u32;
     /// Set the max_results value
@@ -64,7 +61,7 @@ impl MessageList for GmailClient {
     }
 
     /// Add label to the labels collection
-    async fn add_labels(&mut self, labels: &[String]) -> Result<()> {
+    fn add_labels(&mut self, labels: &[String]) -> Result<()> {
         log::debug!("labels from command line: {labels:?}");
         let mut label_ids = Vec::new();
         for label in labels {
@@ -115,7 +112,7 @@ impl MessageList for GmailClient {
     }
 
     /// Run the Gmail api as configured
-    async fn run(&mut self, pages: u32) -> Result<()> {
+    async fn get_messages(&mut self, pages: u32) -> Result<()> {
         let list = self.messages_list(None).await?;
         match pages {
             1 => {}
