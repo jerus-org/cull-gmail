@@ -27,46 +27,34 @@ impl RunCli {
             log::info!("Executing rule `#{}` for label `{label}`", rule.describe());
             client.set_rule(rule.clone());
             client.set_execute(self.execute);
-
+            client.find_rule_and_messages_for_label(&label).await?;
             let Some(action) = client.action() else {
                 log::warn!("no valid action specified for rule #{}", rule.id());
                 continue;
             };
 
-            self.execute_action(client, action, &label).await;
+            if self.execute {
+                match action {
+                    EolAction::Trash => {
+                        log::info!("***executing trash messages***");
+                        if client.batch_trash().await.is_err() {
+                            log::warn!("Move to trash failed for label `{label}`");
+                            continue;
+                        }
+                    }
+                    EolAction::Delete => {
+                        log::info!("***executing final delete messages***");
+                        if client.batch_delete().await.is_err() {
+                            log::warn!("Delete failed for label `{label}`");
+                            continue;
+                        }
+                    }
+                }
+            } else {
+                log::warn!("Execution stopped for dry run");
+            }
         }
 
         Ok(())
-    }
-
-    async fn execute_action(&self, client: &mut GmailClient, action: EolAction, label: &str) {
-        match action {
-            EolAction::Trash => {
-                if !self.skip_trash {
-                    log::info!("trashing older messages");
-                    match client.trash_messages(label).await {
-                        Ok(_) => {}
-                        Err(e) => {
-                            log::warn!("action failed for label {label} with error {e}");
-                        }
-                    }
-                } else {
-                    log::warn!("Rule with `trash` action for label `{label}` skipped.");
-                }
-            }
-            EolAction::Delete => {
-                if !self.skip_delete {
-                    log::info!("deleting older messages");
-                    match client.delete_messages(label).await {
-                        Ok(_) => {}
-                        Err(e) => {
-                            log::warn!("action failed for label {label} with error {e}");
-                        }
-                    }
-                } else {
-                    log::warn!("Rule with `delete` action for label `{label}` skipped.");
-                }
-            }
-        }
     }
 }
