@@ -54,7 +54,7 @@ impl RuleProcessor for GmailClient {
 
     /// Find the rule and messages for the label
     async fn find_rule_and_messages_for_label(&mut self, label: &str) -> Result<()> {
-        self.add_labels(&[label.to_string()]).await?;
+        self.add_labels(&[label.to_string()])?;
 
         if self.label_ids().is_empty() {
             return Err(Error::LabelNotFoundInMailbox(label.to_string()));
@@ -141,7 +141,7 @@ impl RuleProcessor for GmailClient {
     // }
     /// Prepare the message list for delete to be completed on execute by batch_delete
     async fn prepare(&mut self, pages: u32) -> Result<()> {
-        self.run(pages).await
+        self.get_messages(pages).await
     }
 
     /// Run the batch delete on the selected messages
