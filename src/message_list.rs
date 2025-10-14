@@ -5,12 +5,10 @@ use google_gmail1::{
     hyper_util::client::legacy::connect::HttpConnector,
 };
 
-use crate::utils::Elide;
-
 /// Methods to select lists of messages from the mailbox
 pub trait MessageList {
     /// Log the initial characters of the subjects of the message in the list
-    fn log_message_subjects(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn log_messages(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
     /// List of messages
     fn messages_list(
         &mut self,
@@ -195,7 +193,7 @@ impl MessageList for GmailClient {
         Ok(list)
     }
 
-    async fn log_message_subjects(&mut self) -> Result<()> {
+    async fn log_messages(&mut self) -> Result<()> {
         let hub = self.hub();
         for message in &mut self.messages {
             log::trace!("{}", message.id());
@@ -210,8 +208,6 @@ impl MessageList for GmailClient {
                 .await
                 .map_err(Box::new)?;
 
-            let mut subject = String::new();
-            let mut date = String::new();
             let Some(payload) = m.payload else { continue };
             let Some(headers) = payload.headers else {
                 continue;
@@ -220,26 +216,13 @@ impl MessageList for GmailClient {
             for header in headers {
                 if let Some(name) = header.name {
                     match name.to_lowercase().as_str() {
-                        "subject" => subject = header.value.unwrap_or_default(),
-                        "date" => date = header.value.unwrap_or_default(),
+                        "subject" => message.set_subject(header.value),
+                        "date" => message.set_date(header.value),
                         _ => {}
                     }
                 } else {
                     continue;
                 }
-            }
-
-            if date.is_empty() {
-                log::info!("***No orig-date field***");
-            } else {
-                message.set_date(&date);
-            }
-
-            if subject.is_empty() {
-                log::info!("***Email with no subject***");
-            } else {
-                subject.elide(24);
-                message.set_subject(&subject);
             }
 
             log::info!("{}", message.list_date_and_subject());
