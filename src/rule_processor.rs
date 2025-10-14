@@ -185,7 +185,7 @@ impl RuleProcessor for GmailClient {
             .hub()
             .users()
             .messages_batch_modify(batch_request, "me")
-            .add_scope("https://www.googleapis.com/auth/gmail.modify")
+            .add_scope("https://www.google.com/")
             .doit()
             .await
             .map_err(Box::new)?;
