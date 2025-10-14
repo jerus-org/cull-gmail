@@ -1,7 +1,12 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use cull_gmail::{GmailClient, MessageList, Result};
 
 use crate::message_trait::Message;
+
+#[derive(Debug, Subcommand)]
+enum MessageAction {
+    List,
+}
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
@@ -24,13 +29,26 @@ pub struct MessageCli {
     /// Query string to select messages to list
     #[arg(short = 'Q', long, display_order = 1, help_heading = "Config")]
     query: Option<String>,
+    /// Action: what to do with the message list
+    #[command(subcommand)]
+    action: MessageAction,
 }
 
 impl MessageCli {
     pub(crate) async fn run(&self, client: &mut GmailClient) -> Result<()> {
         self.set_parameters(client)?;
 
-        client.get_messages(self.pages).await
+        client.get_messages(self.pages).await?;
+
+        match self.action {
+            MessageAction::List => {
+                if log::max_level() >= log::Level::Info {
+                    client.log_message_subjects().await?;
+                }
+            }
+        }
+
+        Ok(())
     }
 
     pub(crate) fn labels(&self) -> &Vec<String> {
