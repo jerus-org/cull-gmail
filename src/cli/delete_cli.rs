@@ -1,5 +1,7 @@
 use clap::Parser;
-use cull_gmail::{GmailClient, MessageList, Result, RuleProcessor};
+use cull_gmail::{GmailClient, Result, RuleProcessor};
+
+use crate::message_trait::Message;
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
@@ -23,18 +25,7 @@ pub struct DeleteCli {
 
 impl DeleteCli {
     pub(crate) async fn run(&self, client: &mut GmailClient) -> Result<()> {
-        if !self.labels.is_empty() {
-            // add labels if any specified
-            client.add_labels(&self.labels).await?;
-        }
-
-        if let Some(query) = self.query.as_ref() {
-            client.set_query(query)
-        }
-
-        log::trace!("Max results: `{}`", self.max_results);
-        client.set_max_results(self.max_results);
-        log::debug!("List max results set to {}", client.max_results());
+        self.set_parameters(client)?;
 
         client.prepare(self.pages).await?;
 
@@ -45,5 +36,17 @@ impl DeleteCli {
             log::info!("Messages not deleted.");
         }
         Ok(())
+    }
+
+    pub(crate) fn labels(&self) -> &Vec<String> {
+        &self.labels
+    }
+
+    pub(crate) fn query(&self) -> &Option<String> {
+        &self.query
+    }
+
+    pub(crate) fn max_results(&self) -> u32 {
+        self.max_results
     }
 }
