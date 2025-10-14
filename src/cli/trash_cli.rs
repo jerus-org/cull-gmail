@@ -22,7 +22,7 @@ impl TrashCli {
     pub(crate) async fn run(&self, client: &mut GmailClient) -> Result<(), Error> {
         if !self.labels.is_empty() {
             // add labels if any specified
-            client.add_labels(&self.labels).await?;
+            client.add_labels(&self.labels)?;
         }
 
         if let Some(query) = self.query.as_ref() {
