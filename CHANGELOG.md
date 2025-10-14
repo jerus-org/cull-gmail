@@ -5,9 +5,83 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.8] - 2025-10-14
+
+Summary: Added[14], Changed[42], Chore[2], Documentation[2], Fixed[5]
+
+### Added
+
+ - ✨ feat(error): add NoLabelsFound error
+ - ✨ feat(gmail): add get messages functionality
+ - ✨ feat(gmail): create gmail client struct
+ - ✨ feat(gmail_client): integrate message summary
+ - ✨ feat(core): add message management structs
+ - ✨ feat(message_list): enhance message list trait with documentation and functionalities
+ - ✨ feat(eol_action): add clone derive to eolaction enum
+ - ✨ feat(gmail_client): add rule field to GmailClient struct - Add rule field to GmailClient struct to store EolAction.
+ - ✨ feat(processor): add execute flag to GmailClient
+ - ✨ feat(gmail_client): add execute flag and EolRule
+ - ✨ feat(rule_processor): implement rule processing for Gmail
+ - ✨ feat(cli): implement batch actions for trashing and deleting
+ - ✨ feat(cli): add message trait for cli subcommands
+ - ✨ feat(cli): create message trait to share list parameters
+
+### Fixed
+
+ - 🐛 fix(cli): correct label adding to use non-async function
+ - 🐛 fix(cli): fix delete command
+ - 🐛 fix(trash): fix trash command with new gmail client
+ - 🐛 fix(cli): fix rule execution and client handling
+ - 🐛 fix(rule_processor): fix label creation and message retrieval
+
+### Changed
+
+ - ♻️ refactor(gmail): rename labels.rs to gmail_client.rs
+ - ♻️ refactor(core): rename labels module to gmail_client
+ - ♻️ refactor(message_list): use gmail client for label retrieval
+ - ♻️ refactor(cli): remove unused credential file
+ - ♻️ refactor(processor): use GmailClient instead of credential_file
+ - ♻️ refactor(gmail): improve gmail client structure
+ - ♻️ refactor(message_list): update add_labels function to accept &GmailClient
+ - ♻️ refactor(delete): use GmailClient for message list creation
+ - ♻️ refactor(trash): use GmailClient instead of credential string
+ - ♻️ refactor(cli): use gmail client for label operations
+ - ♻️ refactor(cli): use GmailClient in delete_cli
+ - ♻️ refactor(cli): use GmailClient for MessageList
+ - ♻️ refactor(cli): use client instance for message subcommand
+ - ♻️ refactor(processor): use reference for GmailClient in processor builder
+ - ♻️ refactor(cli): pass client to run command
+ - ♻️ refactor(cli): use gmail client in run_cli
+ - ♻️ refactor(cli): use client for trash subcommand
+ - ♻️ refactor(cli): use GmailClient instead of credential file
+ - ♻️ refactor(message_list): implement MessageList trait for GmailClient
+ - ♻️ refactor(gmail_client): move message_summary to gmail_client
+ - ♻️ refactor(processor): consolidate message operations in GmailClient
+ - ♻️ refactor(core): remove unused Delete module - Delete module is no longer needed.
+ - ♻️ refactor(delete): restructure delete functionality
+ - ♻️ refactor(message_list): remove client parameter from add_labels
+ - ♻️ refactor(trash): refactor trash module to trait implementation
+ - ♻️ refactor(core): remove unused trash module
+ - ♻️ refactor(processor): simplify trash_messages function
+ - ♻️ refactor(gmail_client): change MessageSummary's visibility
+ - ♻️ refactor(delete): streamline delete command execution
+ - ♻️ refactor(message_cli): simplify message processing
+ - ♻️ refactor(core): rename Processor to RuleProcessor
+ - ♻️ refactor(cli): use mutable client for subcommands
+ - ♻️ refactor(cli): rename Processor to RuleProcessor
+ - ♻️ refactor(processor): implement RuleProcessor trait for GmailClient
+ - ♻️ refactor(core): restructure modules for clarity
+ - ♻️ refactor(message): remove delete functionality
+ - ♻️ refactor(core): remove processor.rs
+ - ♻️ refactor(cli): remove unused Delete, Trash trait - Remove Delete and Trash traits from cull_gmail - Use RuleProcessor instead of Delete and Trash traits
+ - ♻️ refactor(cli): remove unused `Delete` import
+ - ♻️ refactor(message_list): rename run to get_messages
+ - ♻️ refactor(cli): extract parameter setting logic
+ - ♻️ refactor(cli): streamline message retrieval and parameter setting
+
 ## [0.0.7] - 2025-10-12
 
-Summary: Added[23], Build[1], Changed[8], Chore[4], Documentation[3], Fixed[10]
+Summary: Added[23], Build[1], Changed[8], Chore[5], Documentation[3], Fixed[10]
 
 ### Added
 
@@ -16,47 +90,47 @@ Summary: Added[23], Build[1], Changed[8], Chore[4], Documentation[3], Fixed[10]
  - ✨ feat(processor): add execute flag for dry run
  - ✨ feat(cli): add execute flag to run action
  - ✨ feat(message_list): increase default max results
- - ✨ feat(core): introduce message processor module
- - ✨ feat(cli): add chrono crate as a dependency
- - ✨ feat(config): add eol query function
- - ✨ feat(processor): implement message deletion functionality
- - ✨ feat(cli): implement trash and delete actions
- - ✨ feat(processor): add trash and delete message functionality
- - ✨ feat(processor): add label existence check before processing
- - ✨ feat(config): add retention period to eol rule
- - ✨ feat(config): add date calculation for EOL queries
- - ✨ feat(cli): add option to skip trash actions
- - ✨ feat(cli): add skip-delete flag to cli
  - ✨ feat(cli): add skip action flags to cli
- - ✨ feat(cli): add run command to execute rules
- - ✨ feat(cli): add run cli command
+ - ✨ feat(cli): add skip-delete flag to cli
+ - ✨ feat(cli): add option to skip trash actions
+ - ✨ feat(config): add date calculation for EOL queries
+ - ✨ feat(config): add retention period to eol rule
+ - ✨ feat(processor): add label existence check before processing
+ - ✨ feat(processor): add trash and delete message functionality
+ - ✨ feat(cli): implement trash and delete actions
+ - ✨ feat(processor): implement message deletion functionality
+ - ✨ feat(config): add eol query function
+ - ✨ feat(cli): add chrono crate as a dependency
+ - ✨ feat(core): introduce message processor module
+ - ✨ feat(processor): implement rule processor
+ - ✨ feat(eol_rule): add describe function for eol rule
  - ✨ feat(cli): implement rule execution logic
  - ✨ feat(eol_action): add parse method to EolAction
- - ✨ feat(eol_rule): add describe function for eol rule
- - ✨ feat(processor): implement rule processor
+ - ✨ feat(cli): add run command to execute rules
+ - ✨ feat(cli): add run cli command
 
 ### Fixed
 
  - 🐛 fix(utils): correct string elision boundary calculation
  - 🐛 fix(utils): correct string elision boundary calculation
- - 🐛 fix(error): add specific error for missing label in mailbox - add `LableNotFoundInMailbox` error to handle cases where a label is not found in the mailbox
- - 🐛 fix(error): add error type for no query string calculated
- - 🐛 fix(processor): handle None query in eol_query
- - 🐛 fix(cli): correct count type in add_cli
- - 🐛 fix(message_age): correct data type for message age count
- - 🐛 fix(processor): execute delete messages
- - 🐛 fix(processor): correct typo in error message
  - 🐛 fix(error): correct spelling error in error message
+ - 🐛 fix(processor): correct typo in error message
+ - 🐛 fix(processor): execute delete messages
+ - 🐛 fix(message_age): correct data type for message age count
+ - 🐛 fix(cli): correct count type in add_cli
+ - 🐛 fix(processor): handle None query in eol_query
+ - 🐛 fix(error): add error type for no query string calculated
+ - 🐛 fix(error): add specific error for missing label in mailbox - add `LableNotFoundInMailbox` error to handle cases where a label is not found in the mailbox
 
 ### Changed
 
  - ♻️ refactor(utils): remove unused `get_start_boundary` function
- - ♻️ refactor(config): make EolRule public
- - ♻️ refactor(trash): separate trash preparation and execution
- - ♻️ refactor(trash): refactor trash command
- - ♻️ refactor(eol_rule): simplify eol_rule tests
- - ♻️ refactor(config): extract common logic to reduce duplication
  - ♻️ refactor(cli): extract action execution to separate function
+ - ♻️ refactor(config): extract common logic to reduce duplication
+ - ♻️ refactor(eol_rule): simplify eol_rule tests
+ - ♻️ refactor(trash): refactor trash command
+ - ♻️ refactor(trash): separate trash preparation and execution
+ - ♻️ refactor(config): make EolRule public
  - ♻️ refactor(cli): inject config into run command
 
 ## [0.0.6] - 2025-10-09
@@ -301,7 +375,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.6...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.7...HEAD
+[0.0.7]: https://github.com/jerus-org/cull-gmail/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/jerus-org/cull-gmail/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/jerus-org/cull-gmail/compare/v0.0.3...v0.0.4
