@@ -1,12 +1,11 @@
 use clap::{Parser, Subcommand};
 use cull_gmail::{GmailClient, MessageList, Result, RuleProcessor};
 
-use crate::message_trait::Message;
-
 #[derive(Debug, Subcommand)]
 enum MessageAction {
     List,
     Trash,
+    Delete,
 }
 
 /// Command line options for the list subcommand
@@ -50,9 +49,26 @@ impl MessageCli {
                 }
             }
             MessageAction::Trash => client.batch_trash().await,
+            MessageAction::Delete => client.batch_delete().await,
         }
 
         // Ok(())
+    }
+
+    fn set_parameters(&self, client: &mut GmailClient) -> Result<()> {
+        if !self.labels().is_empty() {
+            client.add_labels(self.labels())?;
+        }
+
+        if let Some(query) = self.query().as_ref() {
+            client.set_query(query)
+        }
+
+        log::trace!("Max results: `{}`", self.max_results());
+        client.set_max_results(self.max_results());
+        log::debug!("List max results set to {}", client.max_results());
+
+        Ok(())
     }
 
     pub(crate) fn labels(&self) -> &Vec<String> {
