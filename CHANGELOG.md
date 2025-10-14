@@ -5,79 +5,102 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.8] - 2025-10-14
+## [0.0.9] - 2025-10-14
 
-Summary: Added[14], Changed[42], Chore[2], Documentation[2], Fixed[5]
+Summary: Added[5], Changed[3], Chore[1], Fixed[2]
 
 ### Added
 
- - ✨ feat(error): add NoLabelsFound error
- - ✨ feat(gmail): add get messages functionality
- - ✨ feat(gmail): create gmail client struct
- - ✨ feat(gmail_client): integrate message summary
- - ✨ feat(core): add message management structs
- - ✨ feat(message_list): enhance message list trait with documentation and functionalities
- - ✨ feat(eol_action): add clone derive to eolaction enum
- - ✨ feat(gmail_client): add rule field to GmailClient struct - Add rule field to GmailClient struct to store EolAction.
- - ✨ feat(processor): add execute flag to GmailClient
- - ✨ feat(gmail_client): add execute flag and EolRule
- - ✨ feat(rule_processor): implement rule processing for Gmail
- - ✨ feat(cli): implement batch actions for trashing and deleting
- - ✨ feat(cli): add message trait for cli subcommands
+ - ✨ feat(cli): add configuration options for message listing
+ - ✨ feat(cli): add message list subcommand
+ - ✨ feat(cli): enhance cli subcommand ordering and grouping
+ - ✨ feat(gmail): enhance message metadata retrieval
+ - ✨ feat(gmail_client): add date to message summary
+
+### Fixed
+
+ - 🐛 fix(gmail_client): resolve ownership issue in message summary
+ - 🐛 fix(gmail): display message date and subject
+
+### Changed
+
+ - ♻️ refactor(cli): refactor message handling and remove trash command
+ - ♻️ refactor(cli): consolidate message handling and remove delete command
+ - ♻️ refactor(cli): rename run_cli to rules_cli
+
+## [0.0.8] - 2025-10-14
+
+Summary: Added[14], Changed[42], Chore[3], Documentation[2], Fixed[5]
+
+### Added
+
  - ✨ feat(cli): create message trait to share list parameters
+ - ✨ feat(cli): add message trait for cli subcommands
+ - ✨ feat(cli): implement batch actions for trashing and deleting
+ - ✨ feat(rule_processor): implement rule processing for Gmail
+ - ✨ feat(gmail_client): add execute flag and EolRule
+ - ✨ feat(processor): add execute flag to GmailClient
+ - ✨ feat(gmail_client): add rule field to GmailClient struct - Add rule field to GmailClient struct to store EolAction.
+ - ✨ feat(eol_action): add clone derive to eolaction enum
+ - ✨ feat(message_list): enhance message list trait with documentation and functionalities
+ - ✨ feat(core): add message management structs
+ - ✨ feat(gmail_client): integrate message summary
+ - ✨ feat(gmail): create gmail client struct
+ - ✨ feat(gmail): add get messages functionality
+ - ✨ feat(error): add NoLabelsFound error
 
 ### Fixed
 
  - 🐛 fix(cli): correct label adding to use non-async function
- - 🐛 fix(cli): fix delete command
- - 🐛 fix(trash): fix trash command with new gmail client
- - 🐛 fix(cli): fix rule execution and client handling
  - 🐛 fix(rule_processor): fix label creation and message retrieval
+ - 🐛 fix(cli): fix rule execution and client handling
+ - 🐛 fix(trash): fix trash command with new gmail client
+ - 🐛 fix(cli): fix delete command
 
 ### Changed
 
- - ♻️ refactor(gmail): rename labels.rs to gmail_client.rs
- - ♻️ refactor(core): rename labels module to gmail_client
- - ♻️ refactor(message_list): use gmail client for label retrieval
- - ♻️ refactor(cli): remove unused credential file
- - ♻️ refactor(processor): use GmailClient instead of credential_file
- - ♻️ refactor(gmail): improve gmail client structure
- - ♻️ refactor(message_list): update add_labels function to accept &GmailClient
- - ♻️ refactor(delete): use GmailClient for message list creation
- - ♻️ refactor(trash): use GmailClient instead of credential string
- - ♻️ refactor(cli): use gmail client for label operations
- - ♻️ refactor(cli): use GmailClient in delete_cli
- - ♻️ refactor(cli): use GmailClient for MessageList
- - ♻️ refactor(cli): use client instance for message subcommand
- - ♻️ refactor(processor): use reference for GmailClient in processor builder
- - ♻️ refactor(cli): pass client to run command
- - ♻️ refactor(cli): use gmail client in run_cli
- - ♻️ refactor(cli): use client for trash subcommand
- - ♻️ refactor(cli): use GmailClient instead of credential file
- - ♻️ refactor(message_list): implement MessageList trait for GmailClient
- - ♻️ refactor(gmail_client): move message_summary to gmail_client
- - ♻️ refactor(processor): consolidate message operations in GmailClient
- - ♻️ refactor(core): remove unused Delete module - Delete module is no longer needed.
- - ♻️ refactor(delete): restructure delete functionality
- - ♻️ refactor(message_list): remove client parameter from add_labels
- - ♻️ refactor(trash): refactor trash module to trait implementation
- - ♻️ refactor(core): remove unused trash module
- - ♻️ refactor(processor): simplify trash_messages function
- - ♻️ refactor(gmail_client): change MessageSummary's visibility
- - ♻️ refactor(delete): streamline delete command execution
- - ♻️ refactor(message_cli): simplify message processing
- - ♻️ refactor(core): rename Processor to RuleProcessor
- - ♻️ refactor(cli): use mutable client for subcommands
- - ♻️ refactor(cli): rename Processor to RuleProcessor
- - ♻️ refactor(processor): implement RuleProcessor trait for GmailClient
- - ♻️ refactor(core): restructure modules for clarity
- - ♻️ refactor(message): remove delete functionality
- - ♻️ refactor(core): remove processor.rs
- - ♻️ refactor(cli): remove unused Delete, Trash trait - Remove Delete and Trash traits from cull_gmail - Use RuleProcessor instead of Delete and Trash traits
- - ♻️ refactor(cli): remove unused `Delete` import
- - ♻️ refactor(message_list): rename run to get_messages
- - ♻️ refactor(cli): extract parameter setting logic
  - ♻️ refactor(cli): streamline message retrieval and parameter setting
+ - ♻️ refactor(cli): extract parameter setting logic
+ - ♻️ refactor(message_list): rename run to get_messages
+ - ♻️ refactor(cli): remove unused `Delete` import
+ - ♻️ refactor(cli): remove unused Delete, Trash trait - Remove Delete and Trash traits from cull_gmail - Use RuleProcessor instead of Delete and Trash traits
+ - ♻️ refactor(core): remove processor.rs
+ - ♻️ refactor(message): remove delete functionality
+ - ♻️ refactor(core): restructure modules for clarity
+ - ♻️ refactor(processor): implement RuleProcessor trait for GmailClient
+ - ♻️ refactor(cli): rename Processor to RuleProcessor
+ - ♻️ refactor(cli): use mutable client for subcommands
+ - ♻️ refactor(core): rename Processor to RuleProcessor
+ - ♻️ refactor(message_cli): simplify message processing
+ - ♻️ refactor(delete): streamline delete command execution
+ - ♻️ refactor(gmail_client): change MessageSummary's visibility
+ - ♻️ refactor(processor): simplify trash_messages function
+ - ♻️ refactor(core): remove unused trash module
+ - ♻️ refactor(trash): refactor trash module to trait implementation
+ - ♻️ refactor(message_list): remove client parameter from add_labels
+ - ♻️ refactor(delete): restructure delete functionality
+ - ♻️ refactor(core): remove unused Delete module - Delete module is no longer needed.
+ - ♻️ refactor(processor): consolidate message operations in GmailClient
+ - ♻️ refactor(gmail_client): move message_summary to gmail_client
+ - ♻️ refactor(message_list): implement MessageList trait for GmailClient
+ - ♻️ refactor(cli): use GmailClient instead of credential file
+ - ♻️ refactor(cli): use client for trash subcommand
+ - ♻️ refactor(cli): use gmail client in run_cli
+ - ♻️ refactor(cli): pass client to run command
+ - ♻️ refactor(processor): use reference for GmailClient in processor builder
+ - ♻️ refactor(cli): use client instance for message subcommand
+ - ♻️ refactor(cli): use GmailClient for MessageList
+ - ♻️ refactor(cli): use GmailClient in delete_cli
+ - ♻️ refactor(cli): use gmail client for label operations
+ - ♻️ refactor(trash): use GmailClient instead of credential string
+ - ♻️ refactor(delete): use GmailClient for message list creation
+ - ♻️ refactor(message_list): update add_labels function to accept &GmailClient
+ - ♻️ refactor(gmail): improve gmail client structure
+ - ♻️ refactor(processor): use GmailClient instead of credential_file
+ - ♻️ refactor(cli): remove unused credential file
+ - ♻️ refactor(message_list): use gmail client for label retrieval
+ - ♻️ refactor(core): rename labels module to gmail_client
+ - ♻️ refactor(gmail): rename labels.rs to gmail_client.rs
 
 ## [0.0.7] - 2025-10-12
 
@@ -375,7 +398,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.7...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...HEAD
+[0.0.8]: https://github.com/jerus-org/cull-gmail/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/jerus-org/cull-gmail/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/jerus-org/cull-gmail/compare/v0.0.5...v0.0.6
 [0.0.5]: https://github.com/jerus-org/cull-gmail/compare/v0.0.4...v0.0.5
