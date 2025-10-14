@@ -1,6 +1,8 @@
 use clap::Parser;
 use cull_gmail::{GmailClient, MessageList, Result};
 
+use crate::message_trait::Message;
+
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
 pub struct MessageCli {
@@ -20,18 +22,20 @@ pub struct MessageCli {
 
 impl MessageCli {
     pub(crate) async fn run(&self, client: &mut GmailClient) -> Result<()> {
-        if !self.labels.is_empty() {
-            client.add_labels(&self.labels).await?;
-        }
+        self.set_parameters(client)?;
 
-        if let Some(query) = self.query.as_ref() {
-            client.set_query(query)
-        }
+        client.get_messages(self.pages).await
+    }
 
-        log::trace!("Max results: `{}`", self.max_results);
-        client.set_max_results(self.max_results);
-        log::debug!("List max results set to {}", client.max_results());
+    pub(crate) fn labels(&self) -> &Vec<String> {
+        &self.labels
+    }
 
-        client.run(self.pages).await
+    pub(crate) fn query(&self) -> &Option<String> {
+        &self.query
+    }
+
+    pub(crate) fn max_results(&self) -> u32 {
+        self.max_results
     }
 }
