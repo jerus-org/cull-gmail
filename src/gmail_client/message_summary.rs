@@ -1,3 +1,5 @@
+use crate::utils::Elide;
+
 #[derive(Debug, Clone)]
 pub struct MessageSummary {
     id: String,
@@ -18,8 +20,8 @@ impl MessageSummary {
         &self.id
     }
 
-    pub(crate) fn set_subject(&mut self, subject: &str) {
-        self.subject = Some(subject.to_string())
+    pub(crate) fn set_subject(&mut self, subject: Option<String>) {
+        self.subject = subject
     }
 
     pub(crate) fn subject(&self) -> &str {
@@ -30,8 +32,8 @@ impl MessageSummary {
         }
     }
 
-    pub(crate) fn set_date(&mut self, date: &str) {
-        self.date = Some(date.to_string())
+    pub(crate) fn set_date(&mut self, date: Option<String>) {
+        self.date = date
     }
 
     pub(crate) fn date(&self) -> &str {
@@ -51,7 +53,7 @@ impl MessageSummary {
             return "***invalid date or subject***".to_string();
         };
         let s = date[5..16].to_string();
-        let s = format!("{s}: {subject}");
+        let s = format!("{s}: {}", subject.to_string().elide(24));
         s
     }
 }
