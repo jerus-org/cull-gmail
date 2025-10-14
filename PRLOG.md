@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- 🐛 rule_processor: update Gmail API scope(pr [#65])
+
 ## [0.0.9] - 2025-10-14
 
 ### Added
@@ -192,6 +198,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#62]: https://github.com/jerus-org/cull-gmail/pull/62
 [#63]: https://github.com/jerus-org/cull-gmail/pull/63
 [#64]: https://github.com/jerus-org/cull-gmail/pull/64
+[#65]: https://github.com/jerus-org/cull-gmail/pull/65
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...HEAD
 [0.0.9]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/jerus-org/cull-gmail/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/jerus-org/cull-gmail/compare/v0.0.6...v0.0.7
