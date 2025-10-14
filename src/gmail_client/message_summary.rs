@@ -53,7 +53,7 @@ impl MessageSummary {
             return "***invalid date or subject***".to_string();
         };
         let s = date[5..16].to_string();
-        let s = format!("{s}: {}", subject.to_string().elide(24));
+        let s = format!("{s}: {}", subject.clone().elide(24));
         s
     }
 }
