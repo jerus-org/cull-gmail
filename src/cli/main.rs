@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 mod config_cli;
 mod label_cli;
 mod message_cli;
-mod run_cli;
+mod rules_cli;
 
 use cull_gmail::{Config, GmailClient, Result};
 use std::error::Error as stdError;
@@ -11,7 +11,7 @@ use std::error::Error as stdError;
 use config_cli::ConfigCli;
 use label_cli::LabelCli;
 use message_cli::MessageCli;
-use run_cli::RunCli;
+use rules_cli::RulesCli;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -39,7 +39,7 @@ enum SubCmds {
     Labels(LabelCli),
     /// Run the rules from the rules configuration
     #[clap(name = "run", display_order = 6, next_help_heading = "Rule Processing")]
-    Run(RunCli),
+    Rules(RulesCli),
 }
 
 #[tokio::main]
@@ -75,7 +75,7 @@ async fn run(args: Cli) -> Result<()> {
         SubCmds::Config(config_cli) => config_cli.run(config),
         SubCmds::Message(list_cli) => list_cli.run(&mut client).await,
         SubCmds::Labels(label_cli) => label_cli.run(client).await,
-        SubCmds::Run(run_cli) => run_cli.run(&mut client, config).await,
+        SubCmds::Rules(run_cli) => run_cli.run(&mut client, config).await,
     }
 }
 

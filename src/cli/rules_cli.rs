@@ -2,7 +2,7 @@ use clap::Parser;
 use cull_gmail::{Config, EolAction, GmailClient, Result, RuleProcessor};
 
 #[derive(Debug, Parser)]
-pub struct RunCli {
+pub struct RulesCli {
     /// Execute the action
     #[clap(short, long, display_order = 1, help_heading = "Action")]
     execute: bool,
@@ -14,7 +14,7 @@ pub struct RunCli {
     skip_delete: bool,
 }
 
-impl RunCli {
+impl RulesCli {
     pub async fn run(&self, client: &mut GmailClient, config: Config) -> Result<()> {
         let rules = config.get_rules_by_label();
 
