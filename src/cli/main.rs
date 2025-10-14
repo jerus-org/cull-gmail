@@ -30,22 +30,26 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum SubCmds {
     /// Configure rules and labels
-    #[clap(name = "config")]
+    #[clap(
+        name = "config",
+        display_order = 1,
+        next_help_heading = "Configuration"
+    )]
     Config(ConfigCli),
     /// List messages
-    #[clap(name = "message")]
+    #[clap(name = "message", display_order = 3, next_help_heading = "Messages")]
     Message(MessageCli),
     /// List labels
-    #[clap(name = "label")]
+    #[clap(name = "label", display_order = 2, next_help_heading = "Labels")]
     Labels(LabelCli),
     /// Move messages to trash
-    #[clap(name = "trash")]
+    #[clap(name = "trash", display_order = 4, next_help_heading = "Messages")]
     Trash(TrashCli),
     /// Delete messages
-    #[clap(name = "delete")]
+    #[clap(name = "delete", display_order = 5, next_help_heading = "Messages")]
     Delete(DeleteCli),
     /// Run the rules from the rules configuration
-    #[clap(name = "run")]
+    #[clap(name = "run", display_order = 6, next_help_heading = "Rule Processing")]
     Run(RunCli),
 }
 
