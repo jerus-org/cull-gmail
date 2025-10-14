@@ -4,10 +4,12 @@ mod config_cli;
 mod delete_cli;
 mod label_cli;
 mod message_cli;
+mod message_trait;
 mod run_cli;
 mod trash_cli;
 
 use cull_gmail::{Config, GmailClient, Result};
+use std::error::Error as stdError;
 
 use config_cli::ConfigCli;
 use delete_cli::DeleteCli;
@@ -15,8 +17,6 @@ use label_cli::LabelCli;
 use message_cli::MessageCli;
 use run_cli::RunCli;
 use trash_cli::TrashCli;
-
-use std::error::Error as stdError;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
