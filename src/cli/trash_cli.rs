@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Delete, Error, GmailClient, MessageList, Trash};
+use cull_gmail::{Error, GmailClient, MessageList, RuleProcessor};
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
