@@ -202,29 +202,37 @@ impl MessageList for GmailClient {
             let (_res, m) = hub
                 .users()
                 .messages_get("me", message.id())
-                .add_scope("https://www.googleapis.com/auth/gmail.metadata")
+                .add_scope("https://mail.google.com/")
                 .format("metadata")
                 .add_metadata_headers("subject")
+                .add_metadata_headers("date")
                 .doit()
                 .await
                 .map_err(Box::new)?;
 
             let mut subject = String::new();
+            let mut date = String::new();
             let Some(payload) = m.payload else { continue };
             let Some(headers) = payload.headers else {
                 continue;
             };
 
             for header in headers {
-                if header.name.is_some()
-                    && header.name.unwrap() == "Subject"
-                    && header.value.is_some()
-                {
-                    subject = header.value.unwrap();
-                    break;
+                if let Some(name) = header.name {
+                    match name.to_lowercase().as_str() {
+                        "subject" => subject = header.value.unwrap_or_default(),
+                        "date" => date = header.value.unwrap_or_default(),
+                        _ => {}
+                    }
                 } else {
                     continue;
                 }
+            }
+
+            if date.is_empty() {
+                log::info!("***No orig-date field***");
+            } else {
+                message.set_date(&date);
             }
 
             if subject.is_empty() {
@@ -232,8 +240,9 @@ impl MessageList for GmailClient {
             } else {
                 subject.elide(24);
                 message.set_subject(&subject);
-                log::info!("{subject:?}");
             }
+
+            log::info!("{}", message.list_date_and_subject());
         }
 
         Ok(())
