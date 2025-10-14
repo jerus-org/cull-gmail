@@ -1,11 +1,12 @@
 use clap::{Parser, Subcommand};
-use cull_gmail::{GmailClient, MessageList, Result};
+use cull_gmail::{GmailClient, MessageList, Result, RuleProcessor};
 
 use crate::message_trait::Message;
 
 #[derive(Debug, Subcommand)]
 enum MessageAction {
     List,
+    Trash,
 }
 
 /// Command line options for the list subcommand
@@ -43,12 +44,15 @@ impl MessageCli {
         match self.action {
             MessageAction::List => {
                 if log::max_level() >= log::Level::Info {
-                    client.log_message_subjects().await?;
+                    client.log_message_subjects().await
+                } else {
+                    Ok(())
                 }
             }
+            MessageAction::Trash => client.batch_trash().await,
         }
 
-        Ok(())
+        // Ok(())
     }
 
     pub(crate) fn labels(&self) -> &Vec<String> {
