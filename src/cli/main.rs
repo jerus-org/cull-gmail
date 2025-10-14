@@ -6,7 +6,6 @@ mod label_cli;
 mod message_cli;
 mod message_trait;
 mod run_cli;
-mod trash_cli;
 
 use cull_gmail::{Config, GmailClient, Result};
 use std::error::Error as stdError;
@@ -16,7 +15,6 @@ use delete_cli::DeleteCli;
 use label_cli::LabelCli;
 use message_cli::MessageCli;
 use run_cli::RunCli;
-use trash_cli::TrashCli;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -42,10 +40,6 @@ enum SubCmds {
     /// List labels
     #[clap(name = "label", display_order = 2, next_help_heading = "Labels")]
     Labels(LabelCli),
-    /// Move messages to trash
-    #[clap(name = "trash", display_order = 4, next_help_heading = "Messages")]
-    Trash(TrashCli),
-    /// Delete messages
     #[clap(name = "delete", display_order = 5, next_help_heading = "Messages")]
     Delete(DeleteCli),
     /// Run the rules from the rules configuration
@@ -86,7 +80,6 @@ async fn run(args: Cli) -> Result<()> {
         SubCmds::Config(config_cli) => config_cli.run(config),
         SubCmds::Message(list_cli) => list_cli.run(&mut client).await,
         SubCmds::Labels(label_cli) => label_cli.run(client).await,
-        SubCmds::Trash(trash_cli) => trash_cli.run(&mut client).await,
         SubCmds::Delete(delete_cli) => delete_cli.run(&mut client).await,
         SubCmds::Run(run_cli) => run_cli.run(&mut client, config).await,
     }
