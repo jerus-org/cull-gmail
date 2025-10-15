@@ -45,4 +45,7 @@ pub enum Error {
     /// Error from toml_de
     #[error(transparent)]
     TomlDe(#[from] toml::de::Error),
+    /// Error from config
+    #[error(transparent)]
+    Config(#[from] config::ConfigError),
 }
