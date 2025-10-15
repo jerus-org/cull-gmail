@@ -16,7 +16,6 @@ use crate::{EolAction, Error, MessageAge, Result, Retention};
 /// Configuration file for the program
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Rules {
-    credentials: Option<String>,
     rules: BTreeMap<String, EolRule>,
 }
 
@@ -24,10 +23,7 @@ impl Default for Rules {
     fn default() -> Self {
         let rules = BTreeMap::new();
 
-        let mut cfg = Self {
-            credentials: Some("credential.json".to_string()),
-            rules,
-        };
+        let mut cfg = Self { rules };
 
         cfg.add_rule(Retention::new(MessageAge::Years(1), true), None, false)
             .add_rule(Retention::new(MessageAge::Weeks(1), true), None, false)
@@ -42,12 +38,6 @@ impl Rules {
     /// Create a new configuration file
     pub fn new() -> Self {
         Rules::default()
-    }
-
-    /// Set a name for the credentials file
-    pub fn set_credentials(&mut self, file_name: &str) -> &mut Self {
-        self.credentials = Some(file_name.to_string());
-        self
     }
 
     /// Get the contents of an existing rule
@@ -189,9 +179,7 @@ impl Rules {
     /// Save the current configuration to the file
     pub fn save(&self) -> Result<()> {
         let home_dir = env::home_dir().unwrap();
-        let path = PathBuf::new()
-            .join(home_dir)
-            .join(".cull-gmail/cull-gmail.toml");
+        let path = PathBuf::new().join(home_dir).join(".cull-gmail/rules.toml");
 
         let res = toml::to_string(self);
         log::trace!("toml conversion result: {res:#?}");
@@ -207,23 +195,12 @@ impl Rules {
     /// Load the current configuration
     pub fn load() -> Result<Rules> {
         let home_dir = env::home_dir().unwrap();
-        let path = PathBuf::new()
-            .join(home_dir)
-            .join(".cull-gmail/cull-gmail.toml");
+        let path = PathBuf::new().join(home_dir).join(".cull-gmail/rules.toml");
         log::trace!("Loading config from {}", path.display());
 
         let input = read_to_string(path)?;
         let config = toml::from_str::<Rules>(&input)?;
         Ok(config)
-    }
-
-    /// Return the credential file name
-    pub fn credential_file(&self) -> &str {
-        if let Some(file) = &self.credentials {
-            file
-        } else {
-            ""
-        }
     }
 
     /// List the end of life rules set in the configuration
