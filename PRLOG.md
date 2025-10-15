@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ♻️ refactor(cli)-restructure cli commands for better organization(pr [#68])
 - ♻️ refactor-rename Config to Rules(pr [#69])
 - ♻️ refactor(cli)-remove config from run args(pr [#70])
+- ♻️ refactor(rules)-remove credentials config(pr [#71])
 
 ### Fixed
 
@@ -212,6 +213,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#68]: https://github.com/jerus-org/cull-gmail/pull/68
 [#69]: https://github.com/jerus-org/cull-gmail/pull/69
 [#70]: https://github.com/jerus-org/cull-gmail/pull/70
+[#71]: https://github.com/jerus-org/cull-gmail/pull/71
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...HEAD
 [0.0.9]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/jerus-org/cull-gmail/compare/v0.0.7...v0.0.8
