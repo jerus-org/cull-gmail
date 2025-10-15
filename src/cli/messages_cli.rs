@@ -10,7 +10,7 @@ enum MessageAction {
 
 /// Command line options for the list subcommand
 #[derive(Debug, Parser)]
-pub struct MessageCli {
+pub struct MessagesCli {
     /// Maximum results per page
     #[arg(short, long,display_order = 1, help_heading = "Config", default_value = cull_gmail::DEFAULT_MAX_RESULTS)]
     max_results: u32,
@@ -34,7 +34,7 @@ pub struct MessageCli {
     action: MessageAction,
 }
 
-impl MessageCli {
+impl MessagesCli {
     pub(crate) async fn run(&self, client: &mut GmailClient) -> Result<()> {
         self.set_parameters(client)?;
 
