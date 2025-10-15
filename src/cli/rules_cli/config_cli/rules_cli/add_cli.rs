@@ -1,7 +1,7 @@
 use std::fmt;
 
 use clap::{Parser, ValueEnum};
-use cull_gmail::{Rules, Error, MessageAge, Retention};
+use cull_gmail::{Error, MessageAge, Retention, Rules};
 
 #[derive(Debug, Clone, Parser, ValueEnum)]
 pub enum Period {

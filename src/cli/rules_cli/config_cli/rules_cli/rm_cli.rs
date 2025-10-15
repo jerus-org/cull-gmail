@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Rules, Error};
+use cull_gmail::{Error, Rules};
 
 #[derive(Debug, Parser)]
 pub struct RmCli {

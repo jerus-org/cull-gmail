@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 mod config_cli;
 mod run_cli;
 
-use cull_gmail::{Rules, GmailClient, Result};
+use cull_gmail::{GmailClient, Result, Rules};
 
 use config_cli::ConfigCli;
 use run_cli::RunCli;

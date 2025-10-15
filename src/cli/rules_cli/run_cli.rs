@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Rules, EolAction, GmailClient, Result, RuleProcessor};
+use cull_gmail::{EolAction, GmailClient, Result, RuleProcessor, Rules};
 
 #[derive(Debug, Parser)]
 pub struct RunCli {

@@ -1,6 +1,6 @@
 use clap::Parser;
 
-use cull_gmail::{Rules, Error, Result};
+use cull_gmail::{Error, Result, Rules};
 
 #[derive(Debug, Parser)]
 pub struct AddCli {
