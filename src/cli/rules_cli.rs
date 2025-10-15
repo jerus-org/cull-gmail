@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 mod config_cli;
 mod run_cli;
 
-use cull_gmail::{Config, GmailClient, Result};
+use cull_gmail::{Rules, GmailClient, Result};
 
 use config_cli::ConfigCli;
 use run_cli::RunCli;
@@ -25,7 +25,7 @@ pub struct RulesCli {
 }
 
 impl RulesCli {
-    pub async fn run(&self, client: &mut GmailClient, config: Config) -> Result<()> {
+    pub async fn run(&self, client: &mut GmailClient, config: Rules) -> Result<()> {
         match &self.sub_command {
             SubCmds::Config(config_cli) => config_cli.run(config),
             SubCmds::Run(run_cli) => run_cli.run(client, config).await,

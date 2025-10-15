@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use cull_gmail::{Config, Error};
+use cull_gmail::{Rules, Error};
 
 mod add_cli;
 mod rm_cli;
@@ -28,7 +28,7 @@ pub struct RulesCli {
 }
 
 impl RulesCli {
-    pub fn run(&self, config: Config) -> Result<(), Error> {
+    pub fn run(&self, config: Rules) -> Result<(), Error> {
         match &self.command {
             RulesCommands::List => config.list_rules(),
             RulesCommands::Add(add_cli) => add_cli.run(config),

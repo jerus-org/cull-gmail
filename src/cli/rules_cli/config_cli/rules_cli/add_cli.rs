@@ -1,7 +1,7 @@
 use std::fmt;
 
 use clap::{Parser, ValueEnum};
-use cull_gmail::{Config, Error, MessageAge, Retention};
+use cull_gmail::{Rules, Error, MessageAge, Retention};
 
 #[derive(Debug, Clone, Parser, ValueEnum)]
 pub enum Period {
@@ -39,7 +39,7 @@ pub struct AddCli {
 }
 
 impl AddCli {
-    pub fn run(&self, mut config: Config) -> Result<(), Error> {
+    pub fn run(&self, mut config: Rules) -> Result<(), Error> {
         let generate = self.label.is_none();
         let message_age = MessageAge::new(self.period.to_string().as_str(), self.count);
         let retention = Retention::new(message_age, generate);

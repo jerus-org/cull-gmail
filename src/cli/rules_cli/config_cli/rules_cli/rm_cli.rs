@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Config, Error};
+use cull_gmail::{Rules, Error};
 
 #[derive(Debug, Parser)]
 pub struct RmCli {
@@ -12,7 +12,7 @@ pub struct RmCli {
 }
 
 impl RmCli {
-    pub fn run(&self, mut config: Config) -> Result<(), Error> {
+    pub fn run(&self, mut config: Rules) -> Result<(), Error> {
         if self.id.is_none() && self.label.is_none() {
             return Err(Error::NoRuleSelector);
         }

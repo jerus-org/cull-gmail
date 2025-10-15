@@ -177,7 +177,7 @@ impl EolRule {
 mod test {
     use chrono::{Local, TimeZone};
 
-    use crate::{MessageAge, Retention, config::eol_rule::EolRule};
+    use crate::{MessageAge, Retention, rules::eol_rule::EolRule};
 
     fn build_test_rule(age: MessageAge) -> EolRule {
         let retention = Retention::new(age, true);

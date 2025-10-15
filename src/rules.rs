@@ -15,12 +15,12 @@ use crate::{EolAction, Error, MessageAge, Result, Retention};
 
 /// Configuration file for the program
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Config {
+pub struct Rules {
     credentials: Option<String>,
     rules: BTreeMap<String, EolRule>,
 }
 
-impl Default for Config {
+impl Default for Rules {
     fn default() -> Self {
         let rules = BTreeMap::new();
 
@@ -38,10 +38,10 @@ impl Default for Config {
     }
 }
 
-impl Config {
+impl Rules {
     /// Create a new configuration file
     pub fn new() -> Self {
-        Config::default()
+        Rules::default()
     }
 
     /// Set a name for the credentials file
@@ -205,7 +205,7 @@ impl Config {
     }
 
     /// Load the current configuration
-    pub fn load() -> Result<Config> {
+    pub fn load() -> Result<Rules> {
         let home_dir = env::home_dir().unwrap();
         let path = PathBuf::new()
             .join(home_dir)
@@ -213,7 +213,7 @@ impl Config {
         log::trace!("Loading config from {}", path.display());
 
         let input = read_to_string(path)?;
-        let config = toml::from_str::<Config>(&input)?;
+        let config = toml::from_str::<Rules>(&input)?;
         Ok(config)
     }
 
