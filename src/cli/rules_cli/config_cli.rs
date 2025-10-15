@@ -5,7 +5,7 @@ mod label_cli;
 mod rules_cli;
 
 use action_cli::ActionCli;
-use cull_gmail::{Config, Result};
+use cull_gmail::{Rules, Result};
 use label_cli::LabelCli;
 use rules_cli::RulesCli;
 
@@ -31,7 +31,7 @@ pub struct ConfigCli {
 }
 
 impl ConfigCli {
-    pub fn run(&self, config: Config) -> Result<()> {
+    pub fn run(&self, config: Rules) -> Result<()> {
         match &self.sub_command {
             SubCmds::Rules(rules_cli) => rules_cli.run(config),
             SubCmds::Label(label_cli) => label_cli.run(config),

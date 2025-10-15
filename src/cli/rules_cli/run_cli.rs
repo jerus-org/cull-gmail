@@ -1,5 +1,5 @@
 use clap::Parser;
-use cull_gmail::{Config, EolAction, GmailClient, Result, RuleProcessor};
+use cull_gmail::{Rules, EolAction, GmailClient, Result, RuleProcessor};
 
 #[derive(Debug, Parser)]
 pub struct RunCli {
@@ -15,7 +15,7 @@ pub struct RunCli {
 }
 
 impl RunCli {
-    pub async fn run(&self, client: &mut GmailClient, config: Config) -> Result<()> {
+    pub async fn run(&self, client: &mut GmailClient, config: Rules) -> Result<()> {
         let rules = config.get_rules_by_label();
 
         for label in config.labels() {

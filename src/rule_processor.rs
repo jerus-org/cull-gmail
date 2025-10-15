@@ -1,6 +1,6 @@
 use google_gmail1::api::{BatchDeleteMessagesRequest, BatchModifyMessagesRequest};
 
-use crate::{EolAction, Error, GmailClient, Result, config::EolRule, message_list::MessageList};
+use crate::{EolAction, Error, GmailClient, Result, message_list::MessageList, rules::EolRule};
 
 /// Rules processor to apply the configured rules to the mailbox.
 pub trait RuleProcessor {

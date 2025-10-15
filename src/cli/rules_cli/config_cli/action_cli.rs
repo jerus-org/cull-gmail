@@ -1,5 +1,5 @@
 use clap::{Parser, ValueEnum};
-use cull_gmail::{Config, EolAction, Error, Result};
+use cull_gmail::{Rules, EolAction, Error, Result};
 
 #[derive(Debug, Clone, Parser, ValueEnum)]
 pub enum Action {
@@ -22,7 +22,7 @@ pub struct ActionCli {
 }
 
 impl ActionCli {
-    pub fn run(&self, mut config: Config) -> Result<()> {
+    pub fn run(&self, mut config: Rules) -> Result<()> {
         if config.get_rule(self.id).is_none() {
             return Err(Error::RuleNotFound(self.id));
         }

@@ -14,7 +14,7 @@ mod message_summary;
 
 pub(crate) use message_summary::MessageSummary;
 
-use crate::{Credential, Error, Result, config::EolRule};
+use crate::{Credential, Error, Result, rules::EolRule};
 
 /// Default for the maximum number of results to return on a page
 pub const DEFAULT_MAX_RESULTS: &str = "200";

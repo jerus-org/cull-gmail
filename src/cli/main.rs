@@ -4,7 +4,7 @@ mod labels_cli;
 mod messages_cli;
 mod rules_cli;
 
-use cull_gmail::{Config, GmailClient, Result};
+use cull_gmail::{GmailClient, Result, Rules};
 use std::error::Error as stdError;
 
 use labels_cli::LabelsCli;
@@ -86,14 +86,14 @@ fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
     builder
 }
 
-fn get_config() -> Result<Config> {
-    match Config::load() {
+fn get_config() -> Result<Rules> {
+    match Rules::load() {
         Ok(c) => Ok(c),
         Err(_) => {
             log::warn!("Configuration not found, creating default config.");
-            let config = Config::new();
-            config.save()?;
-            Ok(config)
+            let rules = Rules::new();
+            rules.save()?;
+            Ok(rules)
         }
     }
 }

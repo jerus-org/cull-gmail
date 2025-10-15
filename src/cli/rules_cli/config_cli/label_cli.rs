@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use cull_gmail::{Config, Error};
+use cull_gmail::{Rules, Error};
 
 mod add_cli;
 mod list_cli;
@@ -30,7 +30,7 @@ pub struct LabelCli {
 }
 
 impl LabelCli {
-    pub fn run(&self, config: Config) -> Result<(), Error> {
+    pub fn run(&self, config: Rules) -> Result<(), Error> {
         match &self.command {
             LabelCommands::List(list_cli) => list_cli.run(config),
             LabelCommands::Add(add_cli) => add_cli.run(config),
