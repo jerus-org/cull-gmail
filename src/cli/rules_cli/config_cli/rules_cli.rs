@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use cull_gmail::{Rules, Error};
+use cull_gmail::{Error, Rules};
 
 mod add_cli;
 mod rm_cli;

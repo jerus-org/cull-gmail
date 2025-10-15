@@ -1,5 +1,5 @@
 use clap::{Parser, ValueEnum};
-use cull_gmail::{Rules, EolAction, Error, Result};
+use cull_gmail::{EolAction, Error, Result, Rules};
 
 #[derive(Debug, Clone, Parser, ValueEnum)]
 pub enum Action {

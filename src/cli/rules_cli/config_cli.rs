@@ -5,7 +5,7 @@ mod label_cli;
 mod rules_cli;
 
 use action_cli::ActionCli;
-use cull_gmail::{Rules, Result};
+use cull_gmail::{Result, Rules};
 use label_cli::LabelCli;
 use rules_cli::RulesCli;
 
