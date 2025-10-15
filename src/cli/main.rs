@@ -1,16 +1,14 @@
 use clap::{Parser, Subcommand};
 
-mod config_cli;
-mod label_cli;
-mod message_cli;
+mod labels_cli;
+mod messages_cli;
 mod rules_cli;
 
 use cull_gmail::{Config, GmailClient, Result};
 use std::error::Error as stdError;
 
-use config_cli::ConfigCli;
-use label_cli::LabelCli;
-use message_cli::MessageCli;
+use labels_cli::LabelsCli;
+use messages_cli::MessagesCli;
 use rules_cli::RulesCli;
 
 #[derive(Parser, Debug)]
@@ -24,21 +22,14 @@ struct Cli {
 
 #[derive(Subcommand, Debug)]
 enum SubCmds {
-    /// Configure rules and labels
-    #[clap(
-        name = "config",
-        display_order = 1,
-        next_help_heading = "Configuration"
-    )]
-    Config(ConfigCli),
     /// List messages
-    #[clap(name = "message", display_order = 3, next_help_heading = "Messages")]
-    Message(MessageCli),
+    #[clap(name = "messages", display_order = 3, next_help_heading = "Labels")]
+    Message(MessagesCli),
     /// List labels
-    #[clap(name = "label", display_order = 2, next_help_heading = "Labels")]
-    Labels(LabelCli),
-    /// Run the rules from the rules configuration
-    #[clap(name = "run", display_order = 6, next_help_heading = "Rule Processing")]
+    #[clap(name = "labels", display_order = 2, next_help_heading = "Rules")]
+    Labels(LabelsCli),
+    /// Configure and run rules
+    #[clap(name = "rules", display_order = 2)]
     Rules(RulesCli),
 }
 
@@ -72,10 +63,9 @@ async fn run(args: Cli) -> Result<()> {
     let mut client = GmailClient::new(config.credential_file()).await?;
 
     match args.sub_command {
-        SubCmds::Config(config_cli) => config_cli.run(config),
-        SubCmds::Message(list_cli) => list_cli.run(&mut client).await,
-        SubCmds::Labels(label_cli) => label_cli.run(client).await,
-        SubCmds::Rules(run_cli) => run_cli.run(&mut client, config).await,
+        SubCmds::Message(messages_cli) => messages_cli.run(&mut client).await,
+        SubCmds::Labels(labels_cli) => labels_cli.run(client).await,
+        SubCmds::Rules(rules_cli) => rules_cli.run(&mut client, config).await,
     }
 }
 
