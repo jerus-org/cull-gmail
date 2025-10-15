@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ♻️ refactor(rule_processor)-remove unused delete functions(pr [#66])
 - ♻️ refactor(message_list)-rename messages_list to list_messages(pr [#67])
+- ♻️ refactor(cli)-restructure cli commands for better organization(pr [#68])
 
 ### Fixed
 
@@ -206,6 +207,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#65]: https://github.com/jerus-org/cull-gmail/pull/65
 [#66]: https://github.com/jerus-org/cull-gmail/pull/66
 [#67]: https://github.com/jerus-org/cull-gmail/pull/67
+[#68]: https://github.com/jerus-org/cull-gmail/pull/68
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...HEAD
 [0.0.9]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/jerus-org/cull-gmail/compare/v0.0.7...v0.0.8
