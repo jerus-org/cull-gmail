@@ -4,8 +4,9 @@ mod labels_cli;
 mod messages_cli;
 mod rules_cli;
 
-use cull_gmail::{GmailClient, Result, Rules};
-use std::error::Error as stdError;
+use config::Config;
+use cull_gmail::{GmailClient, Result};
+use std::{env, error::Error as stdError};
 
 use labels_cli::LabelsCli;
 use messages_cli::MessagesCli;
@@ -57,7 +58,10 @@ async fn main() {
 }
 
 async fn run(args: Cli) -> Result<()> {
-    let mut client = GmailClient::new("credential.json").await?;
+    let config = get_config()?;
+
+    let credential = config.get_string("credentials")?;
+    let mut client = GmailClient::new(&credential).await?;
 
     match args.sub_command {
         SubCmds::Message(messages_cli) => messages_cli.run(&mut client).await,
@@ -83,23 +87,19 @@ fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
     builder
 }
 
-fn get_config() -> Result<Rules> {
-    // let settings = Config::builder()
-    //     // Add in `./Settings.toml`
-    //     .add_source(config::File::with_name("examples/simple/Settings"))
-    //     // Add in settings from the environment (with a prefix of APP)
-    //     // Eg.. `APP_DEBUG=1 ./target/app` would set the `debug` key
-    //     .add_source(config::Environment::with_prefix("APP"))
-    //     .build()
-    //     .unwrap();
+fn get_config() -> Result<Config> {
+    let home_dir = env::home_dir().unwrap();
+    let path = home_dir.join(".cull-gmail/rules.toml");
+    log::trace!("Loading config from {}", path.display());
 
-    match Rules::load() {
-        Ok(c) => Ok(c),
-        Err(_) => {
-            log::warn!("Configuration not found, creating default config.");
-            let rules = Rules::new();
-            rules.save()?;
-            Ok(rules)
-        }
-    }
+    Ok(Config::builder()
+        .set_default("credentials", "credential.json")?
+        // Add in `./Settings.toml`
+        .add_source(config::File::with_name(
+            path.to_path_buf().to_str().unwrap(),
+        ))
+        // Add in settings from the environment (with a prefix of APP)
+        // Eg.. `APP_DEBUG=1 ./target/app` would set the `debug` key
+        .add_source(config::Environment::with_prefix("APP"))
+        .build()?)
 }
