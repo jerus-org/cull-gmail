@@ -26,7 +26,7 @@ impl fmt::Display for EolRule {
                 self.id,
                 self.labels
                     .iter()
-                    .map(|i| i.to_string())
+                    .cloned()
                     .collect::<Vec<String>>()
                     .join(", ")
             )
@@ -73,7 +73,7 @@ impl EolRule {
 
     /// List the labels in the rules
     pub fn labels(&self) -> Vec<String> {
-        self.labels.iter().map(|i| i.to_string()).collect()
+        self.labels.iter().cloned().collect()
     }
 
     pub(crate) fn set_action(&mut self, value: &EolAction) -> &mut Self {
