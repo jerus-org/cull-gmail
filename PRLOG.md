@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- ♻️ refactor(rule_processor)-remove unused delete functions(pr [#66])
+
 ### Fixed
 
 - 🐛 rule_processor: update Gmail API scope(pr [#65])
@@ -199,6 +203,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#63]: https://github.com/jerus-org/cull-gmail/pull/63
 [#64]: https://github.com/jerus-org/cull-gmail/pull/64
 [#65]: https://github.com/jerus-org/cull-gmail/pull/65
+[#66]: https://github.com/jerus-org/cull-gmail/pull/66
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...HEAD
 [0.0.9]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/jerus-org/cull-gmail/compare/v0.0.7...v0.0.8
