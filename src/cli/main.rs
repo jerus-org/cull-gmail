@@ -57,15 +57,12 @@ async fn main() {
 }
 
 async fn run(args: Cli) -> Result<()> {
-    let config = get_config()?;
-    log::trace!("Configuration loaded: {config:#?}");
-
-    let mut client = GmailClient::new(config.credential_file()).await?;
+    let mut client = GmailClient::new("credential.json").await?;
 
     match args.sub_command {
         SubCmds::Message(messages_cli) => messages_cli.run(&mut client).await,
         SubCmds::Labels(labels_cli) => labels_cli.run(client).await,
-        SubCmds::Rules(rules_cli) => rules_cli.run(&mut client, config).await,
+        SubCmds::Rules(rules_cli) => rules_cli.run(&mut client).await,
     }
 }
 

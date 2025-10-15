@@ -15,11 +15,11 @@ pub struct RunCli {
 }
 
 impl RunCli {
-    pub async fn run(&self, client: &mut GmailClient, config: Rules) -> Result<()> {
-        let rules = config.get_rules_by_label();
+    pub async fn run(&self, client: &mut GmailClient, rules: Rules) -> Result<()> {
+        let rules_by_labels = rules.get_rules_by_label();
 
-        for label in config.labels() {
-            let Some(rule) = rules.get(&label) else {
+        for label in rules.labels() {
+            let Some(rule) = rules_by_labels.get(&label) else {
                 log::warn!("no rule found for label `{label}`");
                 continue;
             };

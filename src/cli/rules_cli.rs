@@ -25,10 +25,24 @@ pub struct RulesCli {
 }
 
 impl RulesCli {
-    pub async fn run(&self, client: &mut GmailClient, config: Rules) -> Result<()> {
+    pub async fn run(&self, client: &mut GmailClient) -> Result<()> {
+        let rules = get_config()?;
+
         match &self.sub_command {
-            SubCmds::Config(config_cli) => config_cli.run(config),
-            SubCmds::Run(run_cli) => run_cli.run(client, config).await,
+            SubCmds::Config(config_cli) => config_cli.run(rules),
+            SubCmds::Run(run_cli) => run_cli.run(client, rules).await,
+        }
+    }
+}
+
+fn get_config() -> Result<Rules> {
+    match Rules::load() {
+        Ok(c) => Ok(c),
+        Err(_) => {
+            log::warn!("Configuration not found, creating default config.");
+            let rules = Rules::new();
+            rules.save()?;
+            Ok(rules)
         }
     }
 }
