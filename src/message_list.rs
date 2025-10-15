@@ -10,7 +10,7 @@ pub trait MessageList {
     /// Log the initial characters of the subjects of the message in the list
     fn log_messages(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
     /// List of messages
-    fn messages_list(
+    fn list_messages(
         &mut self,
         next_page_token: Option<String>,
     ) -> impl std::future::Future<Output = Result<ListMessagesResponse>> + Send;
@@ -37,17 +37,6 @@ pub trait MessageList {
 }
 
 impl MessageList for GmailClient {
-    // /// Create a new List struct and add the Gmail api connection.
-    // async fn new(client: &GmailClient) -> Result<Self> {
-    //     Ok(MessageList {
-    //         hub: client.hub(),
-    //         max_results: DEFAULT_MAX_RESULTS.parse::<u32>().unwrap(),
-    //         label_ids: Vec::new(),
-    //         messages: Vec::new(),
-    //         query: String::new(),
-    //     })
-    // }
-
     /// Set the maximum results
     fn set_max_results(&mut self, value: u32) {
         self.max_results = value;
@@ -111,7 +100,7 @@ impl MessageList for GmailClient {
 
     /// Run the Gmail api as configured
     async fn get_messages(&mut self, pages: u32) -> Result<()> {
-        let list = self.messages_list(None).await?;
+        let list = self.list_messages(None).await?;
         match pages {
             1 => {}
             0 => {
@@ -123,7 +112,7 @@ impl MessageList for GmailClient {
                     if list.next_page_token.is_none() {
                         break;
                     }
-                    list = self.messages_list(list.next_page_token).await?;
+                    list = self.list_messages(list.next_page_token).await?;
                     // self.log_message_subjects(&list).await?;
                 }
             }
@@ -134,7 +123,7 @@ impl MessageList for GmailClient {
                     if list.next_page_token.is_none() {
                         break;
                     }
-                    list = self.messages_list(list.next_page_token).await?;
+                    list = self.list_messages(list.next_page_token).await?;
                     // self.log_message_subjects(&list).await?;
                 }
             }
@@ -143,7 +132,7 @@ impl MessageList for GmailClient {
         Ok(())
     }
 
-    async fn messages_list(
+    async fn list_messages(
         &mut self,
         next_page_token: Option<String>,
     ) -> Result<ListMessagesResponse> {
@@ -164,7 +153,7 @@ impl MessageList for GmailClient {
             log::debug!("Setting query string `{}`", self.query);
             call = call.q(&self.query);
         }
-        // Add a page token if it exists
+        // Add a page token
         if let Some(page_token) = next_page_token {
             log::debug!("Setting token for next page.");
             call = call.page_token(&page_token);
