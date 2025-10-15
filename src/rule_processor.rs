@@ -11,16 +11,6 @@ pub trait RuleProcessor {
     ) -> impl std::future::Future<Output = Result<()>> + Send;
     /// Set the execute flag in the client
     fn set_execute(&mut self, value: bool);
-    // /// Delete messages
-    // fn delete_messages(
-    //     &mut self,
-    //     label: &str,
-    // ) -> impl std::future::Future<Output = Result<()>> + Send;
-    // /// Trash Messages
-    // fn trash_messages(
-    //     &mut self,
-    //     label: &str,
-    // ) -> impl std::future::Future<Output = Result<()>> + Send;
     /// Set rule to process
     fn set_rule(&mut self, action: EolRule);
     /// Report the action from the rule
@@ -81,64 +71,6 @@ impl RuleProcessor for GmailClient {
         }
     }
 
-    // /// Trash the messages
-    // async fn trash_messages(&mut self, label: &str) -> Result<()> {
-    //     self.add_labels(&[label.to_string()]).await?;
-
-    //     if self.label_ids().is_empty() {
-    //         return Err(Error::LabelNotFoundInMailbox(label.to_string()));
-    //     }
-
-    //     let Some(rule) = &self.rule else {
-    //         return Err(Error::RuleNotFound(0));
-    //     };
-
-    //     let Some(query) = rule.eol_query() else {
-    //         return Err(Error::NoQueryStringCalculated(rule.id()));
-    //     };
-    //     self.set_query(&query);
-
-    //     log::info!("{:?}", self.messages());
-    //     log::info!("Ready to run");
-    //     self.prepare(0).await?;
-    //     if self.execute {
-    //         log::info!("***executing final delete messages***");
-    //         self.batch_trash().await
-    //     } else {
-    //         log::warn!("Execution stopped for dry run");
-    //         Ok(())
-    //     }
-    // }
-
-    // /// Delete the messages
-    // async fn delete_messages(&mut self, label: &str) -> Result<()> {
-    //     self.add_labels(&[label.to_string()]).await?;
-
-    //     if self.label_ids().is_empty() {
-    //         return Err(Error::LabelNotFoundInMailbox(label.to_string()));
-    //     }
-
-    //     let Some(rule) = &self.rule else {
-    //         return Err(Error::RuleNotFound(0));
-    //     };
-
-    //     let Some(query) = rule.eol_query() else {
-    //         return Err(Error::NoQueryStringCalculated(rule.id()));
-    //     };
-    //     self.set_query(&query);
-
-    //     log::info!("{:?}", self.messages());
-    //     log::info!("Ready to run");
-    //     self.prepare(0).await?;
-    //     if self.execute {
-    //         log::info!("***executing final delete messages***");
-    //         self.batch_delete().await
-    //     } else {
-    //         log::warn!("Execution stopped for dry run");
-
-    //         Ok(())
-    //     }
-    // }
     /// Prepare the message list for delete to be completed on execute by batch_delete
     async fn prepare(&mut self, pages: u32) -> Result<()> {
         self.get_messages(pages).await
