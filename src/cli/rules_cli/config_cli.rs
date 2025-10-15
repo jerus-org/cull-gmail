@@ -31,11 +31,11 @@ pub struct ConfigCli {
 }
 
 impl ConfigCli {
-    pub fn run(&self, config: Rules) -> Result<()> {
+    pub fn run(&self, rules: Rules) -> Result<()> {
         match &self.sub_command {
-            SubCmds::Rules(rules_cli) => rules_cli.run(config),
-            SubCmds::Label(label_cli) => label_cli.run(config),
-            SubCmds::Action(action_cli) => action_cli.run(config),
+            SubCmds::Rules(rules_cli) => rules_cli.run(rules),
+            SubCmds::Label(label_cli) => label_cli.run(rules),
+            SubCmds::Action(action_cli) => action_cli.run(rules),
         }
     }
 }
