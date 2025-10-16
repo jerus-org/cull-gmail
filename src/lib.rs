@@ -13,6 +13,8 @@ mod message_list;
 mod retention;
 mod rule_processor;
 mod rules;
+#[cfg(test)]
+pub(crate) mod test_utils;
 
 pub(crate) mod utils;
 
