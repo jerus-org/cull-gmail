@@ -1,32 +1,49 @@
-use std::{env, fmt::Display};
+use std::{env, fmt::Display, path::PathBuf};
 
 use lazy_regex::{Lazy, Regex, lazy_regex};
 
 static ROOT_CONFIG: Lazy<Regex> = lazy_regex!(r"^(?P<class>[hrc]):(?P<path>.+)$");
 
-#[derive(Debug, Default)]
-pub enum ConfigRoot {
+#[derive(Debug, Default, Clone)]
+pub enum RootBase {
     #[default]
     None,
-    Crate(String),
-    Home(String),
-    Root(String),
+    Crate,
+    Home,
+    Root,
+}
+
+impl Display for RootBase {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RootBase::None => write!(f, ""),
+            RootBase::Crate => write!(f, "c:"),
+            RootBase::Home => write!(f, "h:"),
+            RootBase::Root => write!(f, "r:"),
+        }
+    }
+}
+
+impl RootBase {
+    fn path(&self) -> PathBuf {
+        match self {
+            RootBase::None => PathBuf::new(),
+            RootBase::Crate => PathBuf::new(),
+            RootBase::Home => env::home_dir().unwrap_or_default(),
+            RootBase::Root => PathBuf::from("/"),
+        }
+    }
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct ConfigRoot {
+    root: RootBase,
+    path: String,
 }
 
 impl Display for ConfigRoot {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            ConfigRoot::None => write!(f, ""),
-            ConfigRoot::Crate(path) => write!(f, "{path}"),
-            ConfigRoot::Home(path) => {
-                let pb = path.trim_start_matches("/");
-                write!(f, "{}/{}", env::home_dir().unwrap().display(), pb)
-            }
-            ConfigRoot::Root(path) => {
-                let pb = path.trim_start_matches("/");
-                write!(f, "/{pb}")
-            }
-        }
+        write!(f, "{}{}", self.root, self.path)
     }
 }
 
@@ -34,7 +51,10 @@ impl ConfigRoot {
     pub fn parse(s: &str) -> Self {
         log::debug!("parsing the string `{s}`");
         let Some(captures) = ROOT_CONFIG.captures(s) else {
-            return ConfigRoot::None;
+            return ConfigRoot {
+                root: RootBase::None,
+                path: "".to_string(),
+            };
         };
         log::debug!("found captures `{captures:?}`");
 
@@ -45,21 +65,36 @@ impl ConfigRoot {
         });
         log::debug!("set the path to `{path}`");
 
-        let Some(class) = captures.name("class") else {
-            return ConfigRoot::None;
+        let class = if let Some(c) = captures.name("class") {
+            c.as_str()
+        } else {
+            ""
         };
         log::debug!("found the class `{class:?}`");
 
-        match class.as_str() {
-            "h" => ConfigRoot::Home(path),
-            "r" => ConfigRoot::Root(path),
-            "c" => ConfigRoot::Crate(path),
+        let root = match class {
+            "c" => RootBase::Crate,
+            "h" => RootBase::Home,
+            "r" => RootBase::Root,
+            "" => RootBase::None,
             _ => unreachable!(),
-        }
+        };
+
+        ConfigRoot { root, path }
+    }
+
+    pub fn set_root_base(&mut self, root: &RootBase) {
+        self.root = root.to_owned();
+    }
+
+    pub fn set_path(&mut self, path: &str) {
+        self.path = path.to_string();
+    }
+
+    pub fn full_path(&self) -> PathBuf {
+        self.root.path().join(&self.path)
     }
 }
-
-enum ConfigRootError {}
 
 #[cfg(test)]
 mod tests {
@@ -80,7 +115,10 @@ mod tests {
 
         let expected = user_home.join(dir_part).display().to_string();
 
-        assert_eq!(expected, ConfigRoot::parse(&input).to_string());
+        let output = ConfigRoot::parse(&input);
+        log::debug!("Output set to: `{output:?}`");
+
+        assert_eq!(expected, output.full_path().to_string_lossy().to_string());
     }
 
     #[test]
@@ -92,7 +130,10 @@ mod tests {
 
         let expected = format!("/{dir_part}");
 
-        assert_eq!(expected, ConfigRoot::parse(&input).to_string());
+        let output = ConfigRoot::parse(&input);
+        log::debug!("Output set to: `{output:?}`");
+
+        assert_eq!(expected, output.full_path().to_string_lossy().to_string());
     }
 
     #[test]
@@ -102,7 +143,10 @@ mod tests {
         log::debug!("Input set to: `{input}`");
         let expected = input[2..].to_string();
 
-        assert_eq!(expected, ConfigRoot::parse(&input).to_string());
+        let output = ConfigRoot::parse(&input);
+        log::debug!("Output set to: `{output:?}`");
+
+        assert_eq!(expected, output.full_path().to_string_lossy().to_string());
     }
 
     #[test]
@@ -113,6 +157,9 @@ mod tests {
 
         let expected = "".to_string();
 
-        assert_eq!(expected, ConfigRoot::parse(&input).to_string());
+        let output = ConfigRoot::parse(&input);
+        log::debug!("Output set to: `{output:?}`");
+
+        assert_eq!(expected, output.full_path().to_string_lossy().to_string());
     }
 }
