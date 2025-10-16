@@ -4,6 +4,7 @@
 #![cfg_attr(docsrs, warn(rustdoc::invalid_codeblock_attributes))]
 #![doc = include_str!("../docs/lib.md")]
 
+mod client_config;
 mod credential;
 mod eol_action;
 mod error;
@@ -17,6 +18,7 @@ pub(crate) mod utils;
 
 pub use gmail_client::DEFAULT_MAX_RESULTS;
 
+pub use client_config::ClientConfig;
 pub use credential::Credential;
 pub use gmail_client::GmailClient;
 pub(crate) use gmail_client::MessageSummary;
