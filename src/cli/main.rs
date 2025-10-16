@@ -4,7 +4,8 @@ mod labels_cli;
 mod messages_cli;
 mod rules_cli;
 
-use cull_gmail::{ClientConfig, GmailClient, Result};
+use config::Config;
+use cull_gmail::{ClientConfig, EolAction, GmailClient, Result, RuleProcessor, Rules};
 use std::{env, error::Error as stdError};
 
 use labels_cli::LabelsCli;
@@ -17,7 +18,7 @@ struct Cli {
     #[clap(flatten)]
     logging: clap_verbosity_flag::Verbosity,
     #[command(subcommand)]
-    sub_command: SubCmds,
+    sub_command: Option<SubCmds>,
 }
 
 #[derive(Subcommand, Debug)]
@@ -57,11 +58,17 @@ async fn main() {
 }
 
 async fn run(args: Cli) -> Result<()> {
-    let config = get_config()?;
+    let (config, client_config) = get_config()?;
 
-    let mut client = GmailClient::new_with_config(config).await?;
+    let mut client = GmailClient::new_with_config(client_config).await?;
 
-    match args.sub_command {
+    let Some(sub_command) = args.sub_command else {
+        let rules = rules_cli::get_rules()?;
+        let execute = config.get_bool("execute").unwrap_or(false);
+        return run_rules(&mut client, rules, execute).await;
+    };
+
+    match sub_command {
         SubCmds::Message(messages_cli) => messages_cli.run(&mut client).await,
         SubCmds::Labels(labels_cli) => labels_cli.run(client).await,
         SubCmds::Rules(rules_cli) => rules_cli.run(&mut client).await,
@@ -85,7 +92,7 @@ fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
     builder
 }
 
-fn get_config() -> Result<ClientConfig> {
+fn get_config() -> Result<(Config, ClientConfig)> {
     let home_dir = env::home_dir().unwrap();
     let path = home_dir.join(".cull-gmail/cull-gmail.toml");
     log::info!("Loading config from {}", path.display());
@@ -94,14 +101,61 @@ fn get_config() -> Result<ClientConfig> {
         .set_default("credentials", "credential.json")?
         .set_default("config_root", "h:.cull-gmail")?
         .set_default("rules", "rules.toml")?
-        // Add in `./Settings.toml`
+        .set_default("execute", true)?
         .add_source(config::File::with_name(
             path.to_path_buf().to_str().unwrap(),
         ))
-        // Add in settings from the environment (with a prefix of APP)
-        // Eg.. `APP_DEBUG=1 ./target/app` would set the `debug` key
         .add_source(config::Environment::with_prefix("APP"))
         .build()?;
 
-    ClientConfig::new_from_configuration(configurations)
+    Ok((
+        configurations.clone(),
+        ClientConfig::new_from_configuration(configurations)?,
+    ))
+}
+
+async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Result<()> {
+    let rules_by_labels = rules.get_rules_by_label();
+
+    for label in rules.labels() {
+        let Some(rule) = rules_by_labels.get(&label) else {
+            log::warn!("no rule found for label `{label}`");
+            continue;
+        };
+
+        log::info!("Executing rule `#{}` for label `{label}`", rule.describe());
+        client.set_rule(rule.clone());
+        client.set_execute(execute);
+        if let Err(e) = client.find_rule_and_messages_for_label(&label).await {
+            log::warn!("Nothing to process for label `{label}` as {e}");
+            continue;
+        }
+        let Some(action) = client.action() else {
+            log::warn!("no valid action specified for rule #{}", rule.id());
+            continue;
+        };
+
+        if execute {
+            match action {
+                EolAction::Trash => {
+                    log::info!("***executing trash messages***");
+                    if client.batch_trash().await.is_err() {
+                        log::warn!("Move to trash failed for label `{label}`");
+                        continue;
+                    }
+                }
+                EolAction::Delete => {
+                    log::info!("***executing final delete messages***");
+                    if client.batch_delete().await.is_err() {
+                        log::warn!("Delete failed for label `{label}`");
+                        continue;
+                    }
+                }
+            }
+        } else {
+            log::warn!("Execution stopped for dry run");
+        }
+    }
+
+    Ok(())
 }
