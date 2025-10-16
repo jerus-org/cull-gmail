@@ -40,7 +40,9 @@ impl ClientConfig {
             }
         } else {
             let credential_file = configs.get_string("credential_file")?;
-            let path = PathBuf::from(root).join(credential_file);
+            log::info!("root: {config_root}");
+            let path = PathBuf::from(config_root.to_string()).join(credential_file);
+            log::info!("path: {}", path.display());
             let json_str = fs::read_to_string(path).expect("could not read path");
 
             let console: ConsoleApplicationSecret =
