@@ -72,13 +72,14 @@ impl GmailClient {
             .build();
 
         let client = Client::builder(executor.clone()).build(connector.clone());
+        log::trace!("file to persist tokens to `{}`", config.persist_path());
 
         let auth = InstalledFlowAuthenticator::with_client(
             config.secret().clone(),
             InstalledFlowReturnMethod::HTTPRedirect,
             Client::builder(executor).build(connector),
         )
-        .persist_tokens_to_disk(format!("{}/gmail1", config.config_root()))
+        .persist_tokens_to_disk(config.persist_path())
         .build()
         .await
         .unwrap();
