@@ -4,7 +4,7 @@ description = "Cull emails from a gmail account using the gmail API"
 version = "0.0.9"
 authors = ["Jeremiah Russell <jrussell@jerus.ie>"]
 edition = "2024"
-rust-version = "1.87"
+rust-version = "1.88"
 keywords = ["gmail", "gmail-api", "management"]
 categories = ["command-line-utilities"]
 license = "MIT"
@@ -24,7 +24,10 @@ include = [
 chrono = "0.4.42"
 clap = { version = "4.5.48", features = ["derive"] }
 clap-verbosity-flag = { version = "3.0.4", features = ["tracing"] }
-config = { version = "0.15.18", default-features = false, features = ["json", "toml"] }
+config = { version = "0.15.18", default-features = false, features = [
+    "json",
+    "toml",
+] }
 env_logger = "0.11.8"
 google-gmail1 = "6.0.0"
 lazy-regex = "3.4.1"

@@ -2,7 +2,7 @@
 
 [splash]: https://raw.githubusercontent.com/jerus-org/cull-gmail/main/assets/splash.svg
 
-[![Rust 1.87+][version-badge]][version-url]
+[![Rust 1.88+][version-badge]][version-url]
 [![circleci-badge]][circleci-url]
 [![Crates.io][crates-badge]][crates-url]
 [![Docs][docs-badge]][docs-url]
@@ -18,7 +18,7 @@
 [apache-url]: https://github.com/jerusdp/cull-gmail/blob/main/LICENSE-APACHE
 [circleci-badge]: https://dl.circleci.com/status-badge/img/gh/jerus-org/cull-gmail/tree/main.svg?style=svg
 [circleci-url]: https://dl.circleci.com/status-badge/redirect/gh/jerus-org/cull-gmail/tree/main
-[version-badge]: https://img.shields.io/badge/rust-1.87+-orange.svg
+[version-badge]: https://img.shields.io/badge/rust-1.88+-orange.svg
 [version-url]: https://www.rust-lang.org
 [docs-badge]:  https://docs.rs/cull-gmail/badge.svg
 [docs-url]:  https://docs.rs/cull-gmail

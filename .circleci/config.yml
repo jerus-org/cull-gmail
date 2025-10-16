@@ -6,7 +6,7 @@ parameters:
     default: SHA256:OkxsH8Z6Iim6WDJBaII9eTT9aaO1f3eDc6IpsgYYPVg
   min-rust-version:
     type: string
-    default: "1.87"
+    default: "1.88"
   release-flag:
     type: boolean
     default: false
