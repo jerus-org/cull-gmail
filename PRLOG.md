@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ add config file support(pr [#72])
 - ✨ introduce client configuration(pr [#73])
 - ✨ implement config builder pattern for ClientConfig(pr [#74])
+- ✨ add default subcommand for rule execution(pr [#75])
 
 ### Changed
 
@@ -223,6 +224,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#72]: https://github.com/jerus-org/cull-gmail/pull/72
 [#73]: https://github.com/jerus-org/cull-gmail/pull/73
 [#74]: https://github.com/jerus-org/cull-gmail/pull/74
+[#75]: https://github.com/jerus-org/cull-gmail/pull/75
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...HEAD
 [0.0.9]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/jerus-org/cull-gmail/compare/v0.0.7...v0.0.8
