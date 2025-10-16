@@ -25,13 +25,13 @@ pub(crate) fn assure_config_dir_exists(dir: &str) -> Result<String> {
         trdir.to_string()
     };
 
-    if let Err(err) = fs::create_dir(&expanded_config_dir) {
-        if err.kind() != io::ErrorKind::AlreadyExists {
-            return Err(Error::DirectoryCreationFailed((
-                expanded_config_dir,
-                Box::new(err),
-            )));
-        }
+    if let Err(err) = fs::create_dir(&expanded_config_dir)
+        && err.kind() != io::ErrorKind::AlreadyExists
+    {
+        return Err(Error::DirectoryCreationFailed((
+            expanded_config_dir,
+            Box::new(err),
+        )));
     }
 
     Ok(expanded_config_dir)
