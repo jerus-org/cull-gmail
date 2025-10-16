@@ -26,7 +26,7 @@ pub struct RulesCli {
 
 impl RulesCli {
     pub async fn run(&self, client: &mut GmailClient) -> Result<()> {
-        let rules = get_config()?;
+        let rules = get_rules()?;
 
         match &self.sub_command {
             SubCmds::Config(config_cli) => config_cli.run(rules),
@@ -35,7 +35,7 @@ impl RulesCli {
     }
 }
 
-fn get_config() -> Result<Rules> {
+pub fn get_rules() -> Result<Rules> {
     match Rules::load() {
         Ok(c) => Ok(c),
         Err(_) => {
