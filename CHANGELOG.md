@@ -5,17 +5,59 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.9] - 2025-10-14
+## [0.0.10] - 2025-10-16
 
-Summary: Added[5], Changed[3], Chore[1], Fixed[2]
+Summary: Added[11], Changed[15], Chore[11], Fixed[3]
 
 ### Added
 
- - ✨ feat(cli): add configuration options for message listing
- - ✨ feat(cli): add message list subcommand
- - ✨ feat(cli): enhance cli subcommand ordering and grouping
- - ✨ feat(gmail): enhance message metadata retrieval
+ - ✨ feat(cli): add default subcommand for rule execution
+ - ✨ feat(config): implement config builder pattern for ClientConfig
+ - ✨ feat(utils): add test utils module
+ - ✨ feat(deps): add lazy-regex crate
+ - ✨ feat(dependencies): add lazy-regex dependency
+ - ✨ feat(config): add ConfigRoot enum for flexible path handling
+ - ✨ feat(core): add client config
+ - ✨ feat(config): introduce client configuration
+ - ✨ feat(cli): load configurations from toml file
+ - ✨ feat(client_config): add config root parsing with regex
+ - ✨ feat(cli): add config file support
+
+### Fixed
+
+ - 🐛 fix(gmail): fix token persistence path
+ - 🐛 fix(config): resolve credential file path issue
+ - 🐛 fix(rule_processor): update Gmail API scope
+
+### Changed
+
+ - ♻️ refactor(cli): extract action execution into a function
+ - ♻️ refactor(cli): extract rule execution to separate function
+ - ♻️ refactor(cli): rename get_config to get_rules
+ - ♻️ refactor(config): improve ConfigRoot to handle different root types
+ - ♻️ refactor(cli): use ClientConfig struct for gmail client
+ - ♻️ refactor(gmail): use client config for gmail client
+ - ♻️ refactor(utils): improve config directory creation
+ - ♻️ refactor(rules): remove credentials config
+ - ♻️ refactor(cli): remove config from run args
+ - ♻️ refactor(eol_rule): improve labels handling
+ - ♻️ refactor(cli): remove redundant Rules import
+ - ♻️ refactor: rename Config to Rules
+ - ♻️ refactor(cli): restructure cli commands for better organization
+ - ♻️ refactor(message_list): rename messages_list to list_messages
+ - ♻️ refactor(rule_processor): remove unused delete functions
+
+## [0.0.9] - 2025-10-14
+
+Summary: Added[5], Changed[3], Chore[2], Fixed[2]
+
+### Added
+
  - ✨ feat(gmail_client): add date to message summary
+ - ✨ feat(gmail): enhance message metadata retrieval
+ - ✨ feat(cli): enhance cli subcommand ordering and grouping
+ - ✨ feat(cli): add message list subcommand
+ - ✨ feat(cli): add configuration options for message listing
 
 ### Fixed
 
@@ -24,9 +66,9 @@ Summary: Added[5], Changed[3], Chore[1], Fixed[2]
 
 ### Changed
 
- - ♻️ refactor(cli): refactor message handling and remove trash command
- - ♻️ refactor(cli): consolidate message handling and remove delete command
  - ♻️ refactor(cli): rename run_cli to rules_cli
+ - ♻️ refactor(cli): consolidate message handling and remove delete command
+ - ♻️ refactor(cli): refactor message handling and remove trash command
 
 ## [0.0.8] - 2025-10-14
 
@@ -398,7 +440,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...HEAD
+[0.0.9]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/jerus-org/cull-gmail/compare/v0.0.7...v0.0.8
 [0.0.7]: https://github.com/jerus-org/cull-gmail/compare/v0.0.6...v0.0.7
 [0.0.6]: https://github.com/jerus-org/cull-gmail/compare/v0.0.5...v0.0.6
