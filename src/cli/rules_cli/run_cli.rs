@@ -1,5 +1,7 @@
 use clap::Parser;
-use cull_gmail::{EolAction, GmailClient, Result, RuleProcessor, Rules};
+use cull_gmail::{GmailClient, Result, Rules};
+
+use crate::run_rules;
 
 #[derive(Debug, Parser)]
 pub struct RunCli {
@@ -16,45 +18,6 @@ pub struct RunCli {
 
 impl RunCli {
     pub async fn run(&self, client: &mut GmailClient, rules: Rules) -> Result<()> {
-        let rules_by_labels = rules.get_rules_by_label();
-
-        for label in rules.labels() {
-            let Some(rule) = rules_by_labels.get(&label) else {
-                log::warn!("no rule found for label `{label}`");
-                continue;
-            };
-
-            log::info!("Executing rule `#{}` for label `{label}`", rule.describe());
-            client.set_rule(rule.clone());
-            client.set_execute(self.execute);
-            client.find_rule_and_messages_for_label(&label).await?;
-            let Some(action) = client.action() else {
-                log::warn!("no valid action specified for rule #{}", rule.id());
-                continue;
-            };
-
-            if self.execute {
-                match action {
-                    EolAction::Trash => {
-                        log::info!("***executing trash messages***");
-                        if client.batch_trash().await.is_err() {
-                            log::warn!("Move to trash failed for label `{label}`");
-                            continue;
-                        }
-                    }
-                    EolAction::Delete => {
-                        log::info!("***executing final delete messages***");
-                        if client.batch_delete().await.is_err() {
-                            log::warn!("Delete failed for label `{label}`");
-                            continue;
-                        }
-                    }
-                }
-            } else {
-                log::warn!("Execution stopped for dry run");
-            }
-        }
-
-        Ok(())
+        run_rules(client, rules, self.execute).await
     }
 }
