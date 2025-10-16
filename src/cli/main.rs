@@ -87,12 +87,13 @@ fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
 
 fn get_config() -> Result<ClientConfig> {
     let home_dir = env::home_dir().unwrap();
-    let path = home_dir.join(".cull-gmail/rules.toml");
-    log::trace!("Loading config from {}", path.display());
+    let path = home_dir.join(".cull-gmail/cull-gmail.toml");
+    log::info!("Loading config from {}", path.display());
 
     let configurations = config::Config::builder()
         .set_default("credentials", "credential.json")?
         .set_default("config_root", "h:.cull-gmail")?
+        .set_default("rules", "rules.toml")?
         // Add in `./Settings.toml`
         .add_source(config::File::with_name(
             path.to_path_buf().to_str().unwrap(),
