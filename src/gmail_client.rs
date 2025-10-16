@@ -7,14 +7,14 @@ use google_gmail1::{
         client::legacy::{Client, connect::HttpConnector},
         rt::TokioExecutor,
     },
-    yup_oauth2::{ApplicationSecret, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
+    yup_oauth2::{InstalledFlowAuthenticator, InstalledFlowReturnMethod},
 };
 
 mod message_summary;
 
 pub(crate) use message_summary::MessageSummary;
 
-use crate::{Credential, Error, Result, rules::EolRule};
+use crate::{ClientConfig, Error, Result, rules::EolRule};
 
 /// Default for the maximum number of results to return on a page
 pub const DEFAULT_MAX_RESULTS: &str = "200";
@@ -41,15 +41,28 @@ impl std::fmt::Debug for GmailClient {
 }
 
 impl GmailClient {
+    // /// Create a new Gmail Api connection and fetch label map using credential file.
+    // pub async fn new_from_credential_file(credential_file: &str) -> Result<Self> {
+    //     let (config_dir, secret) = {
+    //         let config_dir = crate::utils::assure_config_dir_exists("~/.cull-gmail")?;
+
+    //         let home_dir = env::home_dir().unwrap();
+
+    //         let path = home_dir.join(".cull-gmail").join(credential_file);
+    //         let json_str = fs::read_to_string(path).expect("could not read path");
+
+    //         let console: ConsoleApplicationSecret =
+    //             serde_json::from_str(&json_str).expect("could not convert to struct");
+
+    //         let secret: ApplicationSecret = console.installed.unwrap();
+    //         (config_dir, secret)
+    //     };
+
+    //     GmailClient::new_from_secret(secret, &config_dir).await
+    // }
+
     /// Create a new List struct and add the Gmail api connection.
-    pub async fn new(credential: &str) -> Result<Self> {
-        let (config_dir, secret) = {
-            let config_dir = crate::utils::assure_config_dir_exists("~/.cull-gmail")?;
-
-            let secret: ApplicationSecret = Credential::load_json_file(credential).into();
-            (config_dir, secret)
-        };
-
+    pub async fn new_with_config(config: ClientConfig) -> Result<Self> {
         let executor = TokioExecutor::new();
         let connector = HttpsConnectorBuilder::new()
             .with_native_roots()
@@ -61,11 +74,11 @@ impl GmailClient {
         let client = Client::builder(executor.clone()).build(connector.clone());
 
         let auth = InstalledFlowAuthenticator::with_client(
-            secret,
+            config.secret().clone(),
             InstalledFlowReturnMethod::HTTPRedirect,
             Client::builder(executor).build(connector),
         )
-        .persist_tokens_to_disk(format!("{config_dir}/gmail1"))
+        .persist_tokens_to_disk(format!("{}/gmail1", config.config_root()))
         .build()
         .await
         .unwrap();
@@ -129,9 +142,4 @@ impl GmailClient {
     pub(crate) fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>> {
         self.hub.clone()
     }
-
-    // /// Get the message list
-    // pub async fn get_message_list(&self) -> Result<MessageList> {
-    //     MessageList::new(self).await
-    // }
 }
