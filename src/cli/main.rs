@@ -136,26 +136,28 @@ async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Res
         };
 
         if execute {
-            match action {
-                EolAction::Trash => {
-                    log::info!("***executing trash messages***");
-                    if client.batch_trash().await.is_err() {
-                        log::warn!("Move to trash failed for label `{label}`");
-                        continue;
-                    }
-                }
-                EolAction::Delete => {
-                    log::info!("***executing final delete messages***");
-                    if client.batch_delete().await.is_err() {
-                        log::warn!("Delete failed for label `{label}`");
-                        continue;
-                    }
-                }
-            }
+            execute_action(action, client, &label).await;
         } else {
             log::warn!("Execution stopped for dry run");
         }
     }
 
     Ok(())
+}
+
+async fn execute_action(action: EolAction, client: &GmailClient, label: &str) {
+    match action {
+        EolAction::Trash => {
+            log::info!("***executing trash messages***");
+            if client.batch_trash().await.is_err() {
+                log::warn!("Move to trash failed for label `{label}`");
+            }
+        }
+        EolAction::Delete => {
+            log::info!("***executing final delete messages***");
+            if client.batch_delete().await.is_err() {
+                log::warn!("Delete failed for label `{label}`");
+            }
+        }
+    }
 }
