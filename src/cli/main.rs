@@ -4,8 +4,7 @@ mod labels_cli;
 mod messages_cli;
 mod rules_cli;
 
-use config::Config;
-use cull_gmail::{GmailClient, Result};
+use cull_gmail::{ClientConfig, GmailClient, Result};
 use std::{env, error::Error as stdError};
 
 use labels_cli::LabelsCli;
@@ -60,8 +59,7 @@ async fn main() {
 async fn run(args: Cli) -> Result<()> {
     let config = get_config()?;
 
-    let credential = config.get_string("credentials")?;
-    let mut client = GmailClient::new(&credential).await?;
+    let mut client = GmailClient::new_with_config(config).await?;
 
     match args.sub_command {
         SubCmds::Message(messages_cli) => messages_cli.run(&mut client).await,
@@ -87,13 +85,14 @@ fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
     builder
 }
 
-fn get_config() -> Result<Config> {
+fn get_config() -> Result<ClientConfig> {
     let home_dir = env::home_dir().unwrap();
     let path = home_dir.join(".cull-gmail/rules.toml");
     log::trace!("Loading config from {}", path.display());
 
-    Ok(Config::builder()
+    let configurations = config::Config::builder()
         .set_default("credentials", "credential.json")?
+        .set_default("config_root", "h:.cull-gmail")?
         // Add in `./Settings.toml`
         .add_source(config::File::with_name(
             path.to_path_buf().to_str().unwrap(),
@@ -101,5 +100,7 @@ fn get_config() -> Result<Config> {
         // Add in settings from the environment (with a prefix of APP)
         // Eg.. `APP_DEBUG=1 ./target/app` would set the `debug` key
         .add_source(config::Environment::with_prefix("APP"))
-        .build()?)
+        .build()?;
+
+    ClientConfig::new_from_configuration(configurations)
 }
