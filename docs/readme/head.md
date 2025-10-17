@@ -31,7 +31,10 @@ The `cull-gmail` provides a software library and command line program to enable 
 
 ## Main Features
 
-- login to get authorization
-- backup the mailbox 
-- filtered lists of the contents
-- move email matching a filtered list to trash
+- list labels and messages to aid planning rules
+- configure the rules list 
+- run the rules list 
+- run the rules list be default 
+- configure api client by file or environment variables
+
+
