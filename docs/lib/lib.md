@@ -122,10 +122,10 @@ rules.add_rule(
 );
 
 // Save rules to file
-rules.save()?;
+// rules.save()?;
 
 // Load existing rules
-let loaded_rules = Rules::load()?;
+// let loaded_rules = Rules::load()?;
 # Ok(())
 # }
 ```
