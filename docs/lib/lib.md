@@ -121,11 +121,15 @@ rules.add_rule(
     false
 );
 
+# let home = std::env::home_dir().unwrap();
+# let dir = home.join(".cull-gmail");
+# let _ = std::fs::create_dir(dir);
+
 // Save rules to file
-// rules.save()?;
+rules.save()?;
 
 // Load existing rules
-// let loaded_rules = Rules::load()?;
+let loaded_rules = Rules::load()?;
 # Ok(())
 # }
 ```
