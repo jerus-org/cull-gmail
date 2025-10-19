@@ -196,15 +196,15 @@ impl Rules {
         label: Option<&str>,
         delete: bool,
     ) -> &mut Self {
-        let current_labels: Vec<String> = self.rules.values()
-            .flat_map(|rule| rule.labels())
-            .collect();
+        let current_labels: Vec<String> =
+            self.rules.values().flat_map(|rule| rule.labels()).collect();
 
         if let Some(label_ref) = label
-            && current_labels.iter().any(|l| l == label_ref) {
-                log::warn!("a rule already applies to label {label_ref}");
-                return self;
-            }
+            && current_labels.iter().any(|l| l == label_ref)
+        {
+            log::warn!("a rule already applies to label {label_ref}");
+            return self;
+        }
 
         let id = if let Some((_, max)) = self.rules.iter().max_by_key(|(_, r)| r.id()) {
             max.id() + 1
@@ -244,9 +244,7 @@ impl Rules {
     /// println!("Configured labels: {:?}", labels);
     /// ```
     pub fn labels(&self) -> Vec<String> {
-        self.rules.values()
-            .flat_map(|rule| rule.labels())
-            .collect()
+        self.rules.values().flat_map(|rule| rule.labels()).collect()
     }
 
     /// Find the id of the rule that contains a label
@@ -494,11 +492,10 @@ impl Rules {
     /// * IO errors when writing to the file system
     /// * File system permission errors
     pub fn save(&self) -> Result<()> {
-        let home_dir = env::home_dir().ok_or_else(|| {
-            Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string())
-        })?;
+        let home_dir = env::home_dir()
+            .ok_or_else(|| Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string()))?;
         let path = PathBuf::new().join(home_dir).join(".cull-gmail/rules.toml");
-        
+
         // Ensure directory exists
         if let Some(parent) = path.parent() {
             fs::create_dir_all(parent)?;
@@ -540,9 +537,8 @@ impl Rules {
     /// * TOML parsing errors if the file is malformed
     /// * File not found errors if the configuration doesn't exist
     pub fn load() -> Result<Rules> {
-        let home_dir = env::home_dir().ok_or_else(|| {
-            Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string())
-        })?;
+        let home_dir = env::home_dir()
+            .ok_or_else(|| Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string()))?;
         let path = PathBuf::new().join(home_dir).join(".cull-gmail/rules.toml");
         log::trace!("Loading config from {}", path.display());
 
@@ -604,13 +600,16 @@ mod tests {
     #[test]
     fn test_rules_new_creates_default_rules() {
         setup_test_environment();
-        
+
         let rules = Rules::new();
-        
+
         // Should have some default rules
         let labels = rules.labels();
-        assert!(!labels.is_empty(), "Default rules should create some labels");
-        
+        assert!(
+            !labels.is_empty(),
+            "Default rules should create some labels"
+        );
+
         // Should contain the expected retention labels
         assert!(labels.iter().any(|l| l.contains("retention/1-years")));
         assert!(labels.iter().any(|l| l.contains("retention/1-weeks")));
@@ -621,10 +620,10 @@ mod tests {
     #[test]
     fn test_rules_default_same_as_new() {
         setup_test_environment();
-        
+
         let rules_new = Rules::new();
         let rules_default = Rules::default();
-        
+
         // Both should have the same number of rules
         assert_eq!(rules_new.labels().len(), rules_default.labels().len());
     }
@@ -632,13 +631,13 @@ mod tests {
     #[test]
     fn test_add_rule_with_label() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
         let initial_label_count = rules.labels().len();
-        
+
         let retention = Retention::new(MessageAge::Days(30), false);
         rules.add_rule(retention, Some("test-label"), false);
-        
+
         let labels = rules.labels();
         assert!(labels.contains(&"test-label".to_string()));
         assert_eq!(labels.len(), initial_label_count + 1);
@@ -647,13 +646,13 @@ mod tests {
     #[test]
     fn test_add_rule_without_label() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
         let initial_label_count = rules.labels().len();
-        
+
         let retention = Retention::new(MessageAge::Days(30), false);
         rules.add_rule(retention, None, false);
-        
+
         // Should not add any new labels since no label specified and generate_label is false
         let labels = rules.labels();
         assert_eq!(labels.len(), initial_label_count);
@@ -662,11 +661,11 @@ mod tests {
     #[test]
     fn test_add_rule_with_delete_action() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
         let retention = Retention::new(MessageAge::Days(7), false);
         rules.add_rule(retention, Some("delete-test"), true);
-        
+
         let rules_by_label = rules.get_rules_by_label();
         let rule = rules_by_label.get("delete-test").unwrap();
         assert_eq!(rule.action(), Some(EolAction::Delete));
@@ -675,17 +674,17 @@ mod tests {
     #[test]
     fn test_add_duplicate_label_warns_and_skips() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
         let retention1 = Retention::new(MessageAge::Days(30), false);
         let retention2 = Retention::new(MessageAge::Days(60), false);
-        
+
         rules.add_rule(retention1, Some("duplicate"), false);
         let initial_count = rules.labels().len();
-        
+
         // Try to add another rule with the same label
         rules.add_rule(retention2, Some("duplicate"), false);
-        
+
         // Should not increase the count of labels
         assert_eq!(rules.labels().len(), initial_count);
     }
@@ -693,9 +692,9 @@ mod tests {
     #[test]
     fn test_get_rule_existing() {
         setup_test_environment();
-        
+
         let rules = Rules::new();
-        
+
         // Default rules should have ID 1
         let rule = rules.get_rule(1);
         assert!(rule.is_some());
@@ -705,9 +704,9 @@ mod tests {
     #[test]
     fn test_get_rule_nonexistent() {
         setup_test_environment();
-        
+
         let rules = Rules::new();
-        
+
         // ID 999 should not exist
         let rule = rules.get_rule(999);
         assert!(rule.is_none());
@@ -716,11 +715,11 @@ mod tests {
     #[test]
     fn test_labels_returns_all_labels() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
         let retention = Retention::new(MessageAge::Days(30), false);
         rules.add_rule(retention, Some("custom-label"), false);
-        
+
         let labels = rules.labels();
         assert!(labels.contains(&"custom-label".to_string()));
     }
@@ -728,11 +727,11 @@ mod tests {
     #[test]
     fn test_get_rules_by_label() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
         let retention = Retention::new(MessageAge::Days(30), false);
         rules.add_rule(retention, Some("mapped-label"), false);
-        
+
         let label_map = rules.get_rules_by_label();
         let rule = label_map.get("mapped-label");
         assert!(rule.is_some());
@@ -742,13 +741,13 @@ mod tests {
     #[test]
     fn test_remove_rule_by_id_existing() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
-        
+
         // Remove a default rule (assuming ID 1 exists)
         let result = rules.remove_rule_by_id(1);
         assert!(result.is_ok());
-        
+
         // Rule should no longer exist
         assert!(rules.get_rule(1).is_none());
     }
@@ -756,9 +755,9 @@ mod tests {
     #[test]
     fn test_remove_rule_by_id_nonexistent() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
-        
+
         // Removing non-existent rule should still succeed
         let result = rules.remove_rule_by_id(999);
         assert!(result.is_ok());
@@ -767,14 +766,14 @@ mod tests {
     #[test]
     fn test_remove_rule_by_label_existing() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
         let retention = Retention::new(MessageAge::Days(30), false);
         rules.add_rule(retention, Some("remove-me"), false);
-        
+
         let result = rules.remove_rule_by_label("remove-me");
         assert!(result.is_ok());
-        
+
         // Label should no longer exist
         let labels = rules.labels();
         assert!(!labels.contains(&"remove-me".to_string()));
@@ -783,12 +782,12 @@ mod tests {
     #[test]
     fn test_remove_rule_by_label_nonexistent() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
-        
+
         let result = rules.remove_rule_by_label("nonexistent-label");
         assert!(result.is_err());
-        
+
         match result.unwrap_err() {
             Error::LabelNotFoundInRules(label) => {
                 assert_eq!(label, "nonexistent-label");
@@ -800,13 +799,13 @@ mod tests {
     #[test]
     fn test_add_label_to_rule_existing_rule() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
-        
+
         // Add label to existing rule (ID 1)
         let result = rules.add_label_to_rule(1, "new-label");
         assert!(result.is_ok());
-        
+
         let rule = rules.get_rule(1).unwrap();
         assert!(rule.labels().contains(&"new-label".to_string()));
     }
@@ -814,12 +813,12 @@ mod tests {
     #[test]
     fn test_add_label_to_rule_nonexistent_rule() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
-        
+
         let result = rules.add_label_to_rule(999, "new-label");
         assert!(result.is_err());
-        
+
         match result.unwrap_err() {
             Error::RuleNotFound(id) => {
                 assert_eq!(id, 999);
@@ -831,17 +830,17 @@ mod tests {
     #[test]
     fn test_remove_label_from_rule_existing() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
-        
+
         // First add a label
         let result = rules.add_label_to_rule(1, "temp-label");
         assert!(result.is_ok());
-        
+
         // Then remove it
         let result = rules.remove_label_from_rule(1, "temp-label");
         assert!(result.is_ok());
-        
+
         let rule = rules.get_rule(1).unwrap();
         assert!(!rule.labels().contains(&"temp-label".to_string()));
     }
@@ -849,12 +848,12 @@ mod tests {
     #[test]
     fn test_remove_label_from_rule_nonexistent_rule() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
-        
+
         let result = rules.remove_label_from_rule(999, "any-label");
         assert!(result.is_err());
-        
+
         match result.unwrap_err() {
             Error::RuleNotFound(id) => {
                 assert_eq!(id, 999);
@@ -866,13 +865,13 @@ mod tests {
     #[test]
     fn test_set_action_on_rule_existing() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
-        
+
         // Set action to Delete
         let result = rules.set_action_on_rule(1, &EolAction::Delete);
         assert!(result.is_ok());
-        
+
         let rule = rules.get_rule(1).unwrap();
         assert_eq!(rule.action(), Some(EolAction::Delete));
     }
@@ -880,12 +879,12 @@ mod tests {
     #[test]
     fn test_set_action_on_rule_nonexistent() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
-        
+
         let result = rules.set_action_on_rule(999, &EolAction::Delete);
         assert!(result.is_err());
-        
+
         match result.unwrap_err() {
             Error::RuleNotFound(id) => {
                 assert_eq!(id, 999);
@@ -897,9 +896,9 @@ mod tests {
     #[test]
     fn test_list_rules_succeeds() {
         setup_test_environment();
-        
+
         let rules = Rules::new();
-        
+
         // Should not panic or return error
         let result = rules.list_rules();
         assert!(result.is_ok());
@@ -911,19 +910,19 @@ mod tests {
     #[ignore = "Integration test that modifies file system"]
     fn test_save_and_load_roundtrip() {
         setup_test_environment();
-        
+
         let mut rules = Rules::new();
         let retention = Retention::new(MessageAge::Days(30), false);
         rules.add_rule(retention, Some("save-test"), false);
-        
+
         // Save to disk
         let save_result = rules.save();
         assert!(save_result.is_ok());
-        
+
         // Load from disk
         let loaded_rules = Rules::load();
         assert!(loaded_rules.is_ok());
-        
+
         let loaded_rules = loaded_rules.unwrap();
         let labels = loaded_rules.labels();
         assert!(labels.contains(&"save-test".to_string()));

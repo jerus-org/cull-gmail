@@ -477,8 +477,13 @@ mod test {
     fn test_eol_query_for_eol_rule_5_years() {
         let rule = build_test_rule(crate::MessageAge::Years(5));
 
-        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).single().unwrap();
-        let query = rule.calculate_for_date(test_today).expect("Failed to calculate query");
+        let test_today = Local
+            .with_ymd_and_hms(2025, 9, 15, 0, 0, 0)
+            .single()
+            .unwrap();
+        let query = rule
+            .calculate_for_date(test_today)
+            .expect("Failed to calculate query");
 
         assert_eq!("before: 2020-09-15", query);
     }
@@ -487,8 +492,13 @@ mod test {
     fn test_eol_query_for_eol_rule_1_month() {
         let rule = build_test_rule(crate::MessageAge::Months(1));
 
-        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).single().unwrap();
-        let query = rule.calculate_for_date(test_today).expect("Failed to calculate query");
+        let test_today = Local
+            .with_ymd_and_hms(2025, 9, 15, 0, 0, 0)
+            .single()
+            .unwrap();
+        let query = rule
+            .calculate_for_date(test_today)
+            .expect("Failed to calculate query");
 
         assert_eq!("before: 2025-08-15", query);
     }
@@ -497,8 +507,13 @@ mod test {
     fn test_eol_query_for_eol_rule_13_weeks() {
         let rule = build_test_rule(crate::MessageAge::Weeks(13));
 
-        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).single().unwrap();
-        let query = rule.calculate_for_date(test_today).expect("Failed to calculate query");
+        let test_today = Local
+            .with_ymd_and_hms(2025, 9, 15, 0, 0, 0)
+            .single()
+            .unwrap();
+        let query = rule
+            .calculate_for_date(test_today)
+            .expect("Failed to calculate query");
 
         assert_eq!("before: 2025-06-16", query);
     }
@@ -507,8 +522,13 @@ mod test {
     fn test_eol_query_for_eol_rule_365_days() {
         let rule = build_test_rule(crate::MessageAge::Days(365));
 
-        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).single().unwrap();
-        let query = rule.calculate_for_date(test_today).expect("Failed to calculate query");
+        let test_today = Local
+            .with_ymd_and_hms(2025, 9, 15, 0, 0, 0)
+            .single()
+            .unwrap();
+        let query = rule
+            .calculate_for_date(test_today)
+            .expect("Failed to calculate query");
 
         assert_eq!("before: 2024-09-15", query);
     }
