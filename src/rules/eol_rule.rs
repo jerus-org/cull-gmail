@@ -320,7 +320,7 @@ impl EolRule {
     /// Describe the action that will be performed by the rule and its conditions
     fn get_action_period_count_strings(&self) -> (String, usize, String) {
         let count = &self.retention[2..];
-        let count = count.parse::<usize>().unwrap();
+        let count = count.parse::<usize>().unwrap_or(0); // Default to 0 if parsing fails
         let mut period = match self.retention.chars().nth(0) {
             Some('d') => "day",
             Some('w') => "week",
@@ -375,11 +375,11 @@ impl EolRule {
         let deadline = match message_age {
             MessageAge::Days(c) => {
                 let delta = TimeDelta::days(c);
-                today.checked_sub_signed(delta).unwrap()
+                today.checked_sub_signed(delta)?
             }
             MessageAge::Weeks(c) => {
                 let delta = TimeDelta::weeks(c);
-                today.checked_sub_signed(delta).unwrap()
+                today.checked_sub_signed(delta)?
             }
             MessageAge::Months(c) => {
                 let day = today.day();
@@ -398,7 +398,7 @@ impl EolRule {
 
                 Local
                     .with_ymd_and_hms(new_year, new_month, day, 0, 0, 0)
-                    .unwrap()
+                    .single()?
             }
             MessageAge::Years(c) => {
                 let day = today.day();
@@ -408,7 +408,7 @@ impl EolRule {
 
                 Local
                     .with_ymd_and_hms(new_year, month, day, 0, 0, 0)
-                    .unwrap()
+                    .single()?
             }
         };
 
@@ -477,8 +477,8 @@ mod test {
     fn test_eol_query_for_eol_rule_5_years() {
         let rule = build_test_rule(crate::MessageAge::Years(5));
 
-        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
-        let query = rule.calculate_for_date(test_today).unwrap();
+        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).single().unwrap();
+        let query = rule.calculate_for_date(test_today).expect("Failed to calculate query");
 
         assert_eq!("before: 2020-09-15", query);
     }
@@ -487,8 +487,8 @@ mod test {
     fn test_eol_query_for_eol_rule_1_month() {
         let rule = build_test_rule(crate::MessageAge::Months(1));
 
-        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
-        let query = rule.calculate_for_date(test_today).unwrap();
+        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).single().unwrap();
+        let query = rule.calculate_for_date(test_today).expect("Failed to calculate query");
 
         assert_eq!("before: 2025-08-15", query);
     }
@@ -497,8 +497,8 @@ mod test {
     fn test_eol_query_for_eol_rule_13_weeks() {
         let rule = build_test_rule(crate::MessageAge::Weeks(13));
 
-        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
-        let query = rule.calculate_for_date(test_today).unwrap();
+        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).single().unwrap();
+        let query = rule.calculate_for_date(test_today).expect("Failed to calculate query");
 
         assert_eq!("before: 2025-06-16", query);
     }
@@ -507,8 +507,8 @@ mod test {
     fn test_eol_query_for_eol_rule_365_days() {
         let rule = build_test_rule(crate::MessageAge::Days(365));
 
-        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).unwrap();
-        let query = rule.calculate_for_date(test_today).unwrap();
+        let test_today = Local.with_ymd_and_hms(2025, 9, 15, 0, 0, 0).single().unwrap();
+        let query = rule.calculate_for_date(test_today).expect("Failed to calculate query");
 
         assert_eq!("before: 2024-09-15", query);
     }
