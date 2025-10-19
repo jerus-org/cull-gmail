@@ -7,7 +7,7 @@
 //!
 //! ## Safety Considerations
 //!
-//! - **Destructive Operations**: The [`RuleProcessor::batch_delete`] method permanently 
+//! - **Destructive Operations**: The [`RuleProcessor::batch_delete`] method permanently
 //!   removes messages from Gmail and cannot be undone.
 //! - **Recoverable Operations**: The [`RuleProcessor::batch_trash`] method moves messages
 //!   to the Gmail trash folder, from which they can be recovered within 30 days.
@@ -17,7 +17,7 @@
 //! ## Workflow
 //!
 //! 1. Set a rule using [`RuleProcessor::set_rule`]
-//! 2. Configure the execute flag with [`RuleProcessor::set_execute`] 
+//! 2. Configure the execute flag with [`RuleProcessor::set_execute`]
 //! 3. Process messages for a label with [`RuleProcessor::find_rule_and_messages_for_label`]
 //! 4. The processor will automatically:
 //!    - Find messages matching the rule's query
@@ -30,13 +30,13 @@
 //! # use cull_gmail::{GmailClient, RuleProcessor, EolRule, EolAction};
 //! # async fn example() -> cull_gmail::Result<()> {
 //! let mut client = GmailClient::new().await?;
-//! 
+//!
 //! // Create a rule (this would typically come from configuration)
 //! let rule = EolRule::new(1, "old-emails".to_string(), EolAction::Trash, None, None, None)?;
-//! 
+//!
 //! client.set_rule(rule);
 //! client.set_execute(true); // Set to false for dry-run
-//! 
+//!
 //! // Process all messages with the "old-emails" label according to the rule
 //! client.find_rule_and_messages_for_label("old-emails").await?;
 //! # Ok(())
@@ -46,6 +46,17 @@
 use google_gmail1::api::{BatchDeleteMessagesRequest, BatchModifyMessagesRequest};
 
 use crate::{EolAction, Error, GmailClient, Result, message_list::MessageList, rules::EolRule};
+
+/// Gmail label name for the trash folder.
+///
+/// This constant ensures consistent usage of the TRASH label throughout the module.
+const TRASH_LABEL: &str = "TRASH";
+
+/// Gmail API scope for modifying messages (recommended scope for most operations).
+///
+/// This scope allows adding/removing labels, moving messages to trash, and other
+/// modification operations. Preferred over broader scopes for security.
+const GMAIL_MODIFY_SCOPE: &str = "https://www.googleapis.com/auth/gmail.modify";
 
 /// Trait for processing Gmail messages according to configured end-of-life rules.
 ///
@@ -62,7 +73,7 @@ pub trait RuleProcessor {
     /// 4. Executes the rule's action (if execute flag is true) or runs in dry-run mode
     ///
     /// # Arguments
-    /// 
+    ///
     /// * `label` - The Gmail label name to process (e.g., "INBOX", "old-emails")
     ///
     /// # Returns
@@ -80,7 +91,7 @@ pub trait RuleProcessor {
         &mut self,
         label: &str,
     ) -> impl std::future::Future<Output = Result<()>> + Send;
-    
+
     /// Sets the execution mode for destructive operations.
     ///
     /// # Arguments
@@ -93,7 +104,7 @@ pub trait RuleProcessor {
     /// destructive operations on Gmail messages. Always verify your rules and queries
     /// in dry-run mode (`false`) before enabling execution.
     fn set_execute(&mut self, value: bool);
-    
+
     /// Configures the end-of-life rule to apply during processing.
     ///
     /// # Arguments
@@ -112,7 +123,7 @@ pub trait RuleProcessor {
     /// # }
     /// ```
     fn set_rule(&mut self, rule: EolRule);
-    
+
     /// Returns the action that will be performed by the currently configured rule.
     ///
     /// # Returns
@@ -120,7 +131,7 @@ pub trait RuleProcessor {
     /// * `Some(EolAction)` - The action (e.g., `EolAction::Trash`) if a rule is set
     /// * `None` - If no rule has been configured via [`set_rule`](Self::set_rule)
     fn action(&self) -> Option<EolAction>;
-    
+
     /// Prepares the list of messages for processing by fetching them from Gmail.
     ///
     /// This method queries the Gmail API to retrieve messages matching the current
@@ -140,7 +151,7 @@ pub trait RuleProcessor {
     /// Makes API calls to Gmail to retrieve message metadata. No messages are
     /// modified by this operation.
     fn prepare(&mut self, pages: u32) -> impl std::future::Future<Output = Result<()>> + Send;
-    
+
     /// Permanently deletes all prepared messages from Gmail.
     ///
     /// # Returns
@@ -151,14 +162,14 @@ pub trait RuleProcessor {
     /// # Safety
     ///
     /// ⚠️ **DESTRUCTIVE OPERATION** - This permanently removes messages from Gmail.
-    /// Deleted messages cannot be recovered. Use [`batch_trash`](Self::batch_trash) 
+    /// Deleted messages cannot be recovered. Use [`batch_trash`](Self::batch_trash)
     /// for recoverable deletion.
     ///
     /// # Gmail API Requirements
     ///
     /// Requires the `https://www.googleapis.com/auth/gmail.modify` scope or broader.
     fn batch_delete(&self) -> impl std::future::Future<Output = Result<()>> + Send;
-    
+
     /// Moves all prepared messages to the Gmail trash folder.
     ///
     /// Messages moved to trash can be recovered within 30 days through the Gmail
@@ -221,7 +232,7 @@ impl RuleProcessor for GmailClient {
     /// The method respects the execute flag - when `false`, it runs in dry-run mode
     /// and only logs what would be done without making any changes.
     async fn find_rule_and_messages_for_label(&mut self, label: &str) -> Result<()> {
-        self.add_labels(&[label.to_string()])?;
+        self.add_labels(&[label.to_owned()])?;
 
         if self.label_ids().is_empty() {
             return Err(Error::LabelNotFoundInMailbox(label.to_string()));
@@ -240,10 +251,10 @@ impl RuleProcessor for GmailClient {
         log::info!("Ready to run");
         self.prepare(0).await?;
         if self.execute {
-            log::info!("***executing final delete messages***");
+            log::info!("Execute mode: applying rule action to messages");
             self.batch_trash().await
         } else {
-            log::warn!("Execution stopped for dry run");
+            log::info!("Dry-run mode: no changes made to messages");
             Ok(())
         }
     }
@@ -271,12 +282,19 @@ impl RuleProcessor for GmailClient {
     ///
     /// # API Scope Requirements
     ///
-    /// Uses `https://mail.google.com/` scope for maximum API access. Consider
-    /// using the more restrictive `https://www.googleapis.com/auth/gmail.modify`
-    /// scope if your application security policy allows it.
+    /// Uses `https://www.googleapis.com/auth/gmail.modify` scope for secure,
+    /// minimal privilege access. This scope provides sufficient permissions
+    /// for message deletion while following security best practices.
     async fn batch_delete(&self) -> Result<()> {
-        let ids = Some(self.message_ids());
+        let message_ids = self.message_ids();
 
+        // Early return if no messages to delete, avoiding unnecessary API calls
+        if message_ids.is_empty() {
+            log::info!("No messages to delete - skipping batch delete operation");
+            return Ok(());
+        }
+
+        let ids = Some(message_ids);
         let batch_request = BatchDeleteMessagesRequest { ids };
 
         log::trace!("{batch_request:#?}");
@@ -285,13 +303,13 @@ impl RuleProcessor for GmailClient {
             .hub()
             .users()
             .messages_batch_delete(batch_request, "me")
-            .add_scope("https://mail.google.com/")
+            .add_scope(GMAIL_MODIFY_SCOPE)
             .doit()
             .await
             .map_err(Box::new)?;
 
         for m in self.messages() {
-            log::info!("Message with subject `{}` deleted.", m.subject());
+            log::info!("Message with subject `{}` permanently deleted", m.subject());
         }
 
         Ok(())
@@ -308,11 +326,19 @@ impl RuleProcessor for GmailClient {
     ///
     /// # API Scope Requirements
     ///
-    /// Currently uses `https://www.google.com/` scope. Should be updated to use
-    /// `https://www.googleapis.com/auth/gmail.modify` for better security.
+    /// Uses `https://www.googleapis.com/auth/gmail.modify` scope for secure,
+    /// minimal privilege access to Gmail message modification operations.
     async fn batch_trash(&self) -> Result<()> {
-        let add_label_ids = Some(Vec::from(["TRASH".to_string()]));
-        let ids = Some(self.message_ids());
+        let message_ids = self.message_ids();
+
+        // Early return if no messages to trash, avoiding unnecessary API calls
+        if message_ids.is_empty() {
+            log::info!("No messages to trash - skipping batch trash operation");
+            return Ok(());
+        }
+
+        let add_label_ids = Some(vec![TRASH_LABEL.to_string()]);
+        let ids = Some(message_ids);
         let remove_label_ids = Some(self.label_ids());
 
         let batch_request = BatchModifyMessagesRequest {
@@ -327,13 +353,13 @@ impl RuleProcessor for GmailClient {
             .hub()
             .users()
             .messages_batch_modify(batch_request, "me")
-            .add_scope("https://www.google.com/")
+            .add_scope(GMAIL_MODIFY_SCOPE)
             .doit()
             .await
             .map_err(Box::new)?;
 
         for m in self.messages() {
-            log::info!("Message with subject `{}` moved to trash.", m.subject());
+            log::info!("Message with subject `{}` moved to trash", m.subject());
         }
 
         Ok(())
