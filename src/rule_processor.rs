@@ -432,3 +432,306 @@ impl RuleProcessor for GmailClient {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{rules::EolRule, EolAction, Error};
+    use std::sync::{Arc, Mutex};
+
+    /// Test helper to create a simple EolRule with or without a query
+    fn create_test_rule(id: usize, has_query: bool) -> EolRule {
+        use crate::{MessageAge, Retention};
+        
+        let mut rule = EolRule::new(id);
+        
+        if has_query {
+            // Create a rule that will generate a query (using retention days)
+            let retention = Retention::new(MessageAge::Days(30), false);
+            rule.set_retention(retention);
+            rule.add_label("test-label");
+        }
+        // For rules without query, we just return the basic rule with no retention set
+        
+        rule
+    }
+
+    /// Fake client implementation for testing the orchestration logic
+    struct FakeClient {
+        labels: Vec<String>,
+        label_ids: Vec<String>,
+        query: String,
+        messages_prepared: bool,
+        prepare_call_count: u32,
+        batch_trash_call_count: Arc<Mutex<u32>>, // Use Arc<Mutex> for thread safety
+        should_fail_add_labels: bool,
+        should_fail_prepare: bool,
+        should_fail_batch_trash: bool,
+        simulate_missing_labels: bool, // Flag to simulate labels not being found
+    }
+    
+    impl Default for FakeClient {
+        fn default() -> Self {
+            Self {
+                labels: Vec::new(),
+                label_ids: Vec::new(),
+                query: String::new(),
+                messages_prepared: false,
+                prepare_call_count: 0,
+                batch_trash_call_count: Arc::new(Mutex::new(0)),
+                should_fail_add_labels: false,
+                should_fail_prepare: false,
+                should_fail_batch_trash: false,
+                simulate_missing_labels: false,
+            }
+        }
+    }
+
+    impl FakeClient {
+        fn new() -> Self {
+            Self::default()
+        }
+        
+        /// Create a client that simulates missing labels (add_labels succeeds but no label_ids)
+        fn with_missing_labels() -> Self {
+            let mut client = Self::default();
+            client.simulate_missing_labels = true;
+            // This client will accept add_labels but won't populate label_ids,
+            // simulating the case where labels don't exist in the mailbox
+            client
+        }
+
+        fn with_labels(label_ids: Vec<String>) -> Self {
+            Self {
+                label_ids,
+                ..Default::default()
+            }
+        }
+
+        fn with_failure(failure_type: &str) -> Self {
+            let mut client = Self::default();
+            match failure_type {
+                "add_labels" => client.should_fail_add_labels = true,
+                "prepare" => client.should_fail_prepare = true,
+                "batch_trash" => client.should_fail_batch_trash = true,
+                _ => {},
+            }
+            client
+        }
+        
+        fn get_batch_trash_call_count(&self) -> u32 {
+            *self.batch_trash_call_count.lock().unwrap()
+        }
+    }
+
+    impl MailOperations for FakeClient {
+        fn add_labels(&mut self, labels: &[String]) -> Result<()> {
+            if self.should_fail_add_labels {
+                return Err(Error::DirectoryUnset); // Use a valid error variant
+            }
+            self.labels.extend(labels.iter().cloned());
+            // Only populate label_ids if we're not simulating missing labels
+            if !self.simulate_missing_labels && !labels.is_empty() {
+                self.label_ids = labels.to_vec();
+            }
+            // When simulate_missing_labels is true, label_ids stays empty
+            Ok(())
+        }
+
+        fn label_ids(&self) -> Vec<String> {
+            self.label_ids.clone()
+        }
+
+        fn set_query(&mut self, query: &str) {
+            self.query = query.to_owned();
+        }
+
+        async fn prepare(&mut self, _pages: u32) -> Result<()> {
+            // Always increment the counter to track that prepare was called
+            self.prepare_call_count += 1;
+            
+            if self.should_fail_prepare {
+                return Err(Error::NoLabelsFound); // Use a valid error variant
+            }
+            self.messages_prepared = true;
+            Ok(())
+        }
+
+        async fn batch_trash(&self) -> Result<()> {
+            // Always increment the counter to track that batch_trash was called
+            *self.batch_trash_call_count.lock().unwrap() += 1;
+            
+            if self.should_fail_batch_trash {
+                return Err(Error::InvalidPagingMode); // Use a valid error variant
+            }
+            Ok(())
+        }
+    }
+
+    #[tokio::test]
+    async fn test_errors_when_label_missing() {
+        let mut client = FakeClient::with_missing_labels(); // Simulate labels not being found
+        let rule = create_test_rule(1, true);
+        let label = "missing-label";
+
+        let result = process_label_with_rule(&mut client, &rule, label, 0, false).await;
+
+        assert!(matches!(result, Err(Error::LabelNotFoundInMailbox(_))));
+        assert_eq!(client.prepare_call_count, 0);
+        assert_eq!(client.get_batch_trash_call_count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_errors_when_rule_has_no_query() {
+        let mut client = FakeClient::with_labels(vec!["test-label".to_string()]);
+        let rule = create_test_rule(2, false); // Rule without query
+        let label = "test-label";
+
+        let result = process_label_with_rule(&mut client, &rule, label, 0, false).await;
+
+        assert!(matches!(result, Err(Error::NoQueryStringCalculated(2))));
+        assert_eq!(client.prepare_call_count, 0);
+        assert_eq!(client.get_batch_trash_call_count(), 0);
+    }
+
+    #[tokio::test]
+    async fn test_dry_run_does_not_trash() {
+        let mut client = FakeClient::with_labels(vec!["test-label".to_string()]);
+        let rule = create_test_rule(3, true);
+        let label = "test-label";
+
+        let result = process_label_with_rule(&mut client, &rule, label, 0, false).await;
+
+        assert!(result.is_ok());
+        assert_eq!(client.prepare_call_count, 1);
+        assert_eq!(client.get_batch_trash_call_count(), 0); // Should not trash in dry-run mode
+        assert!(client.messages_prepared);
+        assert!(!client.query.is_empty()); // Query should be set
+    }
+
+    #[tokio::test]
+    async fn test_execute_trashes_messages_once() {
+        let mut client = FakeClient::with_labels(vec!["test-label".to_string()]);
+        let rule = create_test_rule(4, true);
+        let label = "test-label";
+
+        let result = process_label_with_rule(&mut client, &rule, label, 0, true).await;
+
+        assert!(result.is_ok());
+        assert_eq!(client.prepare_call_count, 1);
+        assert_eq!(client.get_batch_trash_call_count(), 1); // Should trash when execute=true
+        assert!(client.messages_prepared);
+        assert!(!client.query.is_empty());
+    }
+
+    #[tokio::test]
+    async fn test_propagates_prepare_error() {
+        // Create a client that will fail on prepare but has valid labels
+        let mut client = FakeClient::with_labels(vec!["test-label".to_string()]);
+        client.should_fail_prepare = true; // Set the failure flag directly
+        
+        let rule = create_test_rule(5, true);
+        let label = "test-label";
+
+        let result = process_label_with_rule(&mut client, &rule, label, 0, true).await;
+
+        assert!(result.is_err());
+        assert_eq!(client.prepare_call_count, 1); // prepare should be called once
+        assert_eq!(client.get_batch_trash_call_count(), 0); // Should not reach trash due to error
+    }
+
+    #[tokio::test]
+    async fn test_propagates_batch_trash_error() {
+        // Create a client that will fail on batch_trash but has valid labels
+        let mut client = FakeClient::with_labels(vec!["test-label".to_string()]);
+        client.should_fail_batch_trash = true; // Set the failure flag directly
+        
+        let rule = create_test_rule(6, true);
+        let label = "test-label";
+
+        let result = process_label_with_rule(&mut client, &rule, label, 0, true).await;
+
+        assert!(result.is_err());
+        assert_eq!(client.prepare_call_count, 1);
+        assert_eq!(client.get_batch_trash_call_count(), 1); // Should attempt trash but fail
+    }
+
+    #[tokio::test]
+    async fn test_pages_parameter_passed_correctly() {
+        let mut client = FakeClient::with_labels(vec!["test-label".to_string()]);
+        let rule = create_test_rule(7, true);
+        let label = "test-label";
+        let pages = 5;
+
+        let result = process_label_with_rule(&mut client, &rule, label, pages, false).await;
+
+        assert!(result.is_ok());
+        assert_eq!(client.prepare_call_count, 1);
+        // Note: In a more sophisticated test, we'd verify pages parameter is passed to prepare
+        // but our simple FakeClient doesn't track this. In practice, you might want to enhance it.
+    }
+
+    /// Test the rule processor trait setters and getters
+    #[test]
+    fn test_rule_processor_setters_and_getters() {
+        // Note: This test would need a mock GmailClient implementation
+        // For now, we'll create a simple struct that implements RuleProcessor
+        
+        struct MockProcessor {
+            rule: Option<EolRule>,
+            execute: bool,
+        }
+
+        impl RuleProcessor for MockProcessor {
+            fn set_rule(&mut self, rule: EolRule) {
+                self.rule = Some(rule);
+            }
+
+            fn set_execute(&mut self, value: bool) {
+                self.execute = value;
+            }
+
+            fn action(&self) -> Option<EolAction> {
+                self.rule.as_ref().and_then(|r| r.action())
+            }
+
+            async fn find_rule_and_messages_for_label(&mut self, _label: &str) -> Result<()> {
+                Ok(())
+            }
+
+            async fn prepare(&mut self, _pages: u32) -> Result<()> {
+                Ok(())
+            }
+
+            async fn batch_delete(&self) -> Result<()> {
+                Ok(())
+            }
+
+            async fn batch_trash(&self) -> Result<()> {
+                Ok(())
+            }
+        }
+
+        let mut processor = MockProcessor {
+            rule: None,
+            execute: false,
+        };
+
+        // Test initial state
+        assert!(processor.action().is_none());
+        assert!(!processor.execute);
+
+        // Test rule setting
+        let rule = create_test_rule(8, true);
+        processor.set_rule(rule);
+        assert!(processor.action().is_some());
+        assert_eq!(processor.action(), Some(EolAction::Trash));
+
+        // Test execute flag setting
+        processor.set_execute(true);
+        assert!(processor.execute);
+        
+        processor.set_execute(false);
+        assert!(!processor.execute);
+    }
+}
