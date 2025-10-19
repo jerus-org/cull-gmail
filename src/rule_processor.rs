@@ -28,7 +28,7 @@
 //!
 //! ```text
 //! use cull_gmail::{GmailClient, RuleProcessor, ClientConfig};
-//! 
+//!
 //! async fn example() -> Result<(), Box<dyn std::error::Error>> {
 //!     // Configure Gmail client with credentials
 //!     let config = ClientConfig::builder()
@@ -59,7 +59,7 @@ use crate::{EolAction, Error, GmailClient, Result, message_list::MessageList, ru
 const TRASH_LABEL: &str = "TRASH";
 
 /// Gmail API scope for modifying messages (recommended scope for most operations).
-/// 
+///
 /// This scope allows adding/removing labels, moving messages to trash, and other
 /// modification operations. Preferred over broader scopes for security.
 const GMAIL_MODIFY_SCOPE: &str = "https://www.googleapis.com/auth/gmail.modify";
@@ -73,16 +73,16 @@ const GMAIL_MODIFY_SCOPE: &str = "https://www.googleapis.com/auth/gmail.modify";
 pub(crate) trait MailOperations {
     /// Add labels to the client for filtering
     fn add_labels(&mut self, labels: &[String]) -> Result<()>;
-    
+
     /// Get the current label IDs
     fn label_ids(&self) -> Vec<String>;
-    
+
     /// Set the query string for message filtering
     fn set_query(&mut self, query: &str);
-    
+
     /// Prepare messages by fetching from Gmail API
     fn prepare(&mut self, pages: u32) -> impl std::future::Future<Output = Result<()>> + Send;
-    
+
     /// Execute trash operation on prepared messages
     fn batch_trash(&self) -> impl std::future::Future<Output = Result<()>> + Send;
 }
@@ -100,22 +100,22 @@ async fn process_label_with_rule<T: MailOperations>(
 ) -> Result<()> {
     // Add the label for filtering
     client.add_labels(&[label.to_owned()])?;
-    
+
     // Validate label exists in mailbox
     if client.label_ids().is_empty() {
         return Err(Error::LabelNotFoundInMailbox(label.to_owned()));
     }
-    
+
     // Get query from rule
     let Some(query) = rule.eol_query() else {
         return Err(Error::NoQueryStringCalculated(rule.id()));
     };
-    
+
     // Set the query and prepare messages
     client.set_query(&query);
     log::info!("Ready to process messages for label: {label}");
     client.prepare(pages).await?;
-    
+
     // Execute or dry-run based on execute flag
     if execute {
         log::info!("Execute mode: applying rule action to messages");
@@ -131,19 +131,19 @@ impl MailOperations for GmailClient {
     fn add_labels(&mut self, labels: &[String]) -> Result<()> {
         MessageList::add_labels(self, labels)
     }
-    
+
     fn label_ids(&self) -> Vec<String> {
         MessageList::label_ids(self)
     }
-    
+
     fn set_query(&mut self, query: &str) {
         MessageList::set_query(self, query);
     }
-    
+
     async fn prepare(&mut self, pages: u32) -> Result<()> {
         self.get_messages(pages).await
     }
-    
+
     async fn batch_trash(&self) -> Result<()> {
         RuleProcessor::batch_trash(self).await
     }
@@ -332,9 +332,9 @@ impl RuleProcessor for GmailClient {
         let Some(rule) = self.rule.clone() else {
             return Err(Error::RuleNotFound(0));
         };
-        
+
         let execute = self.execute;
-        
+
         // Delegate to internal orchestration function
         process_label_with_rule(self, &rule, label, 0, execute).await
     }
@@ -449,15 +449,15 @@ impl RuleProcessor for GmailClient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{rules::EolRule, EolAction, Error};
+    use crate::{EolAction, Error, rules::EolRule};
     use std::sync::{Arc, Mutex};
 
     /// Test helper to create a simple EolRule with or without a query
     fn create_test_rule(id: usize, has_query: bool) -> EolRule {
         use crate::{MessageAge, Retention};
-        
+
         let mut rule = EolRule::new(id);
-        
+
         if has_query {
             // Create a rule that will generate a query (using retention days)
             let retention = Retention::new(MessageAge::Days(30), false);
@@ -465,7 +465,7 @@ mod tests {
             rule.add_label("test-label");
         }
         // For rules without query, we just return the basic rule with no retention set
-        
+
         rule
     }
 
@@ -482,7 +482,7 @@ mod tests {
         should_fail_batch_trash: bool,
         simulate_missing_labels: bool, // Flag to simulate labels not being found
     }
-    
+
     impl Default for FakeClient {
         fn default() -> Self {
             Self {
@@ -504,14 +504,13 @@ mod tests {
         fn new() -> Self {
             Self::default()
         }
-        
+
         /// Create a client that simulates missing labels (add_labels succeeds but no label_ids)
         fn with_missing_labels() -> Self {
-            let mut client = Self::default();
-            client.simulate_missing_labels = true;
-            // This client will accept add_labels but won't populate label_ids,
-            // simulating the case where labels don't exist in the mailbox
-            client
+            Self {
+                simulate_missing_labels: true,
+                ..Default::default()
+            }
         }
 
         fn with_labels(label_ids: Vec<String>) -> Self {
@@ -522,16 +521,23 @@ mod tests {
         }
 
         fn with_failure(failure_type: &str) -> Self {
-            let mut client = Self::default();
             match failure_type {
-                "add_labels" => client.should_fail_add_labels = true,
-                "prepare" => client.should_fail_prepare = true,
-                "batch_trash" => client.should_fail_batch_trash = true,
-                _ => {},
+                "add_labels" => Self {
+                    should_fail_add_labels: true,
+                    ..Default::default()
+                },
+                "prepare" => Self {
+                    should_fail_prepare: true,
+                    ..Default::default()
+                },
+                "batch_trash" => Self {
+                    should_fail_batch_trash: true,
+                    ..Default::default()
+                },
+                _ => Self::default(),
             }
-            client
         }
-        
+
         fn get_batch_trash_call_count(&self) -> u32 {
             *self.batch_trash_call_count.lock().unwrap()
         }
@@ -562,7 +568,7 @@ mod tests {
         async fn prepare(&mut self, _pages: u32) -> Result<()> {
             // Always increment the counter to track that prepare was called
             self.prepare_call_count += 1;
-            
+
             if self.should_fail_prepare {
                 return Err(Error::NoLabelsFound); // Use a valid error variant
             }
@@ -573,7 +579,7 @@ mod tests {
         async fn batch_trash(&self) -> Result<()> {
             // Always increment the counter to track that batch_trash was called
             *self.batch_trash_call_count.lock().unwrap() += 1;
-            
+
             if self.should_fail_batch_trash {
                 return Err(Error::InvalidPagingMode); // Use a valid error variant
             }
@@ -642,7 +648,7 @@ mod tests {
         // Create a client that will fail on prepare but has valid labels
         let mut client = FakeClient::with_labels(vec!["test-label".to_string()]);
         client.should_fail_prepare = true; // Set the failure flag directly
-        
+
         let rule = create_test_rule(5, true);
         let label = "test-label";
 
@@ -658,7 +664,7 @@ mod tests {
         // Create a client that will fail on batch_trash but has valid labels
         let mut client = FakeClient::with_labels(vec!["test-label".to_string()]);
         client.should_fail_batch_trash = true; // Set the failure flag directly
-        
+
         let rule = create_test_rule(6, true);
         let label = "test-label";
 
@@ -689,7 +695,7 @@ mod tests {
     fn test_rule_processor_setters_and_getters() {
         // Note: This test would need a mock GmailClient implementation
         // For now, we'll create a simple struct that implements RuleProcessor
-        
+
         struct MockProcessor {
             rule: Option<EolRule>,
             execute: bool,
@@ -743,7 +749,7 @@ mod tests {
         // Test execute flag setting
         processor.set_execute(true);
         assert!(processor.execute);
-        
+
         processor.set_execute(false);
         assert!(!processor.execute);
     }
