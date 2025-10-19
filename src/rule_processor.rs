@@ -53,10 +53,95 @@ use crate::{EolAction, Error, GmailClient, Result, message_list::MessageList, ru
 const TRASH_LABEL: &str = "TRASH";
 
 /// Gmail API scope for modifying messages (recommended scope for most operations).
-///
+/// 
 /// This scope allows adding/removing labels, moving messages to trash, and other
 /// modification operations. Preferred over broader scopes for security.
 const GMAIL_MODIFY_SCOPE: &str = "https://www.googleapis.com/auth/gmail.modify";
+
+/// Internal trait defining the minimal operations needed for rule processing.
+///
+/// This trait is used internally to enable unit testing of orchestration logic
+/// without requiring network calls or real Gmail API access. It abstracts the
+/// core operations that the rule processor needs from the Gmail client.
+#[doc(hidden)]
+pub(crate) trait MailOperations {
+    /// Add labels to the client for filtering
+    fn add_labels(&mut self, labels: &[String]) -> Result<()>;
+    
+    /// Get the current label IDs
+    fn label_ids(&self) -> Vec<String>;
+    
+    /// Set the query string for message filtering
+    fn set_query(&mut self, query: &str);
+    
+    /// Prepare messages by fetching from Gmail API
+    fn prepare(&mut self, pages: u32) -> impl std::future::Future<Output = Result<()>> + Send;
+    
+    /// Execute trash operation on prepared messages
+    fn batch_trash(&self) -> impl std::future::Future<Output = Result<()>> + Send;
+}
+
+/// Internal orchestration function for rule processing that can be unit tested.
+///
+/// This function contains the core rule processing logic extracted from the trait
+/// implementation to enable testing without network dependencies.
+async fn process_label_with_rule<T: MailOperations>(
+    client: &mut T,
+    rule: &EolRule,
+    label: &str,
+    pages: u32,
+    execute: bool,
+) -> Result<()> {
+    // Add the label for filtering
+    client.add_labels(&[label.to_owned()])?;
+    
+    // Validate label exists in mailbox
+    if client.label_ids().is_empty() {
+        return Err(Error::LabelNotFoundInMailbox(label.to_owned()));
+    }
+    
+    // Get query from rule
+    let Some(query) = rule.eol_query() else {
+        return Err(Error::NoQueryStringCalculated(rule.id()));
+    };
+    
+    // Set the query and prepare messages
+    client.set_query(&query);
+    log::info!("Ready to process messages for label: {label}");
+    client.prepare(pages).await?;
+    
+    // Execute or dry-run based on execute flag
+    if execute {
+        log::info!("Execute mode: applying rule action to messages");
+        client.batch_trash().await
+    } else {
+        log::info!("Dry-run mode: no changes made to messages");
+        Ok(())
+    }
+}
+
+/// Implement the internal mail operations trait for GmailClient.
+impl MailOperations for GmailClient {
+    fn add_labels(&mut self, labels: &[String]) -> Result<()> {
+        MessageList::add_labels(self, labels)
+    }
+    
+    fn label_ids(&self) -> Vec<String> {
+        MessageList::label_ids(self)
+    }
+    
+    fn set_query(&mut self, query: &str) {
+        MessageList::set_query(self, query);
+    }
+    
+    async fn prepare(&mut self, pages: u32) -> Result<()> {
+        self.get_messages(pages).await
+    }
+    
+    async fn batch_trash(&self) -> Result<()> {
+        RuleProcessor::batch_trash(self).await
+    }
+}
 
 /// Trait for processing Gmail messages according to configured end-of-life rules.
 ///
@@ -223,40 +308,22 @@ impl RuleProcessor for GmailClient {
 
     /// Orchestrates the complete rule processing workflow for a Gmail label.
     ///
-    /// This method implements the main processing logic:
-    /// 1. Validates the label exists in the mailbox
-    /// 2. Constructs a Gmail query from the rule's criteria
-    /// 3. Fetches matching messages from the Gmail API
-    /// 4. Executes the rule's action if execute flag is enabled
+    /// This method implements the main processing logic by delegating to the internal
+    /// orchestration function, which enables better testability while maintaining
+    /// the same external behavior.
     ///
     /// The method respects the execute flag - when `false`, it runs in dry-run mode
     /// and only logs what would be done without making any changes.
     async fn find_rule_and_messages_for_label(&mut self, label: &str) -> Result<()> {
-        self.add_labels(&[label.to_owned()])?;
-
-        if self.label_ids().is_empty() {
-            return Err(Error::LabelNotFoundInMailbox(label.to_string()));
-        }
-
-        let Some(rule) = &self.rule else {
+        // Ensure we have a rule configured and clone it to avoid borrow conflicts
+        let Some(rule) = self.rule.clone() else {
             return Err(Error::RuleNotFound(0));
         };
-
-        let Some(query) = rule.eol_query() else {
-            return Err(Error::NoQueryStringCalculated(rule.id()));
-        };
-        self.set_query(&query);
-
-        log::info!("{:?}", self.messages());
-        log::info!("Ready to run");
-        self.prepare(0).await?;
-        if self.execute {
-            log::info!("Execute mode: applying rule action to messages");
-            self.batch_trash().await
-        } else {
-            log::info!("Dry-run mode: no changes made to messages");
-            Ok(())
-        }
+        
+        let execute = self.execute;
+        
+        // Delegate to internal orchestration function
+        process_label_with_rule(self, &rule, label, 0, execute).await
     }
 
     /// Fetches messages from Gmail API based on current query and label filters.
@@ -286,7 +353,7 @@ impl RuleProcessor for GmailClient {
     /// minimal privilege access. This scope provides sufficient permissions
     /// for message deletion while following security best practices.
     async fn batch_delete(&self) -> Result<()> {
-        let message_ids = self.message_ids();
+        let message_ids = MessageList::message_ids(self);
 
         // Early return if no messages to delete, avoiding unnecessary API calls
         if message_ids.is_empty() {
@@ -329,7 +396,7 @@ impl RuleProcessor for GmailClient {
     /// Uses `https://www.googleapis.com/auth/gmail.modify` scope for secure,
     /// minimal privilege access to Gmail message modification operations.
     async fn batch_trash(&self) -> Result<()> {
-        let message_ids = self.message_ids();
+        let message_ids = MessageList::message_ids(self);
 
         // Early return if no messages to trash, avoiding unnecessary API calls
         if message_ids.is_empty() {
@@ -339,7 +406,7 @@ impl RuleProcessor for GmailClient {
 
         let add_label_ids = Some(vec![TRASH_LABEL.to_string()]);
         let ids = Some(message_ids);
-        let remove_label_ids = Some(self.label_ids());
+        let remove_label_ids = Some(MessageList::label_ids(self));
 
         let batch_request = BatchModifyMessagesRequest {
             add_label_ids,
