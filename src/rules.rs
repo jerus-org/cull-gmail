@@ -202,9 +202,11 @@ impl Rules {
             current_labels.append(&mut ls);
         }
 
-        if label.is_some() && current_labels.contains(label.unwrap()) {
-            log::warn!("a rule already applies to label {}", label.unwrap());
-            return self;
+        if let Some(label_ref) = label {
+            if current_labels.contains(label_ref) {
+                log::warn!("a rule already applies to label {}", label_ref);
+                return self;
+            }
         }
 
         let id = if let Some((_, max)) = self.rules.iter().max_by_key(|(_, r)| r.id()) {
@@ -497,8 +499,15 @@ impl Rules {
     /// * IO errors when writing to the file system
     /// * File system permission errors
     pub fn save(&self) -> Result<()> {
-        let home_dir = env::home_dir().unwrap();
+        let home_dir = env::home_dir().ok_or_else(|| {
+            Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string())
+        })?;
         let path = PathBuf::new().join(home_dir).join(".cull-gmail/rules.toml");
+        
+        // Ensure directory exists
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent)?;
+        }
 
         let res = toml::to_string(self);
         log::trace!("toml conversion result: {res:#?}");
@@ -536,7 +545,9 @@ impl Rules {
     /// * TOML parsing errors if the file is malformed
     /// * File not found errors if the configuration doesn't exist
     pub fn load() -> Result<Rules> {
-        let home_dir = env::home_dir().unwrap();
+        let home_dir = env::home_dir().ok_or_else(|| {
+            Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string())
+        })?;
         let path = PathBuf::new().join(home_dir).join(".cull-gmail/rules.toml");
         log::trace!("Loading config from {}", path.display());
 
@@ -584,7 +595,10 @@ mod tests {
     fn setup_test_environment() {
         get_test_logger();
         // Clean up any existing test files
-        let home_dir = env::home_dir().unwrap();
+        let Some(home_dir) = env::home_dir() else {
+            // Skip cleanup if home directory cannot be determined
+            return;
+        };
         let test_config_dir = home_dir.join(".cull-gmail");
         let test_rules_file = test_config_dir.join("rules.toml");
         if test_rules_file.exists() {
