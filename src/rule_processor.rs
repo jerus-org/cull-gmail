@@ -26,21 +26,27 @@
 //!
 //! ## Example
 //!
-//! ```rust,no_run
-//! # use cull_gmail::{GmailClient, RuleProcessor, EolRule, EolAction};
-//! # async fn example() -> cull_gmail::Result<()> {
-//! let mut client = GmailClient::new().await?;
-//!
-//! // Create a rule (this would typically come from configuration)
-//! let rule = EolRule::new(1, "old-emails".to_string(), EolAction::Trash, None, None, None)?;
-//!
-//! client.set_rule(rule);
-//! client.set_execute(true); // Set to false for dry-run
-//!
-//! // Process all messages with the "old-emails" label according to the rule
-//! client.find_rule_and_messages_for_label("old-emails").await?;
-//! # Ok(())
-//! # }
+//! ```text
+//! use cull_gmail::{GmailClient, RuleProcessor, ClientConfig};
+//! 
+//! async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Configure Gmail client with credentials
+//!     let config = ClientConfig::builder()
+//!         .with_client_id("your-client-id")
+//!         .with_client_secret("your-client-secret")
+//!         .build();
+//!     let mut client = GmailClient::new_with_config(config).await?;
+//!     
+//!     // Rules would typically be loaded from configuration
+//!     // let rule = load_rule_from_config("old-emails");
+//!     // client.set_rule(rule);
+//!     
+//!     client.set_execute(true); // Set to false for dry-run
+//!     
+//!     // Process all messages with the "old-emails" label according to the rule
+//!     client.find_rule_and_messages_for_label("old-emails").await?;
+//!     Ok(())
+//! }
 //! ```
 
 use google_gmail1::api::{BatchDeleteMessagesRequest, BatchModifyMessagesRequest};
@@ -198,14 +204,21 @@ pub trait RuleProcessor {
     ///
     /// # Example
     ///
-    /// ```rust,no_run
-    /// # use cull_gmail::{GmailClient, RuleProcessor, EolRule, EolAction};
-    /// # fn example() -> cull_gmail::Result<()> {
-    /// # let mut client = GmailClient::new_fake(); // This would be real in practice
-    /// let rule = EolRule::new(1, "old".to_string(), EolAction::Trash, None, None, None)?;
-    /// client.set_rule(rule);
-    /// # Ok(())
-    /// # }
+    /// ```text
+    /// use cull_gmail::{GmailClient, RuleProcessor, ClientConfig};
+    ///
+    /// async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let config = ClientConfig::builder()
+    ///         .with_client_id("your-client-id")
+    ///         .with_client_secret("your-client-secret")
+    ///         .build();
+    ///     let mut client = GmailClient::new_with_config(config).await?;
+    ///     
+    ///     // Rules would typically be loaded from configuration
+    ///     // let rule = load_rule_from_config();
+    ///     // client.set_rule(rule);
+    ///     Ok(())
+    /// }
     /// ```
     fn set_rule(&mut self, rule: EolRule);
 
