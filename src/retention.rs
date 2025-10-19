@@ -204,7 +204,7 @@ mod tests {
     #[test]
     fn test_retention_debug() {
         let retention = Retention::new(MessageAge::Days(30), true);
-        let debug_str = format!("{:?}", retention);
+        let debug_str = format!("{retention:?}");
 
         assert!(debug_str.contains("Retention"));
         assert!(debug_str.contains("Days(30)"));
