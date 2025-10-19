@@ -60,34 +60,285 @@ use google_gmail1::{
     hyper_util::client::legacy::connect::HttpConnector,
 };
 
-/// Methods to select lists of messages from the mailbox
+/// A trait for interacting with Gmail message lists, providing methods for
+/// retrieving, filtering, and managing collections of Gmail messages.
+///
+/// This trait abstracts the core operations needed to work with Gmail message lists,
+/// including pagination, filtering by labels and queries, and configuring result limits.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use cull_gmail::{MessageList, GmailClient, ClientConfig};
+///
+/// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+/// let config = ClientConfig::builder().build();
+/// let mut client = GmailClient::new_with_config(config).await?;
+///
+/// // Set search parameters
+/// client.set_query("is:unread");
+/// client.set_max_results(100);
+///
+/// // Retrieve first page of messages
+/// client.get_messages(1).await?;
+/// # Ok(())
+/// # }
+/// ```
 pub trait MessageList {
-    /// Log the initial characters of the subjects of the message in the list
+    /// Fetches detailed metadata for stored messages and logs their subjects and dates.
+    ///
+    /// This method retrieves the subject line and date for each message currently
+    /// stored in the message list and outputs them to the log.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Result<()>` on success, or an error if the Gmail API request fails.
+    ///
+    /// # Errors
+    ///
+    /// This method can fail if:
+    /// - The Gmail API is unreachable
+    /// - Authentication credentials are invalid or expired
+    /// - Network connectivity issues occur
+    /// - Individual message retrieval fails
     fn log_messages(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
-    /// List of messages
+
+    /// Retrieves a list of messages from Gmail based on current filter settings.
+    ///
+    /// This method calls the Gmail API to get a page of messages matching the
+    /// configured query and label filters. Retrieved message IDs are stored
+    /// internally for further operations.
+    ///
+    /// # Arguments
+    ///
+    /// * `next_page_token` - Optional token for pagination. Use `None` for the first page,
+    ///   or the token from a previous response to get subsequent pages.
+    ///
+    /// # Returns
+    ///
+    /// Returns the raw `ListMessagesResponse` from the Gmail API, which contains
+    /// message metadata and pagination tokens.
+    ///
+    /// # Errors
+    ///
+    /// This method can fail if:
+    /// - The Gmail API request fails
+    /// - Authentication is invalid
+    /// - The query syntax is malformed
+    /// - Network issues prevent the API call
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use cull_gmail::{MessageList, GmailClient, ClientConfig};
+    /// # async fn example(mut client: impl MessageList) -> cull_gmail::Result<()> {
+    /// // Get the first page of results
+    /// let response = client.list_messages(None).await?;
+    ///
+    /// // Get the next page if available
+    /// if let Some(token) = response.next_page_token {
+    ///     let next_page = client.list_messages(Some(token)).await?;
+    /// }
+    /// # Ok(())
+    /// # }
+    /// ```
     fn list_messages(
         &mut self,
         next_page_token: Option<String>,
     ) -> impl std::future::Future<Output = Result<ListMessagesResponse>> + Send;
-    /// Run something
+
+    /// Retrieves multiple pages of messages based on the specified page limit.
+    ///
+    /// This method handles pagination automatically, fetching the specified number
+    /// of pages or all available pages if `pages` is 0.
+    ///
+    /// # Arguments
+    ///
+    /// * `pages` - Number of pages to retrieve:
+    ///   - `0`: Fetch all available pages
+    ///   - `1`: Fetch only the first page
+    ///   - `n > 1`: Fetch exactly `n` pages or until no more pages are available
+    ///
+    /// # Returns
+    ///
+    /// Returns `Result<()>` on success. All retrieved messages are stored internally
+    /// and can be accessed via `messages()`.
+    ///
+    /// # Errors
+    ///
+    /// This method can fail if any individual page request fails. See `list_messages`
+    /// for specific error conditions.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use cull_gmail::{MessageList, GmailClient, ClientConfig};
+    /// # async fn example(mut client: impl MessageList) -> cull_gmail::Result<()> {
+    /// // Get all available pages
+    /// client.get_messages(0).await?;
+    ///
+    /// // Get exactly 3 pages
+    /// client.get_messages(3).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
     fn get_messages(&mut self, pages: u32) -> impl std::future::Future<Output = Result<()>> + Send;
-    /// Return the gmail hub
+
+    /// Returns a reference to the Gmail API hub for direct API access.
+    ///
+    /// This method provides access to the underlying Gmail API client for
+    /// advanced operations not covered by this trait.
+    ///
+    /// # Returns
+    ///
+    /// A cloned `Gmail` hub instance configured with the appropriate connectors.
     fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>>;
-    /// Return the list of label_ids
+
+    /// Returns the list of label IDs currently configured for message filtering.
+    ///
+    /// # Returns
+    ///
+    /// A vector of Gmail label ID strings. These IDs are used to filter
+    /// messages during API calls.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use cull_gmail::MessageList;
+    /// # fn example(client: impl MessageList) {
+    /// let labels = client.label_ids();
+    /// println!("Filtering by {} labels", labels.len());
+    /// # }
+    /// ```
     fn label_ids(&self) -> Vec<String>;
-    /// Return the list of message ids
+
+    /// Returns a list of message IDs for all currently stored messages.
+    ///
+    /// # Returns
+    ///
+    /// A vector of Gmail message ID strings. These IDs can be used for
+    /// further Gmail API operations on specific messages.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use cull_gmail::MessageList;
+    /// # fn example(client: impl MessageList) {
+    /// let message_ids = client.message_ids();
+    /// println!("Found {} messages", message_ids.len());
+    /// # }
+    /// ```
     fn message_ids(&self) -> Vec<String>;
-    /// Return a summary of the messages (id and summary)
+
+    /// Returns a reference to the collection of message summaries.
+    ///
+    /// This method provides access to all message summaries currently stored,
+    /// including any metadata that has been fetched.
+    ///
+    /// # Returns
+    ///
+    /// A reference to a vector of `MessageSummary` objects containing
+    /// message IDs and any retrieved metadata.
     fn messages(&self) -> &Vec<MessageSummary>;
-    /// Set the query for the message list
+
+    /// Sets the search query string for filtering messages.
+    ///
+    /// This method configures the Gmail search query that will be used in
+    /// subsequent API calls. The query uses Gmail's search syntax.
+    ///
+    /// # Arguments
+    ///
+    /// * `query` - A Gmail search query string (e.g., "is:unread", "from:example@gmail.com")
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use cull_gmail::MessageList;
+    /// # fn example(mut client: impl MessageList) {
+    /// client.set_query("is:unread older_than:30d");
+    /// client.set_query("from:noreply@example.com");
+    /// # }
+    /// ```
     fn set_query(&mut self, query: &str);
-    /// Add label ids to the list of labels for the message list
+
+    /// Adds Gmail label IDs to the current filter list.
+    ///
+    /// This method appends the provided label IDs to the existing list of
+    /// labels used for filtering messages. Messages must match ALL specified labels.
+    ///
+    /// # Arguments
+    ///
+    /// * `label_ids` - A slice of Gmail label ID strings to add to the filter
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use cull_gmail::MessageList;
+    /// # fn example(mut client: impl MessageList) {
+    /// let label_ids = vec!["Label_1".to_string(), "Label_2".to_string()];
+    /// client.add_labels_ids(&label_ids);
+    /// # }
+    /// ```
     fn add_labels_ids(&mut self, label_ids: &[String]);
-    /// Add labels to the list of labels for the message list
+
+    /// Adds Gmail labels by name to the current filter list.
+    ///
+    /// This method resolves label names to their corresponding IDs and adds them
+    /// to the filter list. This is more convenient than using `add_labels_ids`
+    /// when you know the label names but not their IDs.
+    ///
+    /// # Arguments
+    ///
+    /// * `labels` - A slice of Gmail label name strings (e.g., "INBOX", "SPAM")
+    ///
+    /// # Returns
+    ///
+    /// Returns `Result<()>` on success, or an error if label name resolution fails.
+    ///
+    /// # Errors
+    ///
+    /// This method can fail if label name to ID resolution is not available
+    /// or if the underlying label ID mapping is not accessible.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use cull_gmail::MessageList;
+    /// # async fn example(mut client: impl MessageList) -> cull_gmail::Result<()> {
+    /// let labels = vec!["INBOX".to_string(), "IMPORTANT".to_string()];
+    /// client.add_labels(&labels)?;
+    /// # Ok(())
+    /// # }
+    /// ```
     fn add_labels(&mut self, labels: &[String]) -> Result<()>;
-    /// Report the max results value set
+
+    /// Returns the current maximum results limit per API request.
+    ///
+    /// # Returns
+    ///
+    /// The maximum number of messages to retrieve in a single API call.
+    /// Default is typically 200.
     fn max_results(&self) -> u32;
-    /// Set the max_results value
+
+    /// Sets the maximum number of results to return per API request.
+    ///
+    /// This controls how many messages are retrieved in each page when calling
+    /// the Gmail API. Larger values reduce the number of API calls needed but
+    /// increase memory usage and response time.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - Maximum results per page (typically 1-500, Gmail API limits apply)
+    ///
+    /// # Examples
+    ///
+    /// ```rust,no_run
+    /// # use cull_gmail::MessageList;
+    /// # fn example(mut client: impl MessageList) {
+    /// client.set_max_results(100);  // Retrieve 100 messages per page
+    /// client.set_max_results(500);  // Retrieve 500 messages per page (maximum)
+    /// # }
+    /// ```
     fn set_max_results(&mut self, value: u32);
 }
 
