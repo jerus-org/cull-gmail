@@ -41,8 +41,7 @@ pub struct AddCli {
 impl AddCli {
     pub fn run(&self, mut config: Rules) -> Result<(), Error> {
         let generate = self.label.is_none();
-        let message_age = MessageAge::new(self.period.to_string().as_str(), self.count)
-            .map_err(|e| Error::Config(config::ConfigError::Message(e)))?;
+        let message_age = MessageAge::new(self.period.to_string().as_str(), self.count)?;
         let retention = Retention::new(message_age, generate);
 
         config.add_rule(retention, self.label.as_ref(), self.delete);
