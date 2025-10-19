@@ -48,4 +48,7 @@ pub enum Error {
     /// Error from config
     #[error(transparent)]
     Config(#[from] config::ConfigError),
+    /// Invalid message age specification
+    #[error("Invalid message age: {0}")]
+    InvalidMessageAge(String),
 }
