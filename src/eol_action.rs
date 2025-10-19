@@ -3,7 +3,7 @@ use std::fmt;
 /// End of life action
 /// - Trash - move the message to the trash to be automatically deleted by Google
 /// - Delete - delete the message immediately without allowing rescue from trash
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub enum EolAction {
     #[default]
     /// Move the message to the trash
