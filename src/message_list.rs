@@ -87,20 +87,45 @@ mod tests {
     }
 
     impl MessageList for MockList {
-        async fn log_messages(&mut self) -> Result<()> { Ok(()) }
-        async fn list_messages(&mut self, _next_page_token: Option<String>) -> Result<ListMessagesResponse> { Ok(ListMessagesResponse::default()) }
-        async fn get_messages(&mut self, _pages: u32) -> Result<()> { Ok(()) }
-        fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>> { panic!("not used in tests") }
-        fn label_ids(&self) -> Vec<String> { self.label_ids.clone() }
+        async fn log_messages(&mut self) -> Result<()> {
+            Ok(())
+        }
+        async fn list_messages(
+            &mut self,
+            _next_page_token: Option<String>,
+        ) -> Result<ListMessagesResponse> {
+            Ok(ListMessagesResponse::default())
+        }
+        async fn get_messages(&mut self, _pages: u32) -> Result<()> {
+            Ok(())
+        }
+        fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>> {
+            panic!("not used in tests")
+        }
+        fn label_ids(&self) -> Vec<String> {
+            self.label_ids.clone()
+        }
         fn message_ids(&self) -> Vec<String> {
             self.messages.iter().map(|m| m.id().to_string()).collect()
         }
-        fn messages(&self) -> &Vec<MessageSummary> { &self.messages }
-        fn set_query(&mut self, query: &str) { self.query = query.to_string(); }
-        fn add_labels_ids(&mut self, label_ids: &[String]) { self.label_ids.extend_from_slice(label_ids); }
-        fn add_labels(&mut self, _labels: &[String]) -> Result<()> { Ok(()) }
-        fn max_results(&self) -> u32 { self.max_results }
-        fn set_max_results(&mut self, value: u32) { self.max_results = value; }
+        fn messages(&self) -> &Vec<MessageSummary> {
+            &self.messages
+        }
+        fn set_query(&mut self, query: &str) {
+            self.query = query.to_string();
+        }
+        fn add_labels_ids(&mut self, label_ids: &[String]) {
+            self.label_ids.extend_from_slice(label_ids);
+        }
+        fn add_labels(&mut self, _labels: &[String]) -> Result<()> {
+            Ok(())
+        }
+        fn max_results(&self) -> u32 {
+            self.max_results
+        }
+        fn set_max_results(&mut self, value: u32) {
+            self.max_results = value;
+        }
     }
 
     #[test]
