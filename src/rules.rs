@@ -23,11 +23,11 @@
 //!
 //! // Add a rule to delete old newsletters after 6 months
 //! let newsletter_retention = Retention::new(MessageAge::Months(6), true);
-//! rules.add_rule(newsletter_retention, Some(&"newsletter".to_string()), true);
+//! rules.add_rule(newsletter_retention, Some("newsletter"), true);
 //!
 //! // Add a rule to trash spam after 30 days
 //! let spam_retention = Retention::new(MessageAge::Days(30), false);
-//! rules.add_rule(spam_retention, Some(&"spam".to_string()), false);
+//! rules.add_rule(spam_retention, Some("spam"), false);
 //!
 //! // Save the rules to disk
 //! rules.save().expect("Failed to save rules");
@@ -184,30 +184,27 @@ impl Rules {
     ///
     /// // Add a rule to trash newsletters after 3 months
     /// let retention = Retention::new(MessageAge::Months(3), false);
-    /// rules.add_rule(retention, Some(&"newsletter".to_string()), false);
+    /// rules.add_rule(retention, Some("newsletter"), false);
     ///
     /// // Add a rule to delete spam after 7 days
     /// let spam_retention = Retention::new(MessageAge::Days(7), false);
-    /// rules.add_rule(spam_retention, Some(&"spam".to_string()), true);
+    /// rules.add_rule(spam_retention, Some("spam"), true);
     /// ```
     pub fn add_rule(
         &mut self,
         retention: Retention,
-        label: Option<&String>,
+        label: Option<&str>,
         delete: bool,
     ) -> &mut Self {
-        let mut current_labels = Vec::new();
-        for rule in self.rules.values() {
-            let mut ls = rule.labels().clone();
-            current_labels.append(&mut ls);
-        }
+        let current_labels: Vec<String> = self.rules.values()
+            .flat_map(|rule| rule.labels())
+            .collect();
 
-        if let Some(label_ref) = label {
-            if current_labels.contains(label_ref) {
-                log::warn!("a rule already applies to label {}", label_ref);
+        if let Some(label_ref) = label
+            && current_labels.iter().any(|l| l == label_ref) {
+                log::warn!("a rule already applies to label {label_ref}");
                 return self;
             }
-        }
 
         let id = if let Some((_, max)) = self.rules.iter().max_by_key(|(_, r)| r.id()) {
             max.id() + 1
@@ -240,18 +237,16 @@ impl Rules {
     ///
     /// let mut rules = Rules::new();
     /// let retention = Retention::new(MessageAge::Days(30), false);
-    /// rules.add_rule(retention, Some(&"test-label".to_string()), false);
+    /// rules.add_rule(retention, Some("test-label"), false);
     ///
     /// let labels = rules.labels();
     /// assert!(labels.len() > 0);
     /// println!("Configured labels: {:?}", labels);
     /// ```
     pub fn labels(&self) -> Vec<String> {
-        let mut labels = Vec::new();
-        for rule in self.rules.values() {
-            labels.append(&mut rule.labels().clone());
-        }
-        labels
+        self.rules.values()
+            .flat_map(|rule| rule.labels())
+            .collect()
     }
 
     /// Find the id of the rule that contains a label
@@ -309,7 +304,7 @@ impl Rules {
     ///
     /// let mut rules = Rules::new();
     /// let retention = Retention::new(MessageAge::Days(30), false);
-    /// rules.add_rule(retention, Some(&"newsletter".to_string()), false);
+    /// rules.add_rule(retention, Some("newsletter"), false);
     ///
     /// // Remove the rule targeting the newsletter label
     /// rules.remove_rule_by_label("newsletter")
@@ -324,7 +319,7 @@ impl Rules {
     pub fn remove_rule_by_label(&mut self, label: &str) -> crate::Result<()> {
         let labels = self.labels();
 
-        if !labels.contains(&label.to_string()) {
+        if !labels.iter().any(|l| l == label) {
             return Err(Error::LabelNotFoundInRules(label.to_string()));
         }
 
@@ -352,7 +347,7 @@ impl Rules {
     ///
     /// let mut rules = Rules::new();
     /// let retention = Retention::new(MessageAge::Days(30), false);
-    /// rules.add_rule(retention, Some(&"test".to_string()), false);
+    /// rules.add_rule(retention, Some("test"), false);
     ///
     /// let label_map = rules.get_rules_by_label();
     /// if let Some(rule) = label_map.get("test") {
@@ -488,7 +483,7 @@ impl Rules {
     ///
     /// let mut rules = Rules::new();
     /// let retention = Retention::new(MessageAge::Days(30), false);
-    /// rules.add_rule(retention, Some(&"test".to_string()), false);
+    /// rules.add_rule(retention, Some("test"), false);
     ///
     /// rules.save().expect("Failed to save configuration");
     /// ```
@@ -642,7 +637,7 @@ mod tests {
         let initial_label_count = rules.labels().len();
         
         let retention = Retention::new(MessageAge::Days(30), false);
-        rules.add_rule(retention, Some(&"test-label".to_string()), false);
+        rules.add_rule(retention, Some("test-label"), false);
         
         let labels = rules.labels();
         assert!(labels.contains(&"test-label".to_string()));
@@ -670,7 +665,7 @@ mod tests {
         
         let mut rules = Rules::new();
         let retention = Retention::new(MessageAge::Days(7), false);
-        rules.add_rule(retention, Some(&"delete-test".to_string()), true);
+        rules.add_rule(retention, Some("delete-test"), true);
         
         let rules_by_label = rules.get_rules_by_label();
         let rule = rules_by_label.get("delete-test").unwrap();
@@ -685,11 +680,11 @@ mod tests {
         let retention1 = Retention::new(MessageAge::Days(30), false);
         let retention2 = Retention::new(MessageAge::Days(60), false);
         
-        rules.add_rule(retention1, Some(&"duplicate".to_string()), false);
+        rules.add_rule(retention1, Some("duplicate"), false);
         let initial_count = rules.labels().len();
         
         // Try to add another rule with the same label
-        rules.add_rule(retention2, Some(&"duplicate".to_string()), false);
+        rules.add_rule(retention2, Some("duplicate"), false);
         
         // Should not increase the count of labels
         assert_eq!(rules.labels().len(), initial_count);
@@ -724,7 +719,7 @@ mod tests {
         
         let mut rules = Rules::new();
         let retention = Retention::new(MessageAge::Days(30), false);
-        rules.add_rule(retention, Some(&"custom-label".to_string()), false);
+        rules.add_rule(retention, Some("custom-label"), false);
         
         let labels = rules.labels();
         assert!(labels.contains(&"custom-label".to_string()));
@@ -736,7 +731,7 @@ mod tests {
         
         let mut rules = Rules::new();
         let retention = Retention::new(MessageAge::Days(30), false);
-        rules.add_rule(retention, Some(&"mapped-label".to_string()), false);
+        rules.add_rule(retention, Some("mapped-label"), false);
         
         let label_map = rules.get_rules_by_label();
         let rule = label_map.get("mapped-label");
@@ -775,7 +770,7 @@ mod tests {
         
         let mut rules = Rules::new();
         let retention = Retention::new(MessageAge::Days(30), false);
-        rules.add_rule(retention, Some(&"remove-me".to_string()), false);
+        rules.add_rule(retention, Some("remove-me"), false);
         
         let result = rules.remove_rule_by_label("remove-me");
         assert!(result.is_ok());
@@ -919,7 +914,7 @@ mod tests {
         
         let mut rules = Rules::new();
         let retention = Retention::new(MessageAge::Days(30), false);
-        rules.add_rule(retention, Some(&"save-test".to_string()), false);
+        rules.add_rule(retention, Some("save-test"), false);
         
         // Save to disk
         let save_result = rules.save();

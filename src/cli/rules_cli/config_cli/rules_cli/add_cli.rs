@@ -44,7 +44,7 @@ impl AddCli {
         let message_age = MessageAge::new(self.period.to_string().as_str(), self.count)?;
         let retention = Retention::new(message_age, generate);
 
-        config.add_rule(retention, self.label.as_ref(), self.delete);
+        config.add_rule(retention, self.label.as_deref(), self.delete);
         config.save()
     }
 }
