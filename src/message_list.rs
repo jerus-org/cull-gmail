@@ -1,3 +1,58 @@
+//! # Message List Module
+//!
+//! This module provides the `MessageList` trait for interacting with Gmail message lists.
+//! The trait defines methods for retrieving, filtering, and managing collections of Gmail messages.
+//!
+//! ## Overview
+//!
+//! The `MessageList` trait provides:
+//!
+//! - Message list retrieval with pagination support
+//! - Label and query-based filtering
+//! - Message metadata fetching and logging
+//! - Configuration of result limits and query parameters
+//!
+//! ## Error Handling
+//!
+//! All asynchronous methods return `Result<T>` where errors may include:
+//! - Gmail API communication errors
+//! - Authentication failures
+//! - Network connectivity issues
+//! - Invalid query parameters
+//!
+//! ## Threading
+//!
+//! All async methods in this trait are `Send` compatible, allowing them to be used
+//! across thread boundaries in concurrent contexts.
+//!
+//! ## Example
+//!
+//! ```rust,no_run
+//! use cull_gmail::{GmailClient, MessageList, ClientConfig};
+//!
+//! async fn example() -> Result<(), Box<dyn std::error::Error>> {
+//!     // Create a client with proper configuration (credentials required)
+//!     let config = ClientConfig::builder()
+//!         .with_client_id("your-client-id")
+//!         .with_client_secret("your-client-secret")
+//!         .build();
+//!     let mut client = GmailClient::new_with_config(config).await?;
+//!     
+//!     // Configure search parameters
+//!     client.set_query("is:unread");
+//!     client.set_max_results(50);
+//!     
+//!     // Retrieve messages from Gmail
+//!     client.get_messages(1).await?;
+//!     
+//!     // Access retrieved message summaries
+//!     let messages = client.messages();
+//!     println!("Found {} messages", messages.len());
+//!     
+//!     Ok(())
+//! }
+//! ```
+
 use crate::{GmailClient, MessageSummary, Result};
 
 use google_gmail1::{
