@@ -1,3 +1,27 @@
+//! End-of-life (EOL) rule implementation.
+//!
+//! This module provides the [`EolRule`] struct which defines rules for automatically
+//! processing Gmail messages based on their age. Rules can be configured to either
+//! move messages to trash or permanently delete them after a specified retention period.
+//!
+//! # Usage
+//!
+//! ```ignore
+//! use cull_gmail::{Retention, MessageAge, EolAction};
+//! use cull_gmail::rules::eol_rule::EolRule;
+//!
+//! // Create a new rule to delete messages older than 1 year
+//! let mut rule = EolRule::new(1);
+//! let retention = Retention::new(MessageAge::Years(1), true);
+//! rule.set_retention(retention);
+//! rule.set_action(&EolAction::Delete);
+//!
+//! // Add labels that this rule applies to
+//! rule.add_label("old-emails");
+//!
+//! println!("Rule description: {}", rule.describe());
+//! ```
+
 use std::{collections::BTreeSet, fmt};
 
 use chrono::{DateTime, Datelike, Local, TimeDelta, TimeZone};
@@ -5,7 +29,27 @@ use serde::{Deserialize, Serialize};
 
 use crate::{MessageAge, Retention, eol_action::EolAction};
 
-/// End of life rules
+/// A rule that defines end-of-life processing for Gmail messages.
+///
+/// An `EolRule` specifies conditions under which messages should be processed
+/// (moved to trash or deleted) based on their age and optional label filters.
+/// Each rule has a unique identifier and can be configured with retention periods,
+/// target labels, and actions to perform.
+///
+/// # Examples
+///
+/// Creating a basic rule:
+///
+/// ```ignore
+/// # use cull_gmail::rules::eol_rule::EolRule;
+/// let rule = EolRule::new(42);
+/// assert_eq!(rule.id(), 42);
+/// assert!(rule.labels().is_empty());
+/// ```
+///
+/// # Serialization
+///
+/// Rules can be serialized to and from TOML/JSON using serde.
 #[derive(Debug, Serialize, Deserialize, Default, Clone)]
 pub struct EolRule {
     id: usize,
@@ -37,6 +81,26 @@ impl fmt::Display for EolRule {
 }
 
 impl EolRule {
+    /// Creates a new end-of-life rule with the specified unique identifier.
+    ///
+    /// The rule is created with default settings:
+    /// - Action: Move to trash (not delete)
+    /// - No retention period set
+    /// - No labels specified
+    /// - No custom query
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - A unique identifier for this rule
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use cull_gmail::rules::eol_rule::EolRule;
+    /// let rule = EolRule::new(1);
+    /// assert_eq!(rule.id(), 1);
+    /// assert!(rule.labels().is_empty());
+    /// ```
     pub(crate) fn new(id: usize) -> Self {
         EolRule {
             id,
@@ -45,6 +109,27 @@ impl EolRule {
         }
     }
 
+    /// Sets the retention period for this rule.
+    ///
+    /// The retention period determines how old messages must be before this rule
+    /// applies to them. If the retention is configured to generate labels, the
+    /// appropriate label will be automatically added to this rule.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The retention configuration specifying age and label generation
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use cull_gmail::{rules::eol_rule::EolRule, Retention, MessageAge};
+    /// let mut rule = EolRule::new(1);
+    /// let retention = Retention::new(MessageAge::Months(6), true);
+    /// rule.set_retention(retention);
+    ///
+    /// assert_eq!(rule.retention(), "m:6");
+    /// assert!(rule.labels().contains(&"retention/6-months".to_string()));
+    /// ```
     pub(crate) fn set_retention(&mut self, value: Retention) -> &mut Self {
         self.retention = value.age().to_string();
         if value.generate_label() {
@@ -53,40 +138,177 @@ impl EolRule {
         self
     }
 
+    /// Returns the retention period string for this rule.
+    ///
+    /// The retention string follows the format used by [`MessageAge`],
+    /// such as "d:30" for 30 days or "y:1" for 1 year.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use cull_gmail::{rules::eol_rule::EolRule, Retention, MessageAge};
+    /// let mut rule = EolRule::new(1);
+    /// let retention = Retention::new(MessageAge::Days(90), false);
+    /// rule.set_retention(retention);
+    ///
+    /// assert_eq!(rule.retention(), "d:90");
+    /// ```
     pub(crate) fn retention(&self) -> &str {
         &self.retention
     }
 
+    /// Adds a label that this rule should apply to.
+    ///
+    /// Labels are used to filter which messages this rule processes. Messages
+    /// must have one of the rule's labels to be affected by the rule.
+    /// Duplicate labels are ignored.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The label name to add
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use cull_gmail::rules::eol_rule::EolRule;
+    /// let mut rule = EolRule::new(1);
+    /// rule.add_label("newsletter")
+    ///     .add_label("promotions");
+    ///
+    /// let labels = rule.labels();
+    /// assert!(labels.contains(&"newsletter".to_string()));
+    /// assert!(labels.contains(&"promotions".to_string()));
+    /// assert_eq!(labels.len(), 2);
+    /// ```
     pub(crate) fn add_label(&mut self, value: &str) -> &mut Self {
         self.labels.insert(value.to_string());
         self
     }
 
+    /// Removes a label from this rule.
+    ///
+    /// If the label is not present, this operation does nothing.
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The label name to remove
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use cull_gmail::rules::eol_rule::EolRule;
+    /// let mut rule = EolRule::new(1);
+    /// rule.add_label("temp-label");
+    /// assert!(rule.labels().contains(&"temp-label".to_string()));
+    ///
+    /// rule.remove_label("temp-label");
+    /// assert!(!rule.labels().contains(&"temp-label".to_string()));
+    /// ```
     pub(crate) fn remove_label(&mut self, value: &str) {
         self.labels.remove(value);
     }
 
-    /// Return the id for the rule
+    /// Returns the unique identifier for this rule.
+    ///
+    /// Each rule has a unique ID that distinguishes it from other rules
+    /// in the same rule set.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use cull_gmail::rules::eol_rule::EolRule;
+    /// let rule = EolRule::new(42);
+    /// assert_eq!(rule.id(), 42);
+    /// ```
     pub fn id(&self) -> usize {
         self.id
     }
 
-    /// List the labels in the rules
+    /// Returns a list of all labels that this rule applies to.
+    ///
+    /// Labels determine which messages this rule will process. Only messages
+    /// with one of these labels will be affected by the rule.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use cull_gmail::rules::eol_rule::EolRule;
+    /// let mut rule = EolRule::new(1);
+    /// rule.add_label("spam").add_label("newsletter");
+    ///
+    /// let labels = rule.labels();
+    /// assert_eq!(labels.len(), 2);
+    /// assert!(labels.contains(&"spam".to_string()));
+    /// assert!(labels.contains(&"newsletter".to_string()));
+    /// ```
     pub fn labels(&self) -> Vec<String> {
         self.labels.iter().cloned().collect()
     }
 
+    /// Sets the action to perform when this rule matches messages.
+    ///
+    /// The action determines what happens to messages that match this rule's
+    /// criteria (age and labels).
+    ///
+    /// # Arguments
+    ///
+    /// * `value` - The action to perform (Trash or Delete)
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use cull_gmail::{rules::eol_rule::EolRule, EolAction};
+    /// let mut rule = EolRule::new(1);
+    /// rule.set_action(&EolAction::Delete);
+    ///
+    /// assert_eq!(rule.action(), Some(EolAction::Delete));
+    /// ```
     pub(crate) fn set_action(&mut self, value: &EolAction) -> &mut Self {
         self.action = value.to_string();
         self
     }
 
-    /// Report the action
+    /// Returns the action that will be performed by this rule.
+    ///
+    /// The action determines what happens to messages that match this rule:
+    /// - `Trash`: Move messages to the trash folder
+    /// - `Delete`: Permanently delete messages
+    ///
+    /// Returns `None` if the action string cannot be parsed (should not happen
+    /// with properly constructed rules).
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use cull_gmail::{rules::eol_rule::EolRule, EolAction};
+    /// let mut rule = EolRule::new(1);
+    /// rule.set_action(&EolAction::Trash);
+    ///
+    /// assert_eq!(rule.action(), Some(EolAction::Trash));
+    /// ```
     pub fn action(&self) -> Option<EolAction> {
         EolAction::parse(&self.action)
     }
 
-    /// Describe the action that will be performed by the rule and its conditions
+    /// Returns a human-readable description of what this rule does.
+    ///
+    /// The description includes the rule ID, the action that will be performed,
+    /// and the age threshold for messages.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use cull_gmail::{rules::eol_rule::EolRule, Retention, MessageAge, EolAction};
+    /// let mut rule = EolRule::new(5);
+    /// let retention = Retention::new(MessageAge::Months(3), false);
+    /// rule.set_retention(retention);
+    /// rule.set_action(&EolAction::Delete);
+    ///
+    /// let description = rule.describe();
+    /// assert!(description.contains("Rule #5"));
+    /// assert!(description.contains("delete"));
+    /// assert!(description.contains("3 months"));
+    /// ```
     pub fn describe(&self) -> String {
         let (action, count, period) = self.get_action_period_count_strings();
         format!(
@@ -121,6 +343,27 @@ impl EolRule {
         (action.to_string(), count, period)
     }
 
+    /// Generates a Gmail search query for messages that match this rule's age criteria.
+    ///
+    /// This method calculates the cutoff date based on the rule's retention period
+    /// and returns a Gmail search query string that can be used to find messages
+    /// older than the specified threshold.
+    ///
+    /// Returns `None` if the retention period is not set or cannot be parsed.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// # use cull_gmail::{rules::eol_rule::EolRule, Retention, MessageAge};
+    /// let mut rule = EolRule::new(1);
+    /// let retention = Retention::new(MessageAge::Days(30), false);
+    /// rule.set_retention(retention);
+    ///
+    /// if let Some(query) = rule.eol_query() {
+    ///     println!("Gmail query: {}", query);
+    ///     // Output will be something like "before: 2024-08-15"
+    /// }
+    /// ```
     pub(crate) fn eol_query(&self) -> Option<String> {
         let today = chrono::Local::now();
         self.calculate_for_date(today)
