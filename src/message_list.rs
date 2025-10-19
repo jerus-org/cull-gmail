@@ -60,108 +60,6 @@ use google_gmail1::{
     hyper_util::client::legacy::connect::HttpConnector,
 };
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    struct MockList {
-        label_ids: Vec<String>,
-        query: String,
-        max_results: u32,
-        messages: Vec<MessageSummary>,
-    }
-
-    impl MockList {
-        fn new() -> Self {
-            Self {
-                label_ids: vec![],
-                query: String::new(),
-                max_results: 200,
-                messages: vec![],
-            }
-        }
-
-        fn push_msg(&mut self, id: &str) {
-            self.messages.push(MessageSummary::new(id));
-        }
-    }
-
-    impl MessageList for MockList {
-        async fn log_messages(&mut self) -> Result<()> {
-            Ok(())
-        }
-        async fn list_messages(
-            &mut self,
-            _next_page_token: Option<String>,
-        ) -> Result<ListMessagesResponse> {
-            Ok(ListMessagesResponse::default())
-        }
-        async fn get_messages(&mut self, _pages: u32) -> Result<()> {
-            Ok(())
-        }
-        fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>> {
-            panic!("not used in tests")
-        }
-        fn label_ids(&self) -> Vec<String> {
-            self.label_ids.clone()
-        }
-        fn message_ids(&self) -> Vec<String> {
-            self.messages.iter().map(|m| m.id().to_string()).collect()
-        }
-        fn messages(&self) -> &Vec<MessageSummary> {
-            &self.messages
-        }
-        fn set_query(&mut self, query: &str) {
-            self.query = query.to_string();
-        }
-        fn add_labels_ids(&mut self, label_ids: &[String]) {
-            self.label_ids.extend_from_slice(label_ids);
-        }
-        fn add_labels(&mut self, _labels: &[String]) -> Result<()> {
-            Ok(())
-        }
-        fn max_results(&self) -> u32 {
-            self.max_results
-        }
-        fn set_max_results(&mut self, value: u32) {
-            self.max_results = value;
-        }
-    }
-
-    #[test]
-    fn set_query_updates_state() {
-        let mut ml = MockList::new();
-        ml.set_query("from:noreply@example.com");
-        // not directly accessible; rely on behavior by calling again
-        ml.set_query("is:unread");
-        assert_eq!(ml.query, "is:unread");
-    }
-
-    #[test]
-    fn add_label_ids_accumulates() {
-        let mut ml = MockList::new();
-        ml.add_labels_ids(&["Label_1".into()]);
-        ml.add_labels_ids(&["Label_2".into(), "Label_3".into()]);
-        assert_eq!(ml.label_ids, vec!["Label_1", "Label_2", "Label_3"]);
-    }
-
-    #[test]
-    fn max_results_get_set() {
-        let mut ml = MockList::new();
-        assert_eq!(ml.max_results(), 200);
-        ml.set_max_results(123);
-        assert_eq!(ml.max_results(), 123);
-    }
-
-    #[test]
-    fn message_ids_maps_from_messages() {
-        let mut ml = MockList::new();
-        ml.push_msg("abc");
-        ml.push_msg("def");
-        assert_eq!(ml.message_ids(), vec!["abc", "def"]);
-        assert_eq!(ml.messages().len(), 2);
-    }
-}
 
 /// A trait for interacting with Gmail message lists, providing methods for
 /// retrieving, filtering, and managing collections of Gmail messages.
@@ -626,6 +524,84 @@ impl MessageList for GmailClient {
             log::info!("{}", message.list_date_and_subject());
         }
 
-        Ok(())
+    Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct MockList {
+        label_ids: Vec<String>,
+        query: String,
+        max_results: u32,
+        messages: Vec<MessageSummary>,
+    }
+
+    impl MockList {
+        fn new() -> Self {
+            Self {
+                label_ids: vec![],
+                query: String::new(),
+                max_results: 200,
+                messages: vec![],
+            }
+        }
+
+        fn push_msg(&mut self, id: &str) {
+            self.messages.push(MessageSummary::new(id));
+        }
+    }
+
+    impl MessageList for MockList {
+        async fn log_messages(&mut self) -> Result<()> { Ok(()) }
+        async fn list_messages(&mut self, _next_page_token: Option<String>) -> Result<ListMessagesResponse> { Ok(ListMessagesResponse::default()) }
+        async fn get_messages(&mut self, _pages: u32) -> Result<()> { Ok(()) }
+        fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>> { panic!("not used in tests") }
+        fn label_ids(&self) -> Vec<String> { self.label_ids.clone() }
+        fn message_ids(&self) -> Vec<String> {
+            self.messages.iter().map(|m| m.id().to_string()).collect()
+        }
+        fn messages(&self) -> &Vec<MessageSummary> { &self.messages }
+        fn set_query(&mut self, query: &str) { self.query = query.to_string(); }
+        fn add_labels_ids(&mut self, label_ids: &[String]) { self.label_ids.extend_from_slice(label_ids); }
+        fn add_labels(&mut self, _labels: &[String]) -> Result<()> { Ok(()) }
+        fn max_results(&self) -> u32 { self.max_results }
+        fn set_max_results(&mut self, value: u32) { self.max_results = value; }
+    }
+
+    #[test]
+    fn set_query_updates_state() {
+        let mut ml = MockList::new();
+        ml.set_query("from:noreply@example.com");
+        // not directly accessible; rely on behavior by calling again
+        ml.set_query("is:unread");
+        assert_eq!(ml.query, "is:unread");
+    }
+
+    #[test]
+    fn add_label_ids_accumulates() {
+        let mut ml = MockList::new();
+        ml.add_labels_ids(&["Label_1".into()]);
+        ml.add_labels_ids(&["Label_2".into(), "Label_3".into()]);
+        assert_eq!(ml.label_ids, vec!["Label_1", "Label_2", "Label_3"]);
+    }
+
+    #[test]
+    fn max_results_get_set() {
+        let mut ml = MockList::new();
+        assert_eq!(ml.max_results(), 200);
+        ml.set_max_results(123);
+        assert_eq!(ml.max_results(), 123);
+    }
+
+    #[test]
+    fn message_ids_maps_from_messages() {
+        let mut ml = MockList::new();
+        ml.push_msg("abc");
+        ml.push_msg("def");
+        assert_eq!(ml.message_ids(), vec!["abc", "def"]);
+        assert_eq!(ml.messages().len(), 2);
     }
 }
