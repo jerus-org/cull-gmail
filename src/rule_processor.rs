@@ -323,7 +323,7 @@ impl RuleProcessor for GmailClient {
     ///
     /// This method implements the main processing logic by delegating to the internal
     /// orchestration function, which enables better testability while maintaining
-    /// the same external behavior.
+    /// the same external behaviour.
     ///
     /// The method respects the execute flag - when `false`, it runs in dry-run mode
     /// and only logs what would be done without making any changes.
