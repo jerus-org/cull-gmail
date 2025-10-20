@@ -114,11 +114,11 @@ pub enum EolAction {
     /// until they are automatically purged or manually deleted from trash.
     #[default]
     Trash,
-    
+
     /// Permanently delete the message immediately.
     ///
     /// This action bypasses the trash folder and permanently removes the message.
-    /// 
+    ///
     /// # Warning
     ///
     /// This action is **irreversible**. Once deleted, messages cannot be recovered.
@@ -273,7 +273,7 @@ impl EolAction {
     /// // Generate help text
     /// println!("Available actions:");
     /// for action in EolAction::variants() {
-    ///     println!("  {} - {}", action, 
+    ///     println!("  {} - {}", action,
     ///              if action.is_reversible() { "reversible" } else { "irreversible" });
     /// }
     /// ```
@@ -293,13 +293,13 @@ mod tests {
     }
 
     #[test]
-    fn test_clone_and_equality() {
+    fn test_copy_and_equality() {
         let trash1 = EolAction::Trash;
-        let trash2 = trash1.clone();
+        let trash2 = trash1; // Copy semantics
         assert_eq!(trash1, trash2);
 
         let delete1 = EolAction::Delete;
-        let delete2 = delete1.clone();
+        let delete2 = delete1; // Copy semantics
         assert_eq!(delete1, delete2);
 
         assert_ne!(trash1, delete1);
@@ -370,7 +370,7 @@ mod tests {
     fn test_parse_edge_cases() {
         // Unicode variations
         assert_eq!(EolAction::parse("trash"), Some(EolAction::Trash)); // Unicode 't'
-        
+
         // Numbers and symbols
         assert_eq!(EolAction::parse("trash123"), None);
         assert_eq!(EolAction::parse("123delete"), None);
@@ -399,7 +399,7 @@ mod tests {
     fn test_variants_completeness() {
         // Verify that variants() returns all possible enum values
         let variants = EolAction::variants();
-        
+
         // Test that we can parse back to all variants
         for variant in variants {
             let string_repr = variant.to_string();
@@ -411,11 +411,11 @@ mod tests {
     #[test]
     fn test_hash_trait() {
         use std::collections::HashMap;
-        
+
         let mut map = HashMap::new();
         map.insert(EolAction::Trash, "safe");
         map.insert(EolAction::Delete, "dangerous");
-        
+
         assert_eq!(map.get(&EolAction::Trash), Some(&"safe"));
         assert_eq!(map.get(&EolAction::Delete), Some(&"dangerous"));
     }
@@ -424,7 +424,7 @@ mod tests {
     fn test_round_trip_conversion() {
         // Test that display -> parse -> display is consistent
         let actions = [EolAction::Trash, EolAction::Delete];
-        
+
         for action in actions {
             let string_repr = action.to_string();
             let parsed = EolAction::parse(&string_repr).expect("Should parse successfully");
@@ -436,9 +436,19 @@ mod tests {
     #[test]
     fn test_safety_properties() {
         // Verify safety properties are as expected
-        assert!(EolAction::Trash.is_reversible(), "Trash should be reversible for safety");
-        assert!(!EolAction::Delete.is_reversible(), "Delete should be irreversible");
-        assert_eq!(EolAction::default(), EolAction::Trash, "Default should be the safer option");
+        assert!(
+            EolAction::Trash.is_reversible(),
+            "Trash should be reversible for safety"
+        );
+        assert!(
+            !EolAction::Delete.is_reversible(),
+            "Delete should be irreversible"
+        );
+        assert_eq!(
+            EolAction::default(),
+            EolAction::Trash,
+            "Default should be the safer option"
+        );
     }
 
     #[test]
@@ -458,50 +468,54 @@ mod tests {
         ];
 
         for (input, expected) in test_cases {
-            assert_eq!(EolAction::parse(input), expected, "Failed for input: '{}'", input);
+            assert_eq!(
+                EolAction::parse(input),
+                expected,
+                "Failed for input: '{input}'"
+            );
         }
     }
 
     #[test]
     fn test_practical_usage_scenarios() {
         // Test common usage patterns
-        
+
         // Configuration parsing scenario
         let config_value = "delete";
         let action = EolAction::parse(config_value).unwrap_or_default();
         assert_eq!(action, EolAction::Delete);
-        
+
         // Invalid config falls back to default (safe)
         let invalid_config = "invalid_action";
         let safe_action = EolAction::parse(invalid_config).unwrap_or_default();
         assert_eq!(safe_action, EolAction::Trash);
-        
+
         // Logging/display scenario
         let action = EolAction::Delete;
-        let log_message = format!("Executing {} action", action);
+        let log_message = format!("Executing {action} action");
         assert_eq!(log_message, "Executing delete action");
         
         // Safety check scenario
         let dangerous_action = EolAction::Delete;
         if !dangerous_action.is_reversible() {
             // This would prompt user confirmation in real usage
-            assert!(true, "Safety check working");
+            // Test that we can detect dangerous actions
         }
     }
 
     #[test]
     fn test_error_handling_patterns() {
         // Test error handling patterns that might be used with this enum
-        
+
         fn parse_with_error(input: &str) -> Result<EolAction, String> {
             EolAction::parse(input)
-                .ok_or_else(|| format!("Invalid action: '{}'. Valid options: trash, delete", input))
+                .ok_or_else(|| format!("Invalid action: '{input}'. Valid options: trash, delete"))
         }
-        
+
         // Valid cases
         assert!(parse_with_error("trash").is_ok());
         assert!(parse_with_error("delete").is_ok());
-        
+
         // Error cases
         let error = parse_with_error("invalid").unwrap_err();
         assert!(error.contains("Invalid action: 'invalid'"));
