@@ -5,7 +5,6 @@
 #![doc = include_str!("../docs/lib/lib.md")]
 
 mod client_config;
-mod credential;
 mod eol_action;
 mod error;
 mod gmail_client;
@@ -21,7 +20,6 @@ pub(crate) mod utils;
 pub use gmail_client::DEFAULT_MAX_RESULTS;
 
 pub use client_config::ClientConfig;
-pub use credential::Credential;
 pub use gmail_client::GmailClient;
 pub(crate) use gmail_client::MessageSummary;
 pub use retention::Retention;
