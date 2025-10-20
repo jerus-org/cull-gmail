@@ -154,14 +154,14 @@ mod argument_parsing_tests {
     #[test]
     fn test_cli_help_output() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["--help"], None)
             .expect("Failed to execute CLI");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Verify help output contains key elements
         assert!(stdout.contains("cull-gmail"));
         assert!(stdout.contains("USAGE:") || stdout.contains("Usage:"));
@@ -173,27 +173,27 @@ mod argument_parsing_tests {
     #[test]
     fn test_cli_version_output() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["--version"], None)
             .expect("Failed to execute CLI");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         // Should contain version information
         assert!(stdout.contains("cull-gmail"));
-        assert!(stdout.contains("0.0.10") || stdout.trim().split_whitespace().count() >= 2);
+        assert!(stdout.contains("0.0.10") || stdout.split_whitespace().count() >= 2);
     }
 
     #[test]
     fn test_verbosity_flags() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         // Test different verbosity levels
         let verbosity_tests = [
             (vec!["-v", "labels"], "WARN"),
-            (vec!["-vv", "labels"], "INFO"), 
+            (vec!["-vv", "labels"], "INFO"),
             (vec!["-vvv", "labels"], "DEBUG"),
             (vec!["-vvvv", "labels"], "TRACE"),
         ];
@@ -206,21 +206,24 @@ mod argument_parsing_tests {
             // Command should parse successfully (may succeed with valid auth or fail gracefully)
             // The important thing is that verbosity flags are accepted (not argument parsing error)
             let exit_code = output.status.code().unwrap_or(0);
-            assert!(exit_code != 2, "Exit code 2 indicates argument parsing error, got: {}", exit_code);
+            assert!(
+                exit_code != 2,
+                "Exit code 2 indicates argument parsing error, got: {exit_code}"
+            );
         }
     }
 
     #[test]
     fn test_invalid_subcommand() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["invalid-command"], None)
             .expect("Failed to execute CLI");
 
         assert!(!output.status.success());
         let stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         // Should show error message about invalid subcommand
         assert!(stderr.contains("error:") || stderr.contains("unrecognized"));
     }
@@ -233,37 +236,37 @@ mod labels_tests {
     #[test]
     fn test_labels_help() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["labels", "--help"], None)
             .expect("Failed to execute CLI");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         assert!(stdout.contains("labels") || stdout.contains("List Gmail labels"));
     }
 
     #[test]
     fn test_labels_without_credentials() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["labels"], None)
             .expect("Failed to execute CLI");
 
         assert!(!output.status.success());
         let stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         // Should fail with configuration or authentication error (unless valid credentials exist)
         if !output.status.success() {
             assert!(
-                stderr.contains("config") || 
-                stderr.contains("credentials") || 
-                stderr.contains("authentication") ||
-                stderr.contains("client_secret") ||
-                stderr.contains("OAuth") ||
-                stderr.contains("token")
+                stderr.contains("config")
+                    || stderr.contains("credentials")
+                    || stderr.contains("authentication")
+                    || stderr.contains("client_secret")
+                    || stderr.contains("OAuth")
+                    || stderr.contains("token")
             );
         }
     }
@@ -271,7 +274,7 @@ mod labels_tests {
     #[test]
     fn test_labels_with_mock_config() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         // Create mock configuration files
         fixture
             .create_config_file(mock_config_toml())
@@ -290,11 +293,11 @@ mod labels_tests {
         // 1. Command succeeds entirely, or
         // 2. Fails at OAuth/authentication step (not config parsing)
         assert!(
-            output.status.success() ||
-            !stderr.contains("config") ||
-            stderr.contains("OAuth") ||
-            stderr.contains("authentication") ||
-            stderr.contains("token")
+            output.status.success()
+                || !stderr.contains("config")
+                || stderr.contains("OAuth")
+                || stderr.contains("authentication")
+                || stderr.contains("token")
         );
     }
 }
@@ -306,14 +309,14 @@ mod messages_tests {
     #[test]
     fn test_messages_help() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["messages", "--help"], None)
             .expect("Failed to execute CLI");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         assert!(stdout.contains("messages"));
         assert!(stdout.contains("query") || stdout.contains("QUERY"));
     }
@@ -321,52 +324,67 @@ mod messages_tests {
     #[test]
     fn test_messages_list_action() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["messages", "--query", "in:inbox", "list"], None)
             .expect("Failed to execute CLI");
 
         // Should parse arguments correctly (may succeed or fail gracefully, but not with parse error)
         let exit_code = output.status.code().unwrap_or(0);
-        assert!(exit_code != 2, "Exit code 2 indicates argument parsing error, got: {}", exit_code);
+        assert!(
+            exit_code != 2,
+            "Exit code 2 indicates argument parsing error, got: {exit_code}"
+        );
     }
 
     #[test]
     fn test_messages_trash_action() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["messages", "--query", "in:spam", "trash"], None)
             .expect("Failed to execute CLI");
 
         // Trash command should be accepted (not argument parsing error)
         let exit_code = output.status.code().unwrap_or(0);
-        assert!(exit_code != 2, "Exit code 2 indicates argument parsing error, got: {}", exit_code);
+        assert!(
+            exit_code != 2,
+            "Exit code 2 indicates argument parsing error, got: {exit_code}"
+        );
     }
 
     #[test]
     fn test_messages_pagination_options() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
-            .execute_cli(&[
-                "messages", 
-                "--query", "in:inbox",
-                "--max-results", "50",
-                "--pages", "2",
-                "list"
-            ], None)
+            .execute_cli(
+                &[
+                    "messages",
+                    "--query",
+                    "in:inbox",
+                    "--max-results",
+                    "50",
+                    "--pages",
+                    "2",
+                    "list",
+                ],
+                None,
+            )
             .expect("Failed to execute CLI");
 
         // Pagination arguments should be accepted (not argument parsing error)
         let exit_code = output.status.code().unwrap_or(0);
-        assert!(exit_code != 2, "Exit code 2 indicates argument parsing error, got: {}", exit_code);
+        assert!(
+            exit_code != 2,
+            "Exit code 2 indicates argument parsing error, got: {exit_code}"
+        );
     }
 
     #[test]
     fn test_messages_invalid_action() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["messages", "--query", "test", "invalid-action"], None)
             .expect("Failed to execute CLI");
@@ -379,7 +397,7 @@ mod messages_tests {
     #[test]
     fn test_messages_without_query() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["messages", "list"], None)
             .expect("Failed to execute CLI");
@@ -387,7 +405,10 @@ mod messages_tests {
         // Messages list should work with or without explicit query (may use defaults)
         // The test validates that the command is well-formed, not the query requirement
         let exit_code = output.status.code().unwrap_or(0);
-        assert!(exit_code != 2, "Exit code 2 indicates argument parsing error, got: {}", exit_code);
+        assert!(
+            exit_code != 2,
+            "Exit code 2 indicates argument parsing error, got: {exit_code}"
+        );
     }
 }
 
@@ -398,14 +419,14 @@ mod rules_tests {
     #[test]
     fn test_rules_help() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["rules", "--help"], None)
             .expect("Failed to execute CLI");
 
         assert!(output.status.success());
         let stdout = String::from_utf8_lossy(&output.stdout);
-        
+
         assert!(stdout.contains("rules"));
         assert!(stdout.contains("config") || stdout.contains("run"));
     }
@@ -413,7 +434,7 @@ mod rules_tests {
     #[test]
     fn test_rules_config_subcommand() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["rules", "config"], None)
             .expect("Failed to execute CLI");
@@ -421,21 +442,21 @@ mod rules_tests {
         // Should attempt to create/display config
         let stdout = String::from_utf8_lossy(&output.stdout);
         let stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         // Should either succeed or show meaningful output about config
         assert!(
-            output.status.success() ||
-            stdout.contains("config") ||
-            stderr.contains("config") ||
-            stdout.contains("toml") ||
-            stderr.contains("toml")
+            output.status.success()
+                || stdout.contains("config")
+                || stderr.contains("config")
+                || stdout.contains("toml")
+                || stderr.contains("toml")
         );
     }
 
     #[test]
     fn test_rules_run_without_config() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["rules", "run"], None)
             .expect("Failed to execute CLI");
@@ -444,16 +465,14 @@ mod rules_tests {
         assert!(!output.status.success());
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(
-            stderr.contains("config") || 
-            stderr.contains("file") || 
-            stderr.contains("not found")
+            stderr.contains("config") || stderr.contains("file") || stderr.contains("not found")
         );
     }
 
     #[test]
     fn test_rules_run_with_config() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         fixture
             .create_config_file(mock_config_toml())
             .expect("Failed to create config file");
@@ -465,16 +484,16 @@ mod rules_tests {
         // Should proceed past config parsing (may fail at auth)
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(
-            !stderr.contains("config") || 
-            stderr.contains("credentials") ||
-            stderr.contains("authentication")
+            !stderr.contains("config")
+                || stderr.contains("credentials")
+                || stderr.contains("authentication")
         );
     }
 
     #[test]
     fn test_rules_run_execution() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         fixture
             .create_config_file(mock_config_toml())
             .expect("Failed to create config file");
@@ -485,7 +504,10 @@ mod rules_tests {
 
         // Rules run command should be accepted (not argument parsing error)
         let exit_code = output.status.code().unwrap_or(0);
-        assert!(exit_code != 2, "Exit code 2 indicates argument parsing error, got: {}", exit_code);
+        assert!(
+            exit_code != 2,
+            "Exit code 2 indicates argument parsing error, got: {exit_code}"
+        );
     }
 }
 
@@ -497,7 +519,7 @@ mod configuration_tests {
     #[test]
     fn test_config_file_hierarchy() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         // Create config in expected location
         let config_content = r#"
 [client]
@@ -514,7 +536,7 @@ client_secret = "secret-from-config"
             .expect("Failed to execute CLI");
 
         let stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         // Should not complain about missing config anymore
         assert!(!stderr.contains("config file not found"));
     }
@@ -522,7 +544,7 @@ client_secret = "secret-from-config"
     #[test]
     fn test_environment_variable_precedence() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let mut env_vars = HashMap::new();
         env_vars.insert("CULL_GMAIL_CLIENT_ID", "env-client-id");
         env_vars.insert("CULL_GMAIL_CLIENT_SECRET", "env-secret");
@@ -539,7 +561,7 @@ client_secret = "secret-from-config"
     #[test]
     fn test_invalid_config_format() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         // Create malformed config
         fixture
             .create_config_file("invalid toml content [[[")
@@ -566,20 +588,23 @@ mod error_handling_tests {
         // This test would require more complex setup with signal handling
         // For now, we ensure the CLI handles missing dependencies gracefully
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         let output = fixture
             .execute_cli(&["messages", "--query", "test", "list"], None)
             .expect("Failed to execute CLI");
 
         // Should not crash (no segfault)
         let exit_code = output.status.code().unwrap_or(0);
-        assert!(exit_code != 139, "Segmentation fault detected, got exit code: {}", exit_code);
+        assert!(
+            exit_code != 139,
+            "Segmentation fault detected, got exit code: {exit_code}"
+        );
     }
 
     #[test]
     fn test_invalid_query_syntax() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         fixture
             .create_config_file(mock_config_toml())
             .expect("Failed to create config");
@@ -588,18 +613,24 @@ mod error_handling_tests {
             .expect("Failed to create credentials");
 
         let output = fixture
-            .execute_cli(&["messages", "--query", "invalid:query:syntax:::", "list"], None)
+            .execute_cli(
+                &["messages", "--query", "invalid:query:syntax:::", "list"],
+                None,
+            )
             .expect("Failed to execute CLI");
 
         // Should handle invalid queries gracefully (no segfault)
         let exit_code = output.status.code().unwrap_or(0);
-        assert!(exit_code != 139, "Segmentation fault detected, got exit code: {}", exit_code);
+        assert!(
+            exit_code != 139,
+            "Segmentation fault detected, got exit code: {exit_code}"
+        );
     }
 
     #[test]
     fn test_network_timeout_simulation() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         // Set very short timeout to trigger timeout behavior
         let mut env_vars = HashMap::new();
         env_vars.insert("HTTP_TIMEOUT", "1");
@@ -618,17 +649,17 @@ mod error_handling_tests {
         // Should handle timeouts gracefully
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(
-            output.status.success() ||
-            stderr.contains("timeout") ||
-            stderr.contains("network") ||
-            stderr.contains("connection")
+            output.status.success()
+                || stderr.contains("timeout")
+                || stderr.contains("network")
+                || stderr.contains("connection")
         );
     }
 
     #[test]
     fn test_permission_denied_scenarios() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         // Create a config file with restricted permissions
         let config_path = fixture
             .create_config_file(mock_config_toml())
@@ -650,10 +681,10 @@ mod error_handling_tests {
         // Should handle permission errors gracefully
         let stderr = String::from_utf8_lossy(&output.stderr);
         assert!(
-            output.status.success() ||
-            stderr.contains("permission") ||
-            stderr.contains("access") ||
-            stderr.contains("denied")
+            output.status.success()
+                || stderr.contains("permission")
+                || stderr.contains("access")
+                || stderr.contains("denied")
         );
     }
 }
@@ -665,7 +696,7 @@ mod async_integration_tests {
     #[tokio::test]
     async fn test_concurrent_cli_executions() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         fixture
             .create_config_file(mock_config_toml())
             .expect("Failed to create config");
@@ -678,7 +709,7 @@ mod async_integration_tests {
         ];
 
         let results = futures::future::join_all(tasks).await;
-        
+
         // All help commands should succeed
         for result in results {
             let output = result.expect("Failed to execute CLI");
@@ -689,7 +720,7 @@ mod async_integration_tests {
     #[tokio::test]
     async fn test_async_command_timeout() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         fixture
             .create_config_file(mock_config_toml())
             .expect("Failed to create config");
@@ -700,15 +731,19 @@ mod async_integration_tests {
         // Test with timeout
         let result = tokio::time::timeout(
             std::time::Duration::from_secs(30),
-            fixture.execute_cli_async(&["labels"], None)
-        ).await;
+            fixture.execute_cli_async(&["labels"], None),
+        )
+        .await;
 
         match result {
             Ok(output) => {
                 let output = output.expect("Failed to execute CLI");
                 // Command completed within timeout (no segfault)
                 let exit_code = output.status.code().unwrap_or(0);
-                assert!(exit_code != 139, "Segmentation fault detected, got exit code: {}", exit_code);
+                assert!(
+                    exit_code != 139,
+                    "Segmentation fault detected, got exit code: {exit_code}"
+                );
             }
             Err(_) => {
                 // Timeout occurred - this is acceptable for integration tests

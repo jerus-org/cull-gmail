@@ -377,6 +377,7 @@ dependencies = [
  "clap-verbosity-flag",
  "config",
  "env_logger",
+ "futures",
  "google-gmail1",
  "httpmock",
  "lazy-regex",
