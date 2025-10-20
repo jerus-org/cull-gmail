@@ -642,6 +642,130 @@ mod tests {
         }
     }
 
+    use std::collections::HashMap;
+    use std::sync::Mutex;
+
+    struct TestClient {
+        label_ids: Vec<String>,
+        query: String,
+        max_results: u32,
+        messages: Vec<MessageSummary>,
+        pages: Mutex<HashMap<Option<String>, ListMessagesResponse>>,
+    }
+
+    impl TestClient {
+        fn with_pages(map: HashMap<Option<String>, ListMessagesResponse>) -> Self {
+            Self {
+                label_ids: vec![],
+                query: String::new(),
+                max_results: 200,
+                messages: vec![],
+                pages: Mutex::new(map),
+            }
+        }
+    }
+
+    impl super::GmailService for TestClient {
+        async fn list_messages_page(
+            &self,
+            _label_ids: &[String],
+            _query: &str,
+            _max_results: u32,
+            page_token: Option<String>,
+        ) -> Result<ListMessagesResponse> {
+            let map = self.pages.lock().unwrap();
+            Ok(map
+                .get(&page_token)
+                .cloned()
+                .unwrap_or_else(ListMessagesResponse::default))
+        }
+
+        async fn get_message_metadata(&self, _message_id: &str) -> Result<GmailMessage> {
+            Ok(GmailMessage::default())
+        }
+    }
+
+    impl MessageList for TestClient {
+        fn set_max_results(&mut self, value: u32) {
+            self.max_results = value;
+        }
+        fn max_results(&self) -> u32 {
+            self.max_results
+        }
+        fn add_labels(&mut self, _labels: &[String]) -> Result<()> {
+            Ok(())
+        }
+        fn add_labels_ids(&mut self, label_ids: &[String]) {
+            self.label_ids.extend_from_slice(label_ids);
+        }
+        fn set_query(&mut self, query: &str) {
+            self.query = query.to_string();
+        }
+        fn messages(&self) -> &Vec<MessageSummary> {
+            &self.messages
+        }
+        fn message_ids(&self) -> Vec<String> {
+            self.messages.iter().map(|m| m.id().to_string()).collect()
+        }
+        fn label_ids(&self) -> Vec<String> {
+            self.label_ids.clone()
+        }
+        fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>> {
+            unimplemented!("not used in tests")
+        }
+        async fn get_messages(&mut self, pages: u32) -> Result<()> {
+            let mut list = self.list_messages(None).await?;
+            match pages {
+                1 => {}
+                0 => loop {
+                    if list.next_page_token.is_none() {
+                        break;
+                    }
+                    list = self.list_messages(list.next_page_token).await?;
+                },
+                _ => {
+                    for _page in 2..=pages {
+                        if list.next_page_token.is_none() {
+                            break;
+                        }
+                        list = self.list_messages(list.next_page_token).await?;
+                    }
+                }
+            }
+            Ok(())
+        }
+        async fn list_messages(
+            &mut self,
+            next_page_token: Option<String>,
+        ) -> Result<ListMessagesResponse> {
+            let list = self
+                .list_messages_page(
+                    &self.label_ids,
+                    &self.query,
+                    self.max_results,
+                    next_page_token,
+                )
+                .await?;
+
+            if list.result_size_estimate.unwrap_or(0) == 0 {
+                return Ok(list);
+            }
+
+            if let Some(msgs) = &list.messages {
+                let mut list_ids: Vec<MessageSummary> = msgs
+                    .iter()
+                    .flat_map(|item| item.id.as_deref().map(MessageSummary::new))
+                    .collect();
+                self.messages.append(&mut list_ids);
+            }
+
+            Ok(list)
+        }
+        async fn log_messages(&mut self) -> Result<()> {
+            Ok(())
+        }
+    }
+
     #[test]
     fn set_query_updates_state() {
         let mut ml = MockList::new();
@@ -701,5 +825,42 @@ mod tests {
         GmailClient::append_list_to_messages(&mut out, &list);
         let ids: Vec<_> = out.iter().map(|m| m.id().to_string()).collect();
         assert_eq!(ids, vec!["m1", "m2"]);
+    }
+
+    #[tokio::test]
+    async fn list_messages_across_pages_collects_ids() {
+        use google_gmail1::api::Message;
+        let page1 = ListMessagesResponse {
+            messages: Some(vec![
+                Message {
+                    id: Some("a".into()),
+                    ..Default::default()
+                },
+                Message {
+                    id: Some("b".into()),
+                    ..Default::default()
+                },
+            ]),
+            next_page_token: Some("t2".into()),
+            result_size_estimate: Some(2),
+        };
+        let page2 = ListMessagesResponse {
+            messages: Some(vec![Message {
+                id: Some("c".into()),
+                ..Default::default()
+            }]),
+            next_page_token: None,
+            result_size_estimate: Some(1),
+        };
+        let mut map = HashMap::new();
+        map.insert(None, page1);
+        map.insert(Some("t2".into()), page2);
+
+        let mut client = TestClient::with_pages(map);
+        client.set_max_results(2);
+        client.set_query("in:inbox");
+
+        client.get_messages(0).await.unwrap();
+        assert_eq!(client.message_ids(), vec!["a", "b", "c"]);
     }
 }
