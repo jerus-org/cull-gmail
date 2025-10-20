@@ -35,7 +35,7 @@ log = "0.4.28"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 thiserror = "2.0.17"
-tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread"] }
+tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread", "process"] }
 toml = "0.9.7"
 
 [dev-dependencies]
@@ -43,6 +43,7 @@ httpmock = "0.8"
 tokio-test = "0.4"
 temp-env = "0.3"
 tempfile = "3.12"
+futures = "0.3"
 
 [lints.clippy]
 uninlined-format-args = "warn"
