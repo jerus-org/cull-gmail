@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 📝 docs(eol_action)-add comprehensive documentation and unit testing with safety enhancements(pr [#83])
 - ♻️ refactor-remove redundant credential module(pr [#84])
 - 📝 refactor(client_config)-enhance module with comprehensive docs and testing(pr [#85])
+- 📚 docs(cli)-comprehensive documentation and formatting for CLI modules(pr [#86])
 
 ## [0.0.10] - 2025-10-16
 
@@ -253,6 +254,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#83]: https://github.com/jerus-org/cull-gmail/pull/83
 [#84]: https://github.com/jerus-org/cull-gmail/pull/84
 [#85]: https://github.com/jerus-org/cull-gmail/pull/85
+[#86]: https://github.com/jerus-org/cull-gmail/pull/86
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.10...HEAD
 [0.0.10]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...v0.0.9
