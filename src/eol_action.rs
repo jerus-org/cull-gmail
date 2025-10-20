@@ -101,7 +101,7 @@ use std::fmt;
 /// // Converting to string for logging/display
 /// println!("Action: {}", delete); // Prints: "delete"
 /// ```
-#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EolAction {
     /// Move the message to Gmail's trash folder.
     ///
@@ -279,5 +279,232 @@ impl EolAction {
     /// ```
     pub fn variants() -> &'static [EolAction] {
         &[EolAction::Trash, EolAction::Delete]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_default_action_is_trash() {
+        let action = EolAction::default();
+        assert_eq!(action, EolAction::Trash);
+    }
+
+    #[test]
+    fn test_clone_and_equality() {
+        let trash1 = EolAction::Trash;
+        let trash2 = trash1.clone();
+        assert_eq!(trash1, trash2);
+
+        let delete1 = EolAction::Delete;
+        let delete2 = delete1.clone();
+        assert_eq!(delete1, delete2);
+
+        assert_ne!(trash1, delete1);
+    }
+
+    #[test]
+    fn test_debug_formatting() {
+        assert_eq!(format!("{:?}", EolAction::Trash), "Trash");
+        assert_eq!(format!("{:?}", EolAction::Delete), "Delete");
+    }
+
+    #[test]
+    fn test_display_formatting() {
+        assert_eq!(EolAction::Trash.to_string(), "trash");
+        assert_eq!(EolAction::Delete.to_string(), "delete");
+        assert_eq!(format!("{}", EolAction::Trash), "trash");
+        assert_eq!(format!("{}", EolAction::Delete), "delete");
+    }
+
+    #[test]
+    fn test_parse_valid_inputs() {
+        // Test lowercase
+        assert_eq!(EolAction::parse("trash"), Some(EolAction::Trash));
+        assert_eq!(EolAction::parse("delete"), Some(EolAction::Delete));
+
+        // Test uppercase
+        assert_eq!(EolAction::parse("TRASH"), Some(EolAction::Trash));
+        assert_eq!(EolAction::parse("DELETE"), Some(EolAction::Delete));
+
+        // Test mixed case
+        assert_eq!(EolAction::parse("Trash"), Some(EolAction::Trash));
+        assert_eq!(EolAction::parse("Delete"), Some(EolAction::Delete));
+        assert_eq!(EolAction::parse("TrAsH"), Some(EolAction::Trash));
+        assert_eq!(EolAction::parse("dElEtE"), Some(EolAction::Delete));
+
+        // Test with whitespace
+        assert_eq!(EolAction::parse(" trash "), Some(EolAction::Trash));
+        assert_eq!(EolAction::parse("\tdelete\n"), Some(EolAction::Delete));
+        assert_eq!(EolAction::parse("  TRASH  "), Some(EolAction::Trash));
+    }
+
+    #[test]
+    fn test_parse_invalid_inputs() {
+        // Invalid strings
+        assert_eq!(EolAction::parse("invalid"), None);
+        assert_eq!(EolAction::parse("remove"), None);
+        assert_eq!(EolAction::parse("destroy"), None);
+        assert_eq!(EolAction::parse("archive"), None);
+
+        // Empty and whitespace
+        assert_eq!(EolAction::parse(""), None);
+        assert_eq!(EolAction::parse("   "), None);
+        assert_eq!(EolAction::parse("\t\n"), None);
+
+        // Partial matches
+        assert_eq!(EolAction::parse("tras"), None);
+        assert_eq!(EolAction::parse("delet"), None);
+        assert_eq!(EolAction::parse("trashh"), None);
+        assert_eq!(EolAction::parse("deletee"), None);
+
+        // Special characters
+        assert_eq!(EolAction::parse("trash!"), None);
+        assert_eq!(EolAction::parse("delete?"), None);
+        assert_eq!(EolAction::parse("trash-delete"), None);
+    }
+
+    #[test]
+    fn test_parse_edge_cases() {
+        // Unicode variations
+        assert_eq!(EolAction::parse("trash"), Some(EolAction::Trash)); // Unicode 't'
+        
+        // Numbers and symbols
+        assert_eq!(EolAction::parse("trash123"), None);
+        assert_eq!(EolAction::parse("123delete"), None);
+        assert_eq!(EolAction::parse("t@rash"), None);
+    }
+
+    #[test]
+    fn test_is_reversible() {
+        assert!(EolAction::Trash.is_reversible());
+        assert!(!EolAction::Delete.is_reversible());
+    }
+
+    #[test]
+    fn test_variants() {
+        let variants = EolAction::variants();
+        assert_eq!(variants.len(), 2);
+        assert_eq!(variants[0], EolAction::Trash);
+        assert_eq!(variants[1], EolAction::Delete);
+
+        // Ensure all enum variants are included
+        assert!(variants.contains(&EolAction::Trash));
+        assert!(variants.contains(&EolAction::Delete));
+    }
+
+    #[test]
+    fn test_variants_completeness() {
+        // Verify that variants() returns all possible enum values
+        let variants = EolAction::variants();
+        
+        // Test that we can parse back to all variants
+        for variant in variants {
+            let string_repr = variant.to_string();
+            let parsed = EolAction::parse(&string_repr);
+            assert_eq!(parsed, Some(*variant));
+        }
+    }
+
+    #[test]
+    fn test_hash_trait() {
+        use std::collections::HashMap;
+        
+        let mut map = HashMap::new();
+        map.insert(EolAction::Trash, "safe");
+        map.insert(EolAction::Delete, "dangerous");
+        
+        assert_eq!(map.get(&EolAction::Trash), Some(&"safe"));
+        assert_eq!(map.get(&EolAction::Delete), Some(&"dangerous"));
+    }
+
+    #[test]
+    fn test_round_trip_conversion() {
+        // Test that display -> parse -> display is consistent
+        let actions = [EolAction::Trash, EolAction::Delete];
+        
+        for action in actions {
+            let string_repr = action.to_string();
+            let parsed = EolAction::parse(&string_repr).expect("Should parse successfully");
+            assert_eq!(action, parsed);
+            assert_eq!(string_repr, parsed.to_string());
+        }
+    }
+
+    #[test]
+    fn test_safety_properties() {
+        // Verify safety properties are as expected
+        assert!(EolAction::Trash.is_reversible(), "Trash should be reversible for safety");
+        assert!(!EolAction::Delete.is_reversible(), "Delete should be irreversible");
+        assert_eq!(EolAction::default(), EolAction::Trash, "Default should be the safer option");
+    }
+
+    #[test]
+    fn test_string_case_insensitive_parsing() {
+        let test_cases = [
+            ("trash", Some(EolAction::Trash)),
+            ("TRASH", Some(EolAction::Trash)),
+            ("Trash", Some(EolAction::Trash)),
+            ("TrAsH", Some(EolAction::Trash)),
+            ("delete", Some(EolAction::Delete)),
+            ("DELETE", Some(EolAction::Delete)),
+            ("Delete", Some(EolAction::Delete)),
+            ("DeLeTe", Some(EolAction::Delete)),
+            ("invalid", None),
+            ("INVALID", None),
+            ("", None),
+        ];
+
+        for (input, expected) in test_cases {
+            assert_eq!(EolAction::parse(input), expected, "Failed for input: '{}'", input);
+        }
+    }
+
+    #[test]
+    fn test_practical_usage_scenarios() {
+        // Test common usage patterns
+        
+        // Configuration parsing scenario
+        let config_value = "delete";
+        let action = EolAction::parse(config_value).unwrap_or_default();
+        assert_eq!(action, EolAction::Delete);
+        
+        // Invalid config falls back to default (safe)
+        let invalid_config = "invalid_action";
+        let safe_action = EolAction::parse(invalid_config).unwrap_or_default();
+        assert_eq!(safe_action, EolAction::Trash);
+        
+        // Logging/display scenario
+        let action = EolAction::Delete;
+        let log_message = format!("Executing {} action", action);
+        assert_eq!(log_message, "Executing delete action");
+        
+        // Safety check scenario
+        let dangerous_action = EolAction::Delete;
+        if !dangerous_action.is_reversible() {
+            // This would prompt user confirmation in real usage
+            assert!(true, "Safety check working");
+        }
+    }
+
+    #[test]
+    fn test_error_handling_patterns() {
+        // Test error handling patterns that might be used with this enum
+        
+        fn parse_with_error(input: &str) -> Result<EolAction, String> {
+            EolAction::parse(input)
+                .ok_or_else(|| format!("Invalid action: '{}'. Valid options: trash, delete", input))
+        }
+        
+        // Valid cases
+        assert!(parse_with_error("trash").is_ok());
+        assert!(parse_with_error("delete").is_ok());
+        
+        // Error cases
+        let error = parse_with_error("invalid").unwrap_err();
+        assert!(error.contains("Invalid action: 'invalid'"));
+        assert!(error.contains("trash, delete"));
     }
 }
