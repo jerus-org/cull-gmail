@@ -26,7 +26,163 @@ orbs:
 executors:
   rust-env:
     docker:
-      - image: jerusdp/ci-rust:<<pipeline.parameters.min-rust-version>>
+      - image: jerusdp/ci-rust:<< pipeline.parameters.min-rust-version >>
+
+commands:
+  cargo_nextest:
+    description: >
+      This command tests using the nextest test runner. The compiler version is as
+      specified in the parameters. If no version is specified, it defaults to
+      `stable`. The build will always include all features.
+    parameters:
+      cargo_all_features:
+        default: true
+        description: Build all features
+        type: boolean
+      cargo_args:
+        default: ""
+        description: Additional parameters to pass to cargo build
+        type: string
+      cargo_bin:
+        default: ""
+        description: Binary to build
+        type: string
+      cargo_package:
+        default: ""
+        description: Package to build
+        type: string
+      cargo_target:
+        default: ""
+        description: Target to build for
+        type: string
+      nextest_profile:
+        default: ""
+        description: Nextest profile to use
+        type: string
+      rust_version:
+        default: stable
+        description: The rust compiler version to use
+        type: string
+    steps:
+      - run:
+          command: |
+            set -ex
+            if [ "<< parameters.cargo_all_features >>" == true ]; then
+                all_features=" --all-features "
+            else
+                all_features=""
+            fi
+
+            if [ "<< parameters.nextest_profile >>" != "" ]; then
+                profile=" --profile << parameters.nextest_profile >>"
+            else
+                profile="ci"
+            fi
+
+            if [ "<< parameters.cargo_package >>" != "" ]; then
+                package=" --package << parameters.cargo_package >>"
+            else
+                package=""
+            fi
+
+            if [ "<< parameters.cargo_bin >>" != "" ]; then
+                bin=" --bin << parameters.cargo_bin >>"
+            else
+                bin=""
+            fi
+
+            if [ "<< parameters.cargo_target >>" != "" ]; then
+                target=" --target << parameters.cargo_target >>"
+            else
+                target=""
+            fi
+
+            cargo +<< parameters.rust_version >> nextest run \
+              $profile \
+              << parameters.cargo_args >> \
+              $all_features \
+              $package \
+              $bin \
+              $target
+          name: Check test << parameters.rust_version >>
+
+jobs:
+  common_tests:
+    description: >
+      Execute common tests for all rust crates including formatting, clippy and
+      default tests
+    executor:
+      name: rust-env
+    parameters:
+      cargo_all_features:
+        default: true
+        description: Build all features
+        type: boolean
+      cargo_args:
+        default: ""
+        description: Additional parameters to pass to cargo build
+        type: string
+      cargo_package:
+        default: ""
+        description: Package to pass to cargo build
+        type: string
+      cargo_target:
+        default: ""
+        description: Target to pass to cargo build
+        type: string
+      docker_tag_suffix:
+        default: ""
+        description: The suffix to append to the docker tag
+        type: string
+      min_rust_version:
+        description: "Required: The minimum version of the rust compiler to use"
+        type: string
+      test_runner:
+        default: test
+        description: The test runner to use
+        enum:
+          - test
+          - nextest
+        type: enum
+      nextest_profile:
+        default: ""
+        description: Nextest profile to use
+        type: string
+    steps:
+      - checkout
+      - run:
+          command: cargo --version
+          name: Check rust version for code
+      - run:
+          command: |
+            rustfmt --version
+            cargo fmt --all -- --check
+          name: Check formatting for code
+      - when:
+          condition:
+            equal:
+              - test
+              - << parameters.test_runner >>
+          steps:
+            - toolkit/cargo_test:
+                cargo_all_features: << parameters.cargo_all_features >>
+                cargo_args: << parameters.cargo_args >>
+                cargo_package: << parameters.cargo_package >>
+                cargo_target: << parameters.cargo_target >>
+                rust_version: << parameters.min_rust_version >>
+      - when:
+          condition:
+            equal:
+              - nextest
+              - << parameters.test_runner >>
+          steps:
+            - cargo_nextest:
+                cargo_all_features: << parameters.cargo_all_features >>
+                cargo_args: << parameters.cargo_args >>
+                cargo_package: << parameters.cargo_package >>
+                cargo_target: << parameters.cargo_target >>
+                rust_version: << parameters.min_rust_version >>
+                nextest_profile: << parameters.nextest_profile >>
 
 workflows:
   check_last_commit:
@@ -65,8 +221,13 @@ workflows:
           min_rust_version: << pipeline.parameters.min-rust-version >>
       - toolkit/test_doc_build:
           min_rust_version: << pipeline.parameters.min-rust-version >>
-      - toolkit/common_tests:
+      - common_tests:
           min_rust_version: << pipeline.parameters.min-rust-version >>
+          test_runner: nextest
+          nextest_profile: ci
+          post-steps:
+            - store_test_results:
+              path: target/nextest/ci/junit.xml
       - toolkit/idiomatic_rust:
           min_rust_version: << pipeline.parameters.min-rust-version >>
       - toolkit/security:
@@ -82,7 +243,7 @@ workflows:
             - toolkit/test_doc_build
             - toolkit/idiomatic_rust
             - toolkit/security
-            - toolkit/common_tests
+            - common_tests
           context:
             - release
             - bot-check
