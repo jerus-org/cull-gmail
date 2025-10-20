@@ -52,9 +52,7 @@ mod test_utils {
                 if release_binary.exists() {
                     release_binary
                 } else {
-                    PathBuf::from(&target_dir)
-                        .join("debug")
-                        .join("cull-gmail")
+                    PathBuf::from(&target_dir).join("debug").join("cull-gmail")
                 }
             } else {
                 // Fallback for other scenarios
@@ -71,7 +69,7 @@ mod test_utils {
             if !binary_path.exists() {
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
-                    format!("CLI binary not found at path: {:?}", binary_path)
+                    format!("CLI binary not found at path: {binary_path:?}"),
                 ));
             }
 
@@ -302,7 +300,7 @@ mod labels_tests {
     #[test]
     fn test_labels_with_mock_config() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         // Create mock configuration files
         fixture
             .create_config_file(mock_config_toml())
@@ -318,22 +316,24 @@ mod labels_tests {
         // In CI/isolated environments, the test should succeed or fail gracefully
         // We mainly test that config files are being found and processed
         let stderr = String::from_utf8_lossy(&output.stderr);
-        
+
         // Test passes if any of these conditions are met:
         // 1. Command succeeds with real credentials
         // 2. Command fails but found the config files (not "config file not found")
         // 3. Command fails at OAuth/authentication step (normal for mock data)
-        let config_found = !stderr.contains("config file not found") && !stderr.contains("No such file");
-        let auth_related_failure = stderr.contains("OAuth") || 
-                                   stderr.contains("authentication") || 
-                                   stderr.contains("token") ||
-                                   stderr.contains("credentials") ||
-                                   stderr.contains("client");
-        
+        let config_found =
+            !stderr.contains("config file not found") && !stderr.contains("No such file");
+        let auth_related_failure = stderr.contains("OAuth")
+            || stderr.contains("authentication")
+            || stderr.contains("token")
+            || stderr.contains("credentials")
+            || stderr.contains("client");
+
         assert!(
             output.status.success() || config_found || auth_related_failure,
-            "Command failed unexpectedly. Exit code: {:?}, stderr: {}", 
-            output.status.code(), stderr
+            "Command failed unexpectedly. Exit code: {:?}, stderr: {}",
+            output.status.code(),
+            stderr
         );
     }
 }
@@ -511,28 +511,29 @@ mod rules_tests {
     #[ignore = "This test requires OAuth and may hang in CI environments"]
     fn test_rules_run_with_config() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
-        // Create config files and credentials in both supported locations  
+
+        // Create config files and credentials in both supported locations
         fixture
             .create_config_file(mock_config_toml())
             .expect("Failed to create config file");
         fixture
             .create_credentials_file(mock_credentials_json())
             .expect("Failed to create credentials file");
-        
+
         // Also create legacy config path
         let legacy_dir = fixture.temp_dir.path().join(".cull-gmail");
         fs::create_dir_all(&legacy_dir).expect("Failed to create legacy config directory");
         let legacy_config_path = legacy_dir.join("cull-gmail.toml");
         fs::write(&legacy_config_path, mock_config_toml()).expect("Failed to write legacy config");
         let legacy_creds_path = legacy_dir.join("credential.json");
-        fs::write(&legacy_creds_path, mock_credentials_json()).expect("Failed to write legacy credentials");
+        fs::write(&legacy_creds_path, mock_credentials_json())
+            .expect("Failed to write legacy credentials");
 
         // Add environment variables to prevent long hangs during OAuth attempts
         let mut env_vars = HashMap::new();
         env_vars.insert("HTTP_TIMEOUT", "5");
         env_vars.insert("CONNECT_TIMEOUT", "3");
-        
+
         let output = fixture
             .execute_cli(&["rules", "run"], Some(env_vars))
             .expect("Failed to execute CLI");
@@ -540,18 +541,19 @@ mod rules_tests {
         // Should succeed or fail gracefully - mainly tests that config is found and processed
         let stderr = String::from_utf8_lossy(&output.stderr);
         let exit_code = output.status.code().unwrap_or(0);
-        
+
         // Test passes if:
         // 1. Command succeeds entirely, or
         // 2. Fails with auth/credentials error (normal for mock data), or
         // 3. Fails but config was found (not "config file not found")
-        let config_processed = !stderr.contains("config file not found") && !stderr.contains("No such file");
-        let auth_failure = stderr.contains("credentials") ||
-                          stderr.contains("authentication") ||
-                          stderr.contains("OAuth") ||
-                          stderr.contains("token");
+        let config_processed =
+            !stderr.contains("config file not found") && !stderr.contains("No such file");
+        let auth_failure = stderr.contains("credentials")
+            || stderr.contains("authentication")
+            || stderr.contains("OAuth")
+            || stderr.contains("token");
         let credential_issue = stderr.contains("could not read path");
-        
+
         // The main goal is to test that the rules subcommand works and config is processed
         // In CI environments, OAuth will fail with mock data, which is expected
         assert!(
@@ -579,16 +581,16 @@ mod rules_tests {
             "Exit code 2 indicates argument parsing error, got: {exit_code}"
         );
     }
-    
+
     #[test]
     fn test_rules_config_validation() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
-        // Create config files in both supported locations  
+
+        // Create config files in both supported locations
         fixture
             .create_config_file(mock_config_toml())
             .expect("Failed to create config file");
-        
+
         // Test that rules config subcommand works (doesn't require OAuth)
         let output = fixture
             .execute_cli(&["rules", "config"], None)
@@ -596,7 +598,7 @@ mod rules_tests {
 
         // Rules config should work without authentication
         let exit_code = output.status.code().unwrap_or(0);
-        
+
         // Should not crash and should handle config processing
         assert!(
             exit_code != 139, // No segfault
@@ -724,7 +726,7 @@ mod error_handling_tests {
     #[test]
     fn test_network_timeout_simulation() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         // Set very short timeout to trigger timeout behavior
         let mut env_vars = HashMap::new();
         env_vars.insert("HTTP_TIMEOUT", "1");
@@ -745,7 +747,7 @@ mod error_handling_tests {
         // Timeout behavior may vary depending on network configuration
         let stderr = String::from_utf8_lossy(&output.stderr);
         let exit_code = output.status.code().unwrap_or(0);
-        
+
         // Test passes if:
         // 1. Command succeeds (maybe with valid credentials)
         // 2. Command fails with timeout/network errors
@@ -755,16 +757,16 @@ mod error_handling_tests {
             exit_code != 139, // No segfault
             "Command crashed with segfault. Exit code: {exit_code}, stderr: {stderr}"
         );
-        
+
         // Optional: check for expected error types (but don't require them)
-        let has_expected_errors = output.status.success() ||
-            stderr.contains("timeout") ||
-            stderr.contains("network") ||
-            stderr.contains("connection") ||
-            stderr.contains("authentication") ||
-            stderr.contains("OAuth") ||
-            stderr.contains("credentials");
-        
+        let has_expected_errors = output.status.success()
+            || stderr.contains("timeout")
+            || stderr.contains("network")
+            || stderr.contains("connection")
+            || stderr.contains("authentication")
+            || stderr.contains("OAuth")
+            || stderr.contains("credentials");
+
         // Log additional info for debugging if needed
         if !has_expected_errors {
             eprintln!("Warning: Unexpected error type. Exit code: {exit_code}, stderr: {stderr}");
@@ -774,7 +776,7 @@ mod error_handling_tests {
     #[test]
     fn test_permission_denied_scenarios() {
         let fixture = CliTestFixture::new().expect("Failed to create test fixture");
-        
+
         // Create config files in both supported locations
         let config_path = fixture
             .create_config_file(mock_config_toml())
@@ -801,7 +803,7 @@ mod error_handling_tests {
                         let mut perms = metadata.permissions();
                         perms.set_mode(0o000);
                         fs::set_permissions(&legacy_config_path, perms).ok()
-                    })
+                    }),
                 ];
                 restrict_both.iter().any(|result| result.is_some())
             }
@@ -817,21 +819,20 @@ mod error_handling_tests {
 
         let stderr = String::from_utf8_lossy(&output.stderr);
         let exit_code = output.status.code().unwrap_or(0);
-        
+
         // Test behavior depends on whether permission change worked
         if permission_change_worked {
             // If permissions were successfully restricted, expect permission-related errors
             assert!(
-                !output.status.success() && (
-                    stderr.contains("permission") ||
-                    stderr.contains("access") ||
-                    stderr.contains("denied") ||
-                    stderr.contains("Permission denied")
-                ),
+                !output.status.success()
+                    && (stderr.contains("permission")
+                        || stderr.contains("access")
+                        || stderr.contains("denied")
+                        || stderr.contains("Permission denied")),
                 "Expected permission error when config file is unreadable. Exit code: {exit_code}, stderr: {stderr}"
             );
         } else {
-            // If permission change didn't work (CI/containerized environments), 
+            // If permission change didn't work (CI/containerized environments),
             // just ensure the command doesn't crash
             assert!(
                 exit_code != 139, // No segfault
