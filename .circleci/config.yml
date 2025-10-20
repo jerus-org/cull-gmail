@@ -161,8 +161,8 @@ jobs:
       - when:
           condition:
             equal:
-              - cargo
               - << parameters.test_runner >>
+              - cargo
           steps:
             - toolkit/cargo_test:
                 cargo_all_features: << parameters.cargo_all_features >>
@@ -173,8 +173,8 @@ jobs:
       - when:
           condition:
             equal:
-              - nextest
               - << parameters.test_runner >>
+              - nextest
           steps:
             - cargo_nextest:
                 cargo_all_features: << parameters.cargo_all_features >>
