@@ -190,15 +190,15 @@ mod tests {
     #[test]
     fn test_message_summary_set_subject() {
         let mut summary = MessageSummary::new("test_id");
-        
+
         // Test setting a subject
         summary.set_subject(Some("Test Subject".to_string()));
         assert_eq!(summary.subject(), "Test Subject");
-        
+
         // Test setting subject to None
         summary.set_subject(None);
         assert_eq!(summary.subject(), "*** No Subject for Message ***");
-        
+
         // Test empty subject
         summary.set_subject(Some("".to_string()));
         assert_eq!(summary.subject(), "");
@@ -207,15 +207,15 @@ mod tests {
     #[test]
     fn test_message_summary_set_date() {
         let mut summary = MessageSummary::new("test_id");
-        
+
         // Test setting a date
         summary.set_date(Some("2023-12-25 10:30:00".to_string()));
         assert_eq!(summary.date(), "2023-12-25 10:30:00");
-        
+
         // Test setting date to None
         summary.set_date(None);
         assert_eq!(summary.date(), "*** No Date for Message ***");
-        
+
         // Test empty date
         summary.set_date(Some("".to_string()));
         assert_eq!(summary.date(), "");
@@ -224,13 +224,15 @@ mod tests {
     #[test]
     fn test_message_summary_list_date_and_subject_valid() {
         let mut summary = MessageSummary::new("test_id");
-        
+
         // Set up a realistic date and subject
         summary.set_date(Some("2023-12-25 10:30:00 GMT".to_string()));
-        summary.set_subject(Some("This is a very long subject that should be elided".to_string()));
-        
+        summary.set_subject(Some(
+            "This is a very long subject that should be elided".to_string(),
+        ));
+
         let display = summary.list_date_and_subject();
-        
+
         // The method extracts characters 5-16 from date and elides subject to 24 chars
         // "2023-12-25 10:30:00 GMT" -> chars 5-16 would be "2-25 10:30"
         assert!(display.contains("2-25 10:30"));
@@ -241,18 +243,18 @@ mod tests {
     #[test]
     fn test_message_summary_list_date_and_subject_missing_fields() {
         let mut summary = MessageSummary::new("test_id");
-        
+
         // Test with missing date
         summary.set_subject(Some("Test Subject".to_string()));
         let result = summary.list_date_and_subject();
         assert_eq!(result, "***invalid date or subject***");
-        
+
         // Test with missing subject
         let mut summary2 = MessageSummary::new("test_id");
         summary2.set_date(Some("2023-12-25 10:30:00".to_string()));
         let result2 = summary2.list_date_and_subject();
         assert_eq!(result2, "***invalid date or subject***");
-        
+
         // Test with both missing
         let summary3 = MessageSummary::new("test_id");
         let result3 = summary3.list_date_and_subject();
@@ -264,9 +266,9 @@ mod tests {
         let mut original = MessageSummary::new("original_id");
         original.set_subject(Some("Original Subject".to_string()));
         original.set_date(Some("2023-12-25 10:30:00".to_string()));
-        
+
         let cloned = original.clone();
-        
+
         assert_eq!(original.id(), cloned.id());
         assert_eq!(original.subject(), cloned.subject());
         assert_eq!(original.date(), cloned.date());
@@ -277,9 +279,9 @@ mod tests {
         let mut summary = MessageSummary::new("debug_test_id");
         summary.set_subject(Some("Debug Subject".to_string()));
         summary.set_date(Some("2023-12-25".to_string()));
-        
-        let debug_str = format!("{:?}", summary);
-        
+
+        let debug_str = format!("{summary:?}");
+
         // Verify the debug output contains expected fields
         assert!(debug_str.contains("MessageSummary"));
         assert!(debug_str.contains("debug_test_id"));
@@ -290,14 +292,14 @@ mod tests {
     #[test]
     fn test_message_summary_unicode_handling() {
         let mut summary = MessageSummary::new("unicode_test");
-        
+
         // Test with Unicode characters in subject and date
         summary.set_subject(Some("📧 Important émails with 中文字符".to_string()));
         summary.set_date(Some("2023-12-25 10:30:00 UTC+8 🕒".to_string()));
-        
+
         assert_eq!(summary.subject(), "📧 Important émails with 中文字符");
         assert_eq!(summary.date(), "2023-12-25 10:30:00 UTC+8 🕒");
-        
+
         // Ensure list formatting doesn't panic with Unicode
         let display = summary.list_date_and_subject();
         assert!(!display.is_empty());
@@ -307,16 +309,19 @@ mod tests {
     fn test_message_summary_edge_cases() {
         let test_cases = vec![
             ("", "Empty ID"),
-            ("a", "Single char ID"),  
-            ("very_long_message_id_that_exceeds_normal_length_expectations_123456789", "Very long ID"),
+            ("a", "Single char ID"),
+            (
+                "very_long_message_id_that_exceeds_normal_length_expectations_123456789",
+                "Very long ID",
+            ),
             ("msg-with-dashes", "ID with dashes"),
             ("msg_with_underscores", "ID with underscores"),
             ("123456789", "Numeric ID"),
         ];
-        
+
         for (id, description) in test_cases {
             let summary = MessageSummary::new(id);
-            assert_eq!(summary.id(), id, "Failed for case: {}", description);
+            assert_eq!(summary.id(), id, "Failed for case: {description}");
         }
     }
 }
