@@ -53,6 +53,9 @@
 //! }
 //! ```
 
+#![warn(missing_docs)]
+#![allow(clippy::missing_errors_doc, clippy::missing_panics_doc)]
+
 use crate::{GmailClient, MessageSummary, Result};
 
 use google_gmail1::{
