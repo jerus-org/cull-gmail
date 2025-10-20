@@ -118,28 +118,28 @@ use crate::{ClientConfig, Error, Result, rules::EolRule};
 ///
 /// This constant defines the default page size for Gmail API list operations.
 /// The value "200" represents a balance between API efficiency and memory usage.
-/// 
+///
 /// Gmail API supports up to 500 results per page, but 200 provides good performance
 /// while keeping response sizes manageable.
 pub const DEFAULT_MAX_RESULTS: &str = "200";
 
 /// Gmail API client providing authenticated access to Gmail operations.
-/// 
+///
 /// `GmailClient` manages the connection to Gmail's REST API, handles OAuth2 authentication,
 /// maintains label mappings, and provides methods for message list operations.
-/// 
+///
 /// The client contains internal state for:
 /// - Authentication credentials and tokens
 /// - Label name-to-ID mappings
 /// - Query filters and pagination settings  
 /// - Retrieved message summaries
 /// - Rule processing configuration
-/// 
+///
 /// # Examples
-/// 
+///
 /// ```rust,no_run
 /// use cull_gmail::{ClientConfig, GmailClient};
-/// 
+///
 /// # async fn example() -> cull_gmail::Result<()> {
 /// let config = ClientConfig::builder()
 ///     .with_client_id("client-id")
@@ -378,7 +378,7 @@ impl GmailClient {
     /// # async fn example() -> cull_gmail::Result<()> {
     /// # let config = ClientConfig::builder().build();
     /// let client = GmailClient::new_with_config(config).await?;
-    /// 
+    ///
     /// // Display all labels (output goes to log)
     /// client.show_label();
     /// # Ok(())
