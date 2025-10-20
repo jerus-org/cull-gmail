@@ -494,7 +494,7 @@ mod tests {
         let action = EolAction::Delete;
         let log_message = format!("Executing {action} action");
         assert_eq!(log_message, "Executing delete action");
-        
+
         // Safety check scenario
         let dangerous_action = EolAction::Delete;
         if !dangerous_action.is_reversible() {
