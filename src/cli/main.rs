@@ -46,13 +46,13 @@
 //! ```toml
 //! # OAuth2 credential file (required)
 //! credential_file = "client_secret.json"
-//! 
+//!
 //! # Configuration root directory
 //! config_root = "h:.cull-gmail"
-//! 
+//!
 //! # Rules configuration file
 //! rules = "rules.toml"
-//! 
+//!
 //! # Default execution mode (false = dry-run, true = execute)
 //! execute = false
 //! ```
@@ -75,7 +75,7 @@
 //! ```bash
 //! # List recent messages
 //! cull-gmail messages -m 10 list
-//! 
+//!
 //! # Find old promotional emails
 //! cull-gmail messages -Q "label:promotions older_than:1y" list
 //! ```
@@ -84,7 +84,7 @@
 //! ```bash
 //! # Preview rule execution (dry-run)
 //! cull-gmail rules run
-//! 
+//!
 //! # Execute rules for real
 //! cull-gmail rules run --execute
 //! ```
@@ -124,18 +124,18 @@ use messages_cli::MessagesCli;
 use rules_cli::RulesCli;
 
 /// Main CLI application structure defining global options and subcommands.
-/// 
+///
 /// This struct represents the root of the command-line interface, providing
 /// global configuration options and dispatching to specific subcommands for
 /// labels, messages, and rules management.
-/// 
+///
 /// # Global Options
-/// 
+///
 /// - **Logging**: Configurable verbosity levels for operation visibility
 /// - **Subcommands**: Optional command selection (defaults to rule execution)
-/// 
+///
 /// # Default Behavior
-/// 
+///
 /// When no subcommand is provided, the CLI executes the default rule processing
 /// workflow, loading rules from the configuration file and executing them
 /// according to the current execution mode (dry-run or live).
@@ -143,52 +143,52 @@ use rules_cli::RulesCli;
 #[clap(author, version, about, long_about = None)]
 struct Cli {
     /// Logging verbosity control.
-    /// 
+    ///
     /// Use `-q` for quiet (errors only), default for info level,
     /// `-v` for debug level, `-vv` for trace level.
     #[clap(flatten)]
     logging: clap_verbosity_flag::Verbosity,
-    
+
     /// Optional subcommand selection.
-    /// 
+    ///
     /// If not provided, the CLI will execute the default rule processing workflow.
     #[command(subcommand)]
     sub_command: Option<SubCmds>,
 }
 
 /// Available CLI subcommands for Gmail message management.
-/// 
+///
 /// Each subcommand provides specialized functionality for different aspects
 /// of Gmail message lifecycle management, from inspection to automated processing.
-/// 
+///
 /// # Command Categories
-/// 
+///
 /// - **Messages**: Direct message querying, filtering, and batch operations
 /// - **Labels**: Gmail label inspection and management
 /// - **Rules**: Automated message lifecycle rule configuration and execution
-/// 
+///
 /// # Display Order
-/// 
+///
 /// Commands are ordered by typical usage workflow: inspect labels first,
 /// then query specific messages, and finally configure automated rules.
 #[derive(Subcommand, Debug)]
 enum SubCmds {
     /// Query, filter, and perform batch operations on Gmail messages.
-    /// 
+    ///
     /// Supports advanced Gmail query syntax, label filtering, and batch actions
     /// including trash and permanent deletion with safety controls.
     #[clap(name = "messages", display_order = 3, next_help_heading = "Labels")]
     Message(MessagesCli),
-    
+
     /// List and inspect available Gmail labels.
-    /// 
+    ///
     /// Displays all labels in your Gmail account with their internal IDs,
     /// useful for understanding label structure before creating queries or rules.
     #[clap(name = "labels", display_order = 2, next_help_heading = "Rules")]
     Labels(LabelsCli),
-    
+
     /// Configure and execute automated message retention rules.
-    /// 
+    ///
     /// Provides rule-based message lifecycle management with configurable
     /// retention periods, label targeting, and automated actions.
     #[clap(name = "rules", display_order = 2)]
@@ -196,26 +196,26 @@ enum SubCmds {
 }
 
 /// CLI application entry point with comprehensive error handling and logging setup.
-/// 
+///
 /// This function initializes the async runtime, parses command-line arguments,
 /// configures logging based on user preferences, and orchestrates the main
 /// application workflow with proper error handling and exit code management.
-/// 
+///
 /// # Process Flow
-/// 
+///
 /// 1. **Argument Parsing**: Parse command-line arguments using clap
 /// 2. **Logging Setup**: Initialize logging with user-specified verbosity
 /// 3. **Application Execution**: Run the main application logic
 /// 4. **Error Handling**: Handle errors with detailed reporting
 /// 5. **Exit Code**: Return appropriate exit codes for shell integration
-/// 
+///
 /// # Exit Codes
-/// 
+///
 /// - **0**: Successful execution
 /// - **101**: Error occurred (details logged and printed to stderr)
-/// 
+///
 /// # Error Reporting
-/// 
+///
 /// Errors are reported through multiple channels:
 /// - **Logging**: Structured error logging for debugging
 /// - **stderr**: User-friendly error messages
@@ -244,28 +244,28 @@ async fn main() {
 }
 
 /// Main application logic dispatcher handling subcommand execution and default behavior.
-/// 
+///
 /// This function orchestrates the core application workflow by:
 /// 1. Loading configuration from files and environment
 /// 2. Initializing the Gmail API client with OAuth2 authentication
 /// 3. Dispatching to appropriate subcommands or executing default rule processing
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `args` - Parsed command-line arguments containing global options and subcommands
-/// 
+///
 /// # Returns
-/// 
+///
 /// Returns `Result<()>` indicating success or failure of the operation.
-/// 
+///
 /// # Default Behavior
-/// 
+///
 /// When no subcommand is specified, the function executes the default rule processing
 /// workflow, loading rules from configuration and executing them based on the
 /// current execution mode setting.
-/// 
+///
 /// # Error Handling
-/// 
+///
 /// Errors can occur during:
 /// - Configuration loading and parsing
 /// - Gmail client initialization and authentication
@@ -290,31 +290,31 @@ async fn run(args: Cli) -> Result<()> {
 }
 
 /// Creates and configures a logging builder with appropriate verbosity levels.
-/// 
+///
 /// This function sets up structured logging for the application with:
 /// - Minimum info-level logging for user-facing information
 /// - Configurable verbosity based on command-line flags
 /// - Timestamp formatting for operation tracking
 /// - Focused logging on the cull-gmail crate to reduce noise
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `level` - Desired log level filter from command-line verbosity flags
-/// 
+///
 /// # Returns
-/// 
+///
 /// Returns a configured `env_logger::Builder` ready for initialization.
-/// 
+///
 /// # Logging Levels
-/// 
+///
 /// - **Error**: Critical failures and unrecoverable errors
 /// - **Warn**: Non-fatal issues, dry-run notifications, missing resources
 /// - **Info**: General operation progress, message counts, rule execution
 /// - **Debug**: Detailed operation info, API calls, configuration values
 /// - **Trace**: Very detailed debugging information
-/// 
+///
 /// # Default Behavior
-/// 
+///
 /// The function enforces a minimum of Info-level logging to ensure users
 /// receive adequate feedback about application operations, even when
 /// verbosity is not explicitly requested.
@@ -336,41 +336,41 @@ fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
 }
 
 /// Loads and parses application configuration from multiple sources.
-/// 
+///
 /// This function implements a hierarchical configuration loading strategy:
 /// 1. **Default values**: Sensible defaults for all configuration options
 /// 2. **Configuration file**: User-specific settings from `~/.cull-gmail/cull-gmail.toml`
 /// 3. **Environment variables**: Runtime overrides with `APP_` prefix
-/// 
+///
 /// # Returns
-/// 
+///
 /// Returns a tuple containing:
 /// - **Config**: Raw configuration for general application settings
 /// - **ClientConfig**: Processed Gmail client configuration with OAuth2 setup
-/// 
+///
 /// # Configuration Hierarchy
-/// 
+///
 /// Settings are applied in this order (later sources override earlier ones):
 /// 1. Built-in defaults
 /// 2. Configuration file values
 /// 3. Environment variable overrides
-/// 
+///
 /// # Configuration Parameters
-/// 
+///
 /// ## Default Values:
 /// - `credentials`: "credential.json" - OAuth2 credential file name
 /// - `config_root`: "h:.cull-gmail" - Configuration directory (home-relative)
 /// - `rules`: "rules.toml" - Rules configuration file name
 /// - `execute`: true - Default execution mode (can be overridden for safety)
-/// 
+///
 /// ## Environment Variables:
 /// - `APP_CREDENTIALS`: Override credential file name
 /// - `APP_CONFIG_ROOT`: Override configuration directory
 /// - `APP_RULES`: Override rules file name
 /// - `APP_EXECUTE`: Override execution mode (true/false)
-/// 
+///
 /// # Error Handling
-/// 
+///
 /// Configuration errors can occur due to:
 /// - Missing or inaccessible configuration files
 /// - Invalid TOML syntax in configuration files
@@ -399,38 +399,38 @@ fn get_config() -> Result<(Config, ClientConfig)> {
 }
 
 /// Executes automated message retention rules across Gmail labels.
-/// 
+///
 /// This function orchestrates the rule-based message processing workflow by:
 /// 1. Organizing rules by their target labels
 /// 2. Processing each label according to its configured rule
 /// 3. Executing or simulating actions based on execution mode
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `client` - Mutable Gmail client for API operations
 /// * `rules` - Loaded rules configuration containing all retention policies
 /// * `execute` - Whether to actually perform actions (true) or dry-run (false)
-/// 
+///
 /// # Returns
-/// 
+///
 /// Returns `Result<()>` indicating success or failure of the rule processing.
-/// 
+///
 /// # Rule Processing Flow
-/// 
+///
 /// For each configured label:
 /// 1. **Rule Lookup**: Find the retention rule for the label
 /// 2. **Rule Application**: Apply rule criteria to find matching messages
 /// 3. **Action Determination**: Determine appropriate action (trash/delete)
 /// 4. **Execution**: Execute action or simulate for dry-run
-/// 
+///
 /// # Safety Features
-/// 
+///
 /// - **Dry-run mode**: When `execute` is false, actions are logged but not performed
 /// - **Error isolation**: Errors for individual labels don't stop processing of other labels
 /// - **Detailed logging**: Comprehensive logging of rule execution and results
-/// 
+///
 /// # Error Handling
-/// 
+///
 /// The function continues processing even if individual rules fail, logging
 /// warnings for missing rules, processing errors, or action failures.
 async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Result<()> {
@@ -465,38 +465,38 @@ async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Res
 }
 
 /// Executes the specified end-of-life action on messages for a Gmail label.
-/// 
+///
 /// This function performs the actual message operations (trash or delete) based on
 /// the rule configuration and execution mode. It handles both recoverable (trash)
 /// and permanent (delete) operations with appropriate logging and error handling.
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `action` - The end-of-life action to perform (Trash or Delete)
 /// * `client` - Gmail client configured with messages to process
 /// * `label` - Label name for context in logging and error reporting
-/// 
+///
 /// # Actions
-/// 
+///
 /// ## Trash
 /// - **Operation**: Moves messages to Gmail's Trash folder
 /// - **Reversibility**: Messages can be recovered from Trash for ~30 days
 /// - **Safety**: Relatively safe operation with recovery options
-/// 
+///
 /// ## Delete
 /// - **Operation**: Permanently deletes messages from Gmail
 /// - **Reversibility**: **IRREVERSIBLE** - messages cannot be recovered
 /// - **Safety**: High-risk operation requiring careful consideration
-/// 
+///
 /// # Error Handling
-/// 
+///
 /// The function logs errors but does not propagate them, allowing rule processing
 /// to continue for other labels even if one action fails. Errors are reported through:
 /// - **Warning logs**: Structured logging for debugging
 /// - **Label context**: Error messages include label name for traceability
-/// 
+///
 /// # Safety Considerations
-/// 
+///
 /// This function should only be called when execute mode is enabled and after
 /// appropriate user confirmation for destructive operations.
 async fn execute_action(action: EolAction, client: &GmailClient, label: &str) {

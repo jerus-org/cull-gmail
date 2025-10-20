@@ -112,18 +112,18 @@ use config_cli::ConfigCli;
 use run_cli::RunCli;
 
 /// Available subcommands for rules management and execution.
-/// 
+///
 /// This enum defines the two main operational modes for the rules CLI:
 /// configuration management and rule execution. Each mode provides
 /// specialized functionality for different aspects of rule lifecycle management.
-/// 
+///
 /// # Command Categories
-/// 
+///
 /// - **Config**: Rule definition, modification, and management operations
 /// - **Run**: Rule execution with various safety and control options
-/// 
+///
 /// # Workflow Integration
-/// 
+///
 /// Typical usage follows this pattern:
 /// 1. Use `config` to set up rules, labels, and actions
 /// 2. Use `run` to execute rules with dry-run testing
@@ -131,27 +131,27 @@ use run_cli::RunCli;
 #[derive(Subcommand, Debug)]
 enum SubCmds {
     /// Configure Gmail message retention rules, labels, and actions.
-    /// 
+    ///
     /// Provides comprehensive rule management functionality including:
     /// - **Rule creation**: Define new retention policies
     /// - **Label management**: Configure target labels for rules
     /// - **Action setting**: Specify trash or delete actions
     /// - **Rule modification**: Update existing rule parameters
-    /// 
+    ///
     /// The config subcommand enables fine-grained control over rule behavior
     /// and provides validation to ensure rules are properly configured
     /// before execution.
     #[clap(name = "config")]
     Config(ConfigCli),
-    
+
     /// Execute configured retention rules with optional safety controls.
-    /// 
+    ///
     /// Provides rule execution functionality with comprehensive safety features:
     /// - **Dry-run mode**: Preview rule effects without making changes
     /// - **Selective execution**: Skip specific action types (trash/delete)
     /// - **Error handling**: Continue processing despite individual failures
     /// - **Progress tracking**: Detailed logging of rule execution
-    /// 
+    ///
     /// The run subcommand is the primary interface for automated message
     /// lifecycle management based on configured retention policies.
     #[clap(name = "run")]
@@ -159,43 +159,43 @@ enum SubCmds {
 }
 
 /// Command-line interface for Gmail message retention rule management.
-/// 
+///
 /// This structure represents the rules subcommand, providing comprehensive
 /// functionality for both configuring and executing automated Gmail message
 /// retention policies. It serves as the main entry point for rule-based
 /// message lifecycle management.
-/// 
+///
 /// # Core Functionality
-/// 
+///
 /// - **Rule Configuration**: Create, modify, and manage retention rules
 /// - **Label Management**: Associate rules with specific Gmail labels
 /// - **Action Control**: Configure trash or delete actions for rules
 /// - **Rule Execution**: Run configured rules with safety controls
-/// 
+///
 /// # Architecture
-/// 
+///
 /// The RulesCli delegates to specialized subcommands:
 /// - **ConfigCli**: Handles all rule configuration operations
 /// - **RunCli**: Manages rule execution and safety controls
-/// 
+///
 /// # Configuration Flow
-/// 
+///
 /// 1. **Rule Creation**: Define retention periods and basic parameters
 /// 2. **Label Assignment**: Associate rules with target Gmail labels
 /// 3. **Action Configuration**: Set appropriate actions (trash/delete)
 /// 4. **Validation**: Ensure rules are properly configured
 /// 5. **Execution**: Run rules with appropriate safety controls
-/// 
+///
 /// # Safety Integration
-/// 
+///
 /// The RulesCli incorporates multiple safety layers:
 /// - **Configuration validation**: Rules are validated before execution
 /// - **Dry-run capabilities**: Preview rule effects before applying changes
 /// - **Error isolation**: Individual rule failures don't stop processing
 /// - **Comprehensive logging**: Detailed tracking of all operations
-/// 
+///
 /// # Usage Context
-/// 
+///
 /// This CLI is designed for:
 /// - **System administrators**: Managing organizational Gmail retention policies
 /// - **Power users**: Implementing personal email organization strategies
@@ -204,7 +204,7 @@ enum SubCmds {
 #[derive(Debug, Parser)]
 pub struct RulesCli {
     /// Subcommand selection for rules operations.
-    /// 
+    ///
     /// Determines whether to perform configuration management or rule execution.
     /// Each subcommand provides specialized functionality for its domain.
     #[command(subcommand)]
@@ -213,51 +213,51 @@ pub struct RulesCli {
 
 impl RulesCli {
     /// Executes the rules command based on the selected subcommand.
-    /// 
+    ///
     /// This method coordinates the rules workflow by first loading the current
     /// rule configuration, then dispatching to the appropriate subcommand handler
     /// based on user selection (config or run).
-    /// 
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `client` - Mutable Gmail client for API operations during rule execution
-    /// 
+    ///
     /// # Returns
-    /// 
+    ///
     /// Returns `Result<()>` indicating success or failure of the rules operation.
-    /// 
+    ///
     /// # Operation Flow
-    /// 
+    ///
     /// ## Rule Loading
     /// - Attempts to load existing rules from configuration file
     /// - Creates default configuration if no rules file exists
     /// - Validates rule structure and consistency
-    /// 
+    ///
     /// ## Subcommand Dispatch
     /// - **Config operations**: Delegate to ConfigCli for rule management
     /// - **Run operations**: Delegate to RunCli for rule execution
-    /// 
+    ///
     /// # Error Handling
-    /// 
+    ///
     /// The method handles several error conditions:
     /// - **Configuration errors**: Problems loading or parsing rules file
     /// - **Validation errors**: Invalid rule configurations or conflicts
     /// - **Execution errors**: Failures during rule processing or Gmail operations
-    /// 
+    ///
     /// # Side Effects
-    /// 
+    ///
     /// ## Configuration Mode
     /// - May modify the rules configuration file
     /// - Creates backup copies of configuration when making changes
     /// - Validates configuration consistency after modifications
-    /// 
+    ///
     /// ## Execution Mode
     /// - May modify Gmail messages according to rule actions
     /// - Produces detailed logging of operations performed
     /// - Updates rule execution tracking and statistics
-    /// 
+    ///
     /// # Safety Features
-    /// 
+    ///
     /// - **Configuration validation**: Rules are validated before use
     /// - **Error isolation**: Subcommand errors don't affect rule loading
     /// - **State preservation**: Configuration errors don't corrupt existing rules
@@ -272,57 +272,57 @@ impl RulesCli {
 }
 
 /// Loads Gmail retention rules from configuration with automatic fallback.
-/// 
+///
 /// This function provides robust rule loading with automatic configuration
 /// creation when no existing rules are found. It ensures that the rules
 /// subsystem always has a valid configuration to work with.
-/// 
+///
 /// # Returns
-/// 
+///
 /// Returns `Result<Rules>` containing the loaded or newly created rules configuration.
-/// 
+///
 /// # Loading Strategy
-/// 
+///
 /// ## Primary Path
 /// - Attempts to load existing rules from the configured rules file
 /// - Validates rule structure and consistency
 /// - Returns loaded rules if successful
-/// 
+///
 /// ## Fallback Path
 /// - Creates new default rules configuration if loading fails
 /// - Saves the default configuration to disk for future use
 /// - Returns the newly created default configuration
-/// 
+///
 /// # Configuration Location
-/// 
+///
 /// Rules are typically stored in:
 /// - **Default location**: `~/.cull-gmail/rules.toml`
 /// - **Format**: TOML configuration with structured rule definitions
 /// - **Permissions**: Should be readable/writable by user only
-/// 
+///
 /// # Error Handling
-/// 
+///
 /// The function handles various error scenarios:
 /// - **Missing configuration**: Creates default configuration automatically
 /// - **Corrupted configuration**: Logs warnings and falls back to defaults
 /// - **File system errors**: Propagates errors for disk access issues
-/// 
+///
 /// # Default Configuration
-/// 
+///
 /// When creating a new configuration, the function:
 /// - Initializes an empty rules collection
 /// - Sets up proper TOML structure for future rule additions
 /// - Saves the configuration to disk for persistence
-/// 
+///
 /// # Logging
-/// 
+///
 /// The function provides appropriate logging:
 /// - **Info**: Successful rule loading
 /// - **Warn**: Fallback to default configuration
 /// - **Error**: Critical failures during configuration creation
-/// 
+///
 /// # Usage Context
-/// 
+///
 /// This function is called by:
 /// - **Rules CLI**: To load rules before configuration or execution
 /// - **Main CLI**: For default rule execution when no subcommand is specified
