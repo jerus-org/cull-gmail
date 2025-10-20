@@ -227,7 +227,7 @@ workflows:
           nextest_profile: ci
           post-steps:
             - store_test_results:
-              path: target/nextest/ci/junit.xml
+                path: target/nextest/ci/junit.xml
       - toolkit/idiomatic_rust:
           min_rust_version: << pipeline.parameters.min-rust-version >>
       - toolkit/security:
