@@ -372,9 +372,7 @@ impl MessageList for GmailClient {
     /// Add label to the labels collection
     fn add_labels_ids(&mut self, label_ids: &[String]) {
         if !label_ids.is_empty() {
-            for id in label_ids {
-                self.label_ids.push(id.to_string())
-            }
+            self.label_ids.extend(label_ids.iter().cloned());
         }
     }
 
@@ -390,11 +388,7 @@ impl MessageList for GmailClient {
 
     /// Get a reference to the message_ids
     fn message_ids(&self) -> Vec<String> {
-        self.messages
-            .iter()
-            .map(|m| m.id().to_string())
-            .collect::<Vec<_>>()
-            .clone()
+        self.messages.iter().map(|m| m.id().to_string()).collect()
     }
 
     /// Get a reference to the message_ids
@@ -479,14 +473,13 @@ impl MessageList for GmailClient {
             return Ok(list);
         }
 
-        let mut list_ids = list
-            .clone()
-            .messages
-            .unwrap()
-            .iter()
-            .flat_map(|item| item.id.as_ref().map(|id| MessageSummary::new(id)))
-            .collect();
-        self.messages.append(&mut list_ids);
+        if let Some(msgs) = &list.messages {
+            let mut list_ids: Vec<MessageSummary> = msgs
+                .iter()
+                .flat_map(|item| item.id.as_deref().map(MessageSummary::new))
+                .collect();
+            self.messages.append(&mut list_ids);
+        }
 
         Ok(list)
     }
