@@ -37,4 +37,20 @@ The `cull-gmail` provides a software library and command line program to enable 
 - run the rules list be default 
 - configure api client by file or environment variables
 
+### Running the optional Gmail integration test
+
+An optional, ignored integration test exercises the Gmail API end-to-end (networked). It is ignored by default and will not run in CI.
+
+Steps to run locally:
+
+1. Ensure you have valid OAuth client credentials configured for the library (see `ClientConfig::builder()` usage in docs).
+2. Run the test explicitly with the ignored flag:
+
+```bash
+cargo test --test gmail_message_list_integration -- --ignored
+```
+
+Notes:
+- The test performs a lightweight listing (max 10 messages) and should be safe, but it still uses your Gmail account.
+- Do not run this in CI; it is intended only for local verification.
 
