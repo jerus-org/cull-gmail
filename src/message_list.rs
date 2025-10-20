@@ -863,4 +863,36 @@ mod tests {
         client.get_messages(0).await.unwrap();
         assert_eq!(client.message_ids(), vec!["a", "b", "c"]);
     }
+
+    #[tokio::test]
+    async fn empty_first_page_returns_early() {
+        let page = ListMessagesResponse {
+            messages: None,
+            next_page_token: None,
+            result_size_estimate: Some(0),
+        };
+        let mut map = HashMap::new();
+        map.insert(None, page);
+        let mut client = TestClient::with_pages(map);
+        client.get_messages(0).await.unwrap();
+        assert!(client.message_ids().is_empty());
+    }
+
+    #[tokio::test]
+    async fn pages_param_gt1_but_no_next_token_stops() {
+        use google_gmail1::api::Message;
+        let first = ListMessagesResponse {
+            messages: Some(vec![Message {
+                id: Some("x".into()),
+                ..Default::default()
+            }]),
+            next_page_token: None,
+            result_size_estimate: Some(1),
+        };
+        let mut map = HashMap::new();
+        map.insert(None, first);
+        let mut client = TestClient::with_pages(map);
+        client.get_messages(5).await.unwrap();
+        assert_eq!(client.message_ids(), vec!["x"]);
+    }
 }
