@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ✨ enhance retention policy configuration(pr [#77])
 - improve documentation, tests, error handling, and formatting(pr [#78])
 - ✨ improve docs, tests, idioms, and CI enforcement(pr [#79])
+- ✨ introduce nextest test runner(pr [#82])
 
 ### Changed
 
@@ -245,6 +246,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#79]: https://github.com/jerus-org/cull-gmail/pull/79
 [#80]: https://github.com/jerus-org/cull-gmail/pull/80
 [#81]: https://github.com/jerus-org/cull-gmail/pull/81
+[#82]: https://github.com/jerus-org/cull-gmail/pull/82
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.10...HEAD
 [0.0.10]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...v0.0.9
