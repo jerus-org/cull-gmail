@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - 📝 docs(readme)-improve library and CLI documentation(pr [#76])
+- 🧰 chore(message-list)-ensure rustdoc compliance and test coverage(pr [#80])
 
 ## [0.0.10] - 2025-10-16
 
@@ -241,6 +242,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#77]: https://github.com/jerus-org/cull-gmail/pull/77
 [#78]: https://github.com/jerus-org/cull-gmail/pull/78
 [#79]: https://github.com/jerus-org/cull-gmail/pull/79
+[#80]: https://github.com/jerus-org/cull-gmail/pull/80
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.10...HEAD
 [0.0.10]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...v0.0.9
