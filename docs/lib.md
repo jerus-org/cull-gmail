@@ -304,15 +304,15 @@ Log levels:
 ### Required Scopes
 The library requires the `https://mail.google.com/` scope for full Gmail access.
 
-### Credential File Security
-- Store credential files securely (not in version control)
+### OAuth2 File Security
+- Store OAuth2 credential files securely (not in version control)
 - Use restrictive file permissions (600)
 - Consider using environment variables in production
 
 ## Troubleshooting
 
 ### Authentication Issues
-1. Verify credential file path and format
+1. Verify OAuth2 credential file path and JSON format
 2. Check OAuth2 client is configured for "Desktop Application"
 3. Ensure redirect URI matches configuration
 4. Clear token cache: `rm -rf ~/.cull-gmail/gmail1`

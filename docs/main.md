@@ -46,14 +46,14 @@ cull-gmail --version
    mkdir -p ~/.cull-gmail
    ```
 
-2. Copy your credential file:
+2. Copy your OAuth2 credential file:
    ```bash
-   cp ~/Downloads/client_secret_*.json ~/.cull-gmail/credential.json
+   cp ~/Downloads/client_secret_*.json ~/.cull-gmail/client_secret.json
    ```
 
 3. Create configuration file `~/.cull-gmail/cull-gmail.toml`:
    ```toml
-   credentials = "credential.json"
+   credential_file = "client_secret.json"
    config_root = "~/.cull-gmail"
    rules = "rules.toml"
    execute = false  # Start in dry-run mode
@@ -80,7 +80,7 @@ This will:
 
 ```toml
 # OAuth2 credential file (relative to config_root)
-credentials = "credential.json"
+credential_file = "client_secret.json"
 
 # Configuration directory
 config_root = "~/.cull-gmail"
@@ -103,7 +103,7 @@ execute = false
 Override any configuration setting:
 
 ```bash
-export APP_CREDENTIALS="credential.json"
+export APP_CREDENTIAL_FILE="client_secret.json"
 export APP_EXECUTE="true"
 export APP_CLIENT_ID="your-client-id"
 export APP_CLIENT_SECRET="your-client-secret"
@@ -479,7 +479,7 @@ cull-gmail -vvv messages list
 **Problem**: "Authentication failed" or "Invalid credentials"
 
 **Solutions**:
-1. Verify credential file exists and is valid JSON
+1. Verify OAuth2 credential file exists and is valid JSON
 2. Check OAuth client is configured as "Desktop Application"
 3. Clear token cache: `rm -rf ~/.cull-gmail/gmail1`
 4. Re-run authentication: `cull-gmail labels`
@@ -525,7 +525,7 @@ cull-gmail -vvv messages list
 **Solutions**:
 1. Verify config file path: `~/.cull-gmail/cull-gmail.toml`
 2. Check TOML syntax
-3. Ensure credential file path is correct
+3. Ensure OAuth2 credential file path is correct
 4. Use absolute paths if relative paths fail
 
 ## Exit Codes
