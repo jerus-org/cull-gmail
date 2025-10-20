@@ -59,7 +59,9 @@
 use crate::{GmailClient, MessageSummary, Result};
 
 use google_gmail1::{
-    Gmail, api::ListMessagesResponse, hyper_rustls::HttpsConnector,
+    Gmail,
+    api::{ListMessagesResponse, Message as GmailMessage},
+    hyper_rustls::HttpsConnector,
     hyper_util::client::legacy::connect::HttpConnector,
 };
 
@@ -345,6 +347,21 @@ pub trait MessageList {
     fn set_max_results(&mut self, value: u32);
 }
 
+/// Abstraction for Gmail API calls used by MessageList.
+pub(crate) trait GmailService {
+    /// Fetch a page of messages using current filters.
+    async fn list_messages_page(
+        &self,
+        label_ids: &[String],
+        query: &str,
+        max_results: u32,
+        page_token: Option<String>,
+    ) -> Result<ListMessagesResponse>;
+
+    /// Fetch minimal metadata for a message (subject, date, etc.).
+    async fn get_message_metadata(&self, message_id: &str) -> Result<GmailMessage>;
+}
+
 impl GmailClient {
     /// Append any message IDs from a ListMessagesResponse into the provided messages vector.
     fn append_list_to_messages(out: &mut Vec<MessageSummary>, list: &ListMessagesResponse) {
@@ -355,6 +372,47 @@ impl GmailClient {
                 .collect();
             out.append(&mut list_ids);
         }
+    }
+}
+
+impl GmailService for GmailClient {
+    async fn list_messages_page(
+        &self,
+        label_ids: &[String],
+        query: &str,
+        max_results: u32,
+        page_token: Option<String>,
+    ) -> Result<ListMessagesResponse> {
+        let hub = self.hub();
+        let mut call = hub.users().messages_list("me").max_results(max_results);
+        if !label_ids.is_empty() {
+            for id in label_ids {
+                call = call.add_label_ids(id);
+            }
+        }
+        if !query.is_empty() {
+            call = call.q(query);
+        }
+        if let Some(token) = page_token {
+            call = call.page_token(&token);
+        }
+        let (_response, list) = call.doit().await.map_err(Box::new)?;
+        Ok(list)
+    }
+
+    async fn get_message_metadata(&self, message_id: &str) -> Result<GmailMessage> {
+        let hub = self.hub();
+        let (_res, m) = hub
+            .users()
+            .messages_get("me", message_id)
+            .add_scope("https://mail.google.com/")
+            .format("metadata")
+            .add_metadata_headers("subject")
+            .add_metadata_headers("date")
+            .doit()
+            .await
+            .map_err(Box::new)?;
+        Ok(m)
     }
 }
 
@@ -452,30 +510,24 @@ impl MessageList for GmailClient {
         &mut self,
         next_page_token: Option<String>,
     ) -> Result<ListMessagesResponse> {
-        let hub = self.hub();
-        let mut call = hub
-            .users()
-            .messages_list("me")
-            .max_results(self.max_results);
-        // Add any labels specified
         if !self.label_ids.is_empty() {
             log::debug!("Setting labels for list: {:#?}", self.label_ids);
-            for id in self.label_ids.as_slice() {
-                call = call.add_label_ids(id);
-            }
         }
-        // Add query
         if !self.query.is_empty() {
             log::debug!("Setting query string `{}`", self.query);
-            call = call.q(&self.query);
         }
-        // Add a page token
-        if let Some(page_token) = next_page_token {
+        if next_page_token.is_some() {
             log::debug!("Setting token for next page.");
-            call = call.page_token(&page_token);
         }
 
-        let (_response, list) = call.doit().await.map_err(Box::new)?;
+        let list = self
+            .list_messages_page(
+                &self.label_ids,
+                &self.query,
+                self.max_results,
+                next_page_token,
+            )
+            .await?;
         log::trace!(
             "Estimated {} messages.",
             list.result_size_estimate.unwrap_or(0)
@@ -492,19 +544,11 @@ impl MessageList for GmailClient {
     }
 
     async fn log_messages(&mut self) -> Result<()> {
-        let hub = self.hub();
-        for message in &mut self.messages {
-            log::trace!("{}", message.id());
-            let (_res, m) = hub
-                .users()
-                .messages_get("me", message.id())
-                .add_scope("https://mail.google.com/")
-                .format("metadata")
-                .add_metadata_headers("subject")
-                .add_metadata_headers("date")
-                .doit()
-                .await
-                .map_err(Box::new)?;
+        for i in 0..self.messages.len() {
+            let id = self.messages[i].id().to_string();
+            log::trace!("{id}");
+            let m = self.get_message_metadata(&id).await?;
+            let message = &mut self.messages[i];
 
             let Some(payload) = m.payload else { continue };
             let Some(headers) = payload.headers else {
