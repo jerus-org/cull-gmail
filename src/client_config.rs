@@ -609,3 +609,368 @@ impl ConfigBuilder {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use config::Config;
+    use std::env;
+    use tempfile::TempDir;
+    use std::fs;
+    use crate::test_utils::get_test_logger;
+
+    /// Helper function to create a temporary credential file for testing
+    fn create_test_credential_file(temp_dir: &TempDir, filename: &str, content: &str) -> String {
+        let file_path = temp_dir.path().join(filename);
+        fs::write(&file_path, content).expect("Failed to write test file");
+        file_path.to_string_lossy().to_string()
+    }
+
+    /// Sample valid OAuth2 credential JSON for testing
+    fn sample_valid_credential() -> &'static str {
+        r#"{
+  "installed": {
+    "client_id": "123456789-test.googleusercontent.com",
+    "project_id": "test-project",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+    "client_secret": "test-client-secret",
+    "redirect_uris": ["http://localhost"]
+  }
+}"#
+    }
+
+    #[test]
+    fn test_config_builder_defaults() {
+        let builder = ConfigBuilder::default();
+        
+        assert_eq!(builder.secret.auth_uri, "https://accounts.google.com/o/oauth2/auth");
+        assert_eq!(builder.secret.token_uri, "https://oauth2.googleapis.com/token");
+        assert!(builder.secret.client_id.is_empty());
+        assert!(builder.secret.client_secret.is_empty());
+    }
+
+    #[test]
+    fn test_builder_pattern_direct_oauth2() {
+        let config = ClientConfig::builder()
+            .with_client_id("test-client-id")
+            .with_client_secret("test-client-secret")
+            .with_auth_uri("https://auth.example.com")
+            .with_token_uri("https://token.example.com")
+            .add_redirect_uri("http://localhost:8080")
+            .add_redirect_uri("http://localhost:3000")
+            .with_project_id("test-project")
+            .with_client_email("test@example.com")
+            .with_auth_provider_x509_cert_url("https://certs.example.com")
+            .with_client_x509_cert_url("https://client-cert.example.com")
+            .build();
+
+        assert_eq!(config.secret().client_id, "test-client-id");
+        assert_eq!(config.secret().client_secret, "test-client-secret");
+        assert_eq!(config.secret().auth_uri, "https://auth.example.com");
+        assert_eq!(config.secret().token_uri, "https://token.example.com");
+        assert_eq!(config.secret().redirect_uris, vec!["http://localhost:8080", "http://localhost:3000"]);
+        assert_eq!(config.secret().project_id, Some("test-project".to_string()));
+        assert_eq!(config.secret().client_email, Some("test@example.com".to_string()));
+        assert_eq!(config.secret().auth_provider_x509_cert_url, Some("https://certs.example.com".to_string()));
+        assert_eq!(config.secret().client_x509_cert_url, Some("https://client-cert.example.com".to_string()));
+        assert!(config.persist_path().contains("gmail1"));
+    }
+
+    #[test]
+    fn test_builder_with_config_path() {
+        let config = ClientConfig::builder()
+            .with_client_id("test-id")
+            .with_config_path(".test-config")
+            .build();
+
+        let full_path = config.full_path();
+        assert_eq!(full_path, ".test-config");
+        assert!(config.persist_path().contains(".test-config/gmail1"));
+    }
+
+    #[test]
+    fn test_builder_with_config_base_home() {
+        let config = ClientConfig::builder()
+            .with_client_id("test-id")
+            .with_config_base(&config_root::RootBase::Home)
+            .with_config_path(".test-config")
+            .build();
+
+        let expected_path = env::home_dir()
+            .unwrap_or_default()
+            .join(".test-config")
+            .display()
+            .to_string();
+            
+        assert_eq!(config.full_path(), expected_path);
+    }
+
+    #[test]
+    fn test_builder_with_config_base_root() {
+        let config = ClientConfig::builder()
+            .with_client_id("test-id")
+            .with_config_base(&config_root::RootBase::Root)
+            .with_config_path("etc/test-config")
+            .build();
+
+        assert_eq!(config.full_path(), "/etc/test-config");
+    }
+
+    #[test]
+    fn test_config_from_direct_oauth2_params() {
+        let app_config = Config::builder()
+            .set_default("client_id", "direct-client-id").unwrap()
+            .set_default("client_secret", "direct-client-secret").unwrap()
+            .set_default("token_uri", "https://token.direct.com").unwrap()
+            .set_default("auth_uri", "https://auth.direct.com").unwrap()
+            .set_default("config_root", "h:.test-direct").unwrap()
+            .build()
+            .unwrap();
+
+        let config = ClientConfig::new_from_configuration(app_config).unwrap();
+        
+        assert_eq!(config.secret().client_id, "direct-client-id");
+        assert_eq!(config.secret().client_secret, "direct-client-secret");
+        assert_eq!(config.secret().token_uri, "https://token.direct.com");
+        assert_eq!(config.secret().auth_uri, "https://auth.direct.com");
+        assert_eq!(config.secret().project_id, None);
+        assert!(config.secret().redirect_uris.is_empty());
+    }
+
+    #[test]
+    fn test_config_from_credential_file() {
+        get_test_logger();
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let _cred_file = create_test_credential_file(&temp_dir, "test_creds.json", sample_valid_credential());
+        
+        let config_root = format!("c:{}", temp_dir.path().display());
+        let app_config = Config::builder()
+            .set_default("credential_file", "test_creds.json").unwrap()
+            .set_default("config_root", config_root.as_str()).unwrap()
+            .build()
+            .unwrap();
+
+        let config = ClientConfig::new_from_configuration(app_config).unwrap();
+        
+        assert_eq!(config.secret().client_id, "123456789-test.googleusercontent.com");
+        assert_eq!(config.secret().client_secret, "test-client-secret");
+        assert_eq!(config.secret().project_id, Some("test-project".to_string()));
+        assert_eq!(config.secret().redirect_uris, vec!["http://localhost"]);
+    }
+
+    #[test]
+    fn test_config_missing_required_params() {
+        // Test with missing config_root
+        let app_config = Config::builder()
+            .set_default("client_id", "test-id").unwrap()
+            .build()
+            .unwrap();
+
+        let result = ClientConfig::new_from_configuration(app_config);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_config_incomplete_oauth2_params() {
+        // Test with some but not all OAuth2 parameters
+        let app_config = Config::builder()
+            .set_default("client_id", "test-id").unwrap()
+            .set_default("client_secret", "test-secret").unwrap()
+            // Missing token_uri and auth_uri
+            .set_default("config_root", "h:.test").unwrap()
+            .build()
+            .unwrap();
+
+        // Should fall back to credential_file approach, which should fail
+        let result = ClientConfig::new_from_configuration(app_config);
+        assert!(result.is_err());
+    }
+
+    #[test] 
+    #[should_panic(expected = "could not read path")]
+    fn test_config_invalid_credential_file() {
+        let app_config = Config::builder()
+            .set_default("credential_file", "nonexistent.json").unwrap()
+            .set_default("config_root", "h:.test").unwrap()
+            .build()
+            .unwrap();
+
+        // This should panic with "could not read path" since the code uses .expect()
+        let _result = ClientConfig::new_from_configuration(app_config);
+    }
+
+    #[test]
+    #[should_panic(expected = "could not convert to struct")]
+    fn test_config_malformed_credential_file() {
+        get_test_logger();
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let _cred_file = create_test_credential_file(&temp_dir, "malformed.json", "{ invalid json");
+        
+        let config_root = format!("c:{}", temp_dir.path().display());
+        let app_config = Config::builder()
+            .set_default("credential_file", "malformed.json").unwrap()
+            .set_default("config_root", config_root.as_str()).unwrap()
+            .build()
+            .unwrap();
+
+        // This should panic with "could not convert to struct" since the code uses .expect()
+        let _result = ClientConfig::new_from_configuration(app_config);
+    }
+
+    #[test]
+    #[should_panic(expected = "called `Option::unwrap()` on a `None` value")]
+    fn test_config_credential_file_wrong_structure() {
+        get_test_logger();
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let wrong_structure = r#"{"wrong": "structure"}"#;
+        let _cred_file = create_test_credential_file(&temp_dir, "wrong.json", wrong_structure);
+        
+        let config_root = format!("c:{}", temp_dir.path().display());
+        let app_config = Config::builder()
+            .set_default("credential_file", "wrong.json").unwrap()
+            .set_default("config_root", config_root.as_str()).unwrap()
+            .build()
+            .unwrap();
+
+        // This should panic with unwrap on None since console.installed is None
+        let _result = ClientConfig::new_from_configuration(app_config);
+    }
+
+    #[test]
+    fn test_persist_path_generation() {
+        let config = ClientConfig::builder()
+            .with_client_id("test")
+            .with_config_path("/custom/path")
+            .build();
+
+        assert_eq!(config.persist_path(), "/custom/path/gmail1");
+    }
+
+    #[test]
+    fn test_config_accessor_methods() {
+        let config = ClientConfig::builder()
+            .with_client_id("accessor-test-id")
+            .with_client_secret("accessor-test-secret")
+            .with_config_path("/test/path")
+            .build();
+
+        // Test secret() accessor
+        let secret = config.secret();
+        assert_eq!(secret.client_id, "accessor-test-id");
+        assert_eq!(secret.client_secret, "accessor-test-secret");
+
+        // Test persist_path() accessor
+        assert_eq!(config.persist_path(), "/test/path/gmail1");
+
+        // Test full_path() accessor
+        assert_eq!(config.full_path(), "/test/path");
+
+        // Test config_root() accessor
+        let config_root = config.config_root();
+        assert_eq!(config_root.full_path().display().to_string(), "/test/path");
+    }
+
+    #[test]
+    fn test_builder_method_chaining() {
+        // Test that all builder methods return &mut Self for chaining
+        let config = ClientConfig::builder()
+            .with_client_id("chain-test")
+            .with_client_secret("chain-secret")
+            .with_auth_uri("https://auth.chain.com")
+            .with_token_uri("https://token.chain.com")
+            .add_redirect_uri("http://redirect1.com")
+            .add_redirect_uri("http://redirect2.com")
+            .with_project_id("chain-project")
+            .with_client_email("chain@test.com")
+            .with_auth_provider_x509_cert_url("https://cert1.com")
+            .with_client_x509_cert_url("https://cert2.com")
+            .with_config_base(&config_root::RootBase::Home)
+            .with_config_path(".chain-test")
+            .build();
+
+        assert_eq!(config.secret().client_id, "chain-test");
+        assert_eq!(config.secret().redirect_uris.len(), 2);
+    }
+
+    #[test]
+    fn test_configuration_priority() {
+        // Test that direct OAuth2 params take priority over credential file
+        get_test_logger();
+        let temp_dir = TempDir::new().expect("Failed to create temp dir");
+        let _cred_file = create_test_credential_file(&temp_dir, "priority.json", sample_valid_credential());
+        
+        let config_root = format!("c:{}", temp_dir.path().display());
+        let app_config = Config::builder()
+            // Direct OAuth2 params (should take priority)
+            .set_default("client_id", "priority-client-id").unwrap()
+            .set_default("client_secret", "priority-client-secret").unwrap()
+            .set_default("token_uri", "https://priority.token.com").unwrap()
+            .set_default("auth_uri", "https://priority.auth.com").unwrap()
+            // Credential file (should be ignored)
+            .set_default("credential_file", "priority.json").unwrap()
+            .set_default("config_root", config_root.as_str()).unwrap()
+            .build()
+            .unwrap();
+
+        let config = ClientConfig::new_from_configuration(app_config).unwrap();
+        
+        // Should use direct params, not file contents
+        assert_eq!(config.secret().client_id, "priority-client-id");
+        assert_eq!(config.secret().client_secret, "priority-client-secret");
+        assert_eq!(config.secret().token_uri, "https://priority.token.com");
+        assert_ne!(config.secret().client_id, "123456789-test.googleusercontent.com"); // From file
+    }
+
+    #[test] 
+    fn test_empty_redirect_uris() {
+        let config = ClientConfig::builder()
+            .with_client_id("test-id")
+            .build();
+
+        assert!(config.secret().redirect_uris.is_empty());
+    }
+
+    #[test]
+    fn test_multiple_redirect_uris() {
+        let config = ClientConfig::builder()
+            .with_client_id("test-id")
+            .add_redirect_uri("http://localhost:8080")
+            .add_redirect_uri("http://localhost:3000")
+            .add_redirect_uri("https://example.com/callback")
+            .build();
+
+        assert_eq!(config.secret().redirect_uris.len(), 3);
+        assert!(config.secret().redirect_uris.contains(&"http://localhost:8080".to_string()));
+        assert!(config.secret().redirect_uris.contains(&"http://localhost:3000".to_string()));
+        assert!(config.secret().redirect_uris.contains(&"https://example.com/callback".to_string()));
+    }
+
+    #[test]
+    fn test_optional_fields() {
+        let config = ClientConfig::builder()
+            .with_client_id("optional-test")
+            .build();
+
+        assert_eq!(config.secret().project_id, None);
+        assert_eq!(config.secret().client_email, None);
+        assert_eq!(config.secret().auth_provider_x509_cert_url, None);
+        assert_eq!(config.secret().client_x509_cert_url, None);
+    }
+
+    #[test]
+    fn test_unicode_in_configuration() {
+        let config = ClientConfig::builder()
+            .with_client_id("unicode-客戶端-🔐-test")
+            .with_client_secret("secret-with-unicode-密碼")
+            .with_project_id("project-項目-id")
+            .with_config_path(".unicode-配置")
+            .build();
+
+        assert_eq!(config.secret().client_id, "unicode-客戶端-🔐-test");
+        assert_eq!(config.secret().client_secret, "secret-with-unicode-密碼");
+        assert_eq!(config.secret().project_id, Some("project-項目-id".to_string()));
+        assert!(config.full_path().contains(".unicode-配置"));
+    }
+}
