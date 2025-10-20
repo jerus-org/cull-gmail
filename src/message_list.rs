@@ -345,6 +345,19 @@ pub trait MessageList {
     fn set_max_results(&mut self, value: u32);
 }
 
+impl GmailClient {
+    /// Append any message IDs from a ListMessagesResponse into the provided messages vector.
+    fn append_list_to_messages(out: &mut Vec<MessageSummary>, list: &ListMessagesResponse) {
+        if let Some(msgs) = &list.messages {
+            let mut list_ids: Vec<MessageSummary> = msgs
+                .iter()
+                .flat_map(|item| item.id.as_deref().map(MessageSummary::new))
+                .collect();
+            out.append(&mut list_ids);
+        }
+    }
+}
+
 impl MessageList for GmailClient {
     /// Set the maximum results
     fn set_max_results(&mut self, value: u32) {
@@ -473,13 +486,7 @@ impl MessageList for GmailClient {
             return Ok(list);
         }
 
-        if let Some(msgs) = &list.messages {
-            let mut list_ids: Vec<MessageSummary> = msgs
-                .iter()
-                .flat_map(|item| item.id.as_deref().map(MessageSummary::new))
-                .collect();
-            self.messages.append(&mut list_ids);
-        }
+        Self::append_list_to_messages(&mut self.messages, &list);
 
         Ok(list)
     }
@@ -623,5 +630,32 @@ mod tests {
         ml.push_msg("def");
         assert_eq!(ml.message_ids(), vec!["abc", "def"]);
         assert_eq!(ml.messages().len(), 2);
+    }
+
+    #[test]
+    fn append_list_to_messages_extracts_ids() {
+        use google_gmail1::api::Message;
+        let mut out = Vec::<MessageSummary>::new();
+        let list = ListMessagesResponse {
+            messages: Some(vec![
+                Message {
+                    id: Some("m1".into()),
+                    ..Default::default()
+                },
+                Message {
+                    id: None,
+                    ..Default::default()
+                },
+                Message {
+                    id: Some("m2".into()),
+                    ..Default::default()
+                },
+            ]),
+            ..Default::default()
+        };
+
+        GmailClient::append_list_to_messages(&mut out, &list);
+        let ids: Vec<_> = out.iter().map(|m| m.id().to_string()).collect();
+        assert_eq!(ids, vec!["m1", "m2"]);
     }
 }
