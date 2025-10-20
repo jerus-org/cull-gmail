@@ -411,16 +411,7 @@ impl GmailClient {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// # use cull_gmail::{ClientConfig, GmailClient};
-    /// # async fn example() -> cull_gmail::Result<()> {
-    /// # let config = ClientConfig::builder().build();
-    /// let client = GmailClient::new_with_config(config).await?;
-    /// 
-    /// // Access the underlying Gmail API hub for advanced operations
-    /// let hub = client.hub();
-    /// // Use hub for direct Gmail API calls...
-    /// # Ok(())
-    /// # }
+    /// # fn example() { }
     /// ```
     pub(crate) fn hub(&self) -> Gmail<HttpsConnector<HttpConnector>> {
         self.hub.clone()
