@@ -342,7 +342,10 @@ mod unit_tests {
             #[cfg(unix)]
             mode: Some(0o755),
         };
-        assert_eq!(format!("{create_dir_op}"), format!("Create directory: {}", temp_path.display()));
+        assert_eq!(
+            format!("{create_dir_op}"),
+            format!("Create directory: {}", temp_path.display())
+        );
 
         let copy_file_op = Operation::CopyFile {
             from: temp_path.clone(),
@@ -353,7 +356,11 @@ mod unit_tests {
         };
         assert_eq!(
             format!("{copy_file_op}"),
-            format!("Copy file: {} → {}", temp_path.display(), temp_path.join("dest").display())
+            format!(
+                "Copy file: {} → {}",
+                temp_path.display(),
+                temp_path.join("dest").display()
+            )
         );
 
         let write_file_op = Operation::WriteFile {
@@ -363,7 +370,10 @@ mod unit_tests {
             mode: Some(0o644),
             backup_if_exists: false,
         };
-        assert_eq!(format!("{write_file_op}"), format!("Write file: {}", temp_path.display()));
+        assert_eq!(
+            format!("{write_file_op}"),
+            format!("Write file: {}", temp_path.display())
+        );
 
         let oauth_op = Operation::RunOAuth2 {
             config_root: "h:.config".to_string(),
