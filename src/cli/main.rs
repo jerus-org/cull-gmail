@@ -539,6 +539,24 @@ async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Res
 /// - Container deployments with injected token environment variables
 /// - CI/CD pipelines with stored token secrets
 /// - Ephemeral compute environments requiring periodic Gmail access
+fn restore_tokens_if_available(config: &Config, client_config: &ClientConfig) -> Result<()> {
+    let token_env_var = config
+        .get_string("token_cache_env")
+        .unwrap_or_else(|_| "CULL_GMAIL_TOKEN_CACHE".to_string());
+
+    if let Ok(token_data) = env::var(&token_env_var) {
+        log::info!("Found {token_env_var} environment variable, restoring tokens");
+        restore_tokens_from_string(&token_data, client_config.persist_path())?;
+        log::info!("Tokens successfully restored from environment variable");
+    } else {
+        log::debug!(
+            "No {token_env_var} environment variable found, proceeding with normal token flow"
+        );
+    }
+
+    Ok(())
+}
+
 /// Gets the rules file path from configuration.
 ///
 /// Reads the `rules` configuration value and resolves it using path prefixes.
@@ -564,24 +582,6 @@ fn get_rules_path(config: &Config) -> Result<Option<PathBuf>> {
     // Otherwise, parse the path with prefix support
     let path = init_cli::parse_config_root(&rules_config);
     Ok(Some(path))
-}
-
-fn restore_tokens_if_available(config: &Config, client_config: &ClientConfig) -> Result<()> {
-    let token_env_var = config
-        .get_string("token_cache_env")
-        .unwrap_or_else(|_| "CULL_GMAIL_TOKEN_CACHE".to_string());
-
-    if let Ok(token_data) = env::var(&token_env_var) {
-        log::info!("Found {token_env_var} environment variable, restoring tokens");
-        restore_tokens_from_string(&token_data, client_config.persist_path())?;
-        log::info!("Tokens successfully restored from environment variable");
-    } else {
-        log::debug!(
-            "No {token_env_var} environment variable found, proceeding with normal token flow"
-        );
-    }
-
-    Ok(())
 }
 
 /// Executes the specified end-of-life action on messages for a Gmail label.
