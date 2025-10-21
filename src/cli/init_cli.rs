@@ -146,6 +146,23 @@ pub struct InitCli {
     )]
     pub credential_file: Option<PathBuf>,
 
+    /// Rules file directory path.
+    ///
+    /// Optionally specify a separate directory for the rules.toml file.
+    /// If not provided, rules.toml will be created in the configuration directory.
+    /// Supports the same path prefixes as --config-dir (h:, c:, r:).
+    ///
+    /// This is useful for:
+    /// - Version controlling rules separately from credentials
+    /// - Sharing rules across multiple configurations
+    /// - Organizing files by security sensitivity
+    #[arg(
+        long = "rules-dir",
+        value_name = "DIR",
+        help = "Optional separate directory for rules.toml file"
+    )]
+    pub rules_dir: Option<String>,
+
     /// Overwrite existing files without prompting.
     ///
     /// When enabled, existing configuration files will be backed up with
@@ -291,6 +308,31 @@ execute = false
 # Environment variable name for token cache (for ephemeral environments)
 token_cache_env = "CULL_GMAIL_TOKEN_CACHE"
 "#;
+
+    /// Generate config file content with custom rules path.
+    fn config_content_with_rules_path(rules_path: &str) -> String {
+        format!(
+            r#"# cull-gmail configuration
+# This file configures the cull-gmail application.
+
+# OAuth2 credential file (relative to config_root)
+credential_file = "credential.json"
+
+# Configuration root directory  
+config_root = "h:.cull-gmail"
+
+# Rules configuration file (supports h:, c:, r: prefixes)
+rules = "{rules_path}"
+
+# Default execution mode (false = dry-run, true = execute)
+# Set to false for safety - you can override with --execute flag
+execute = false
+
+# Environment variable name for token cache (for ephemeral environments)
+token_cache_env = "CULL_GMAIL_TOKEN_CACHE"
+"#
+        )
+    }
 
     const RULES_FILE_CONTENT: &'static str = r#"# Example rules for cull-gmail
 # Each rule targets a Gmail label and specifies an action.
@@ -473,21 +515,37 @@ impl InitCli {
             self.plan_credential_file_operation(&mut operations, config_path, cred_file)?;
         }
 
-        // 3. Write config file
-        self.plan_config_file_operation(&mut operations, config_path)?;
+        // 3. Determine rules directory
+        let rules_dir = self.get_rules_directory(config_path);
 
-        // 4. Write rules file
-        self.plan_rules_file_operation(&mut operations, config_path)?;
+        // 4. Write config file (with correct rules path)
+        self.plan_config_file_operation(&mut operations, config_path, &rules_dir)?;
 
-        // 5. Ensure token directory exists
+        // 5. Write rules file (possibly in separate directory)
+        self.plan_rules_file_operation(&mut operations, &rules_dir)?;
+
+        // 6. Ensure token directory exists
         self.plan_token_directory(&mut operations, config_path);
 
-        // 6. Run OAuth2 if we have credentials
+        // 7. Run OAuth2 if we have credentials
         if credential_file.is_some() {
             self.plan_oauth_operation(&mut operations);
         }
 
         Ok(operations)
+    }
+
+    /// Get the directory where rules.toml should be placed.
+    ///
+    /// Returns the rules directory path, which is either:
+    /// - The custom directory specified with --rules-dir
+    /// - The config directory (default)
+    fn get_rules_directory(&self, config_path: &Path) -> PathBuf {
+        if let Some(ref rules_dir_str) = self.rules_dir {
+            parse_config_root(rules_dir_str)
+        } else {
+            config_path.to_path_buf()
+        }
     }
 
     /// Plan config directory creation.
@@ -526,13 +584,26 @@ impl InitCli {
         &self,
         operations: &mut Vec<Operation>,
         config_path: &Path,
+        rules_dir: &Path,
     ) -> Result<()> {
         let config_file_path = config_path.join(InitDefaults::config_filename());
         self.check_file_conflicts(&config_file_path, "Configuration file")?;
 
+        // Generate rules path for config file
+        let rules_path = rules_dir.join(InitDefaults::rules_filename());
+        let rules_path_str = rules_path.to_string_lossy().to_string();
+
+        let config_contents = if rules_dir == config_path {
+            // Rules in same directory - use relative path
+            InitDefaults::CONFIG_FILE_CONTENT.to_string()
+        } else {
+            // Rules in different directory - use full path
+            InitDefaults::config_content_with_rules_path(&rules_path_str)
+        };
+
         operations.push(Operation::WriteFile {
             path: config_file_path.clone(),
-            contents: InitDefaults::CONFIG_FILE_CONTENT.to_string(),
+            contents: config_contents,
             #[cfg(unix)]
             mode: Some(0o644),
             backup_if_exists: self.should_backup(&config_file_path),
@@ -544,9 +615,18 @@ impl InitCli {
     fn plan_rules_file_operation(
         &self,
         operations: &mut Vec<Operation>,
-        config_path: &Path,
+        rules_dir: &Path,
     ) -> Result<()> {
-        let rules_file_path = config_path.join(InitDefaults::rules_filename());
+        // Create rules directory if it doesn't exist and is different from config dir
+        if !rules_dir.exists() {
+            operations.push(Operation::CreateDir {
+                path: rules_dir.to_path_buf(),
+                #[cfg(unix)]
+                mode: Some(0o755),
+            });
+        }
+
+        let rules_file_path = rules_dir.join(InitDefaults::rules_filename());
         self.check_file_conflicts(&rules_file_path, "Rules file")?;
 
         operations.push(Operation::WriteFile {

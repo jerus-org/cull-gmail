@@ -45,7 +45,7 @@ use std::{
     collections::BTreeMap,
     env,
     fs::{self, read_to_string},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
 use serde::{Deserialize, Serialize};
@@ -492,12 +492,45 @@ impl Rules {
     /// * IO errors when writing to the file system
     /// * File system permission errors
     pub fn save(&self) -> Result<()> {
-        let home_dir = env::home_dir()
-            .ok_or_else(|| Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string()))?;
-        let path = PathBuf::new().join(home_dir).join(".cull-gmail/rules.toml");
+        self.save_to(None)
+    }
+
+    /// Saves the current rule configuration to a specified path.
+    ///
+    /// If no path is provided, defaults to `~/.cull-gmail/rules.toml`.
+    /// The directory is created if it doesn't exist.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - Optional path where the rules should be saved
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use cull_gmail::Rules;
+    /// use std::path::Path;
+    ///
+    /// let rules = Rules::new();
+    /// rules.save_to(Some(Path::new("/custom/path/rules.toml")))
+    ///      .expect("Failed to save");
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// * TOML serialization errors
+    /// * IO errors when writing to the file system
+    /// * File system permission errors
+    pub fn save_to(&self, path: Option<&Path>) -> Result<()> {
+        let save_path = if let Some(p) = path {
+            p.to_path_buf()
+        } else {
+            let home_dir = env::home_dir()
+                .ok_or_else(|| Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string()))?;
+            home_dir.join(".cull-gmail/rules.toml")
+        };
 
         // Ensure directory exists
-        if let Some(parent) = path.parent() {
+        if let Some(parent) = save_path.parent() {
             fs::create_dir_all(parent)?;
         }
 
@@ -505,8 +538,8 @@ impl Rules {
         log::trace!("toml conversion result: {res:#?}");
 
         if let Ok(output) = res {
-            fs::write(&path, output)?;
-            log::trace!("Config saved to {}", path.display());
+            fs::write(&save_path, output)?;
+            log::trace!("Config saved to {}", save_path.display());
         }
 
         Ok(())
@@ -537,12 +570,44 @@ impl Rules {
     /// * TOML parsing errors if the file is malformed
     /// * File not found errors if the configuration doesn't exist
     pub fn load() -> Result<Rules> {
-        let home_dir = env::home_dir()
-            .ok_or_else(|| Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string()))?;
-        let path = PathBuf::new().join(home_dir).join(".cull-gmail/rules.toml");
-        log::trace!("Loading config from {}", path.display());
+        Self::load_from(None)
+    }
 
-        let input = read_to_string(path)?;
+    /// Loads rule configuration from a specified path.
+    ///
+    /// If no path is provided, defaults to `~/.cull-gmail/rules.toml`.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - Optional path to load rules from
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// use cull_gmail::Rules;
+    /// use std::path::Path;
+    ///
+    /// let rules = Rules::load_from(Some(Path::new("/custom/path/rules.toml")))
+    ///     .expect("Failed to load rules");
+    /// ```
+    ///
+    /// # Errors
+    ///
+    /// * IO errors when reading from the file system
+    /// * TOML parsing errors if the file is malformed
+    /// * File not found errors if the configuration doesn't exist
+    pub fn load_from(path: Option<&Path>) -> Result<Rules> {
+        let load_path = if let Some(p) = path {
+            p.to_path_buf()
+        } else {
+            let home_dir = env::home_dir()
+                .ok_or_else(|| Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string()))?;
+            home_dir.join(".cull-gmail/rules.toml")
+        };
+
+        log::trace!("Loading config from {}", load_path.display());
+
+        let input = read_to_string(load_path)?;
         let config = toml::from_str::<Rules>(&input)?;
         Ok(config)
     }
