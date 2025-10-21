@@ -78,6 +78,76 @@ fn test_init_dry_run_new_setup() {
 }
 
 #[test]
+fn test_init_with_separate_rules_directory() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("config");
+    let rules_dir = temp_dir.path().join("rules");
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--config-dir",
+        &format!("c:{}", config_dir.to_string_lossy()),
+        "--rules-dir",
+        &format!("c:{}", rules_dir.to_string_lossy()),
+    ]);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Initialization completed successfully!",
+        ));
+
+    // Verify config directory was created
+    assert!(config_dir.exists());
+    assert!(config_dir.join("cull-gmail.toml").exists());
+    assert!(config_dir.join("gmail1").exists());
+
+    // Verify rules directory was created separately
+    assert!(rules_dir.exists());
+    assert!(rules_dir.join("rules.toml").exists());
+
+    // Verify rules.toml is NOT in config directory
+    assert!(!config_dir.join("rules.toml").exists());
+
+    // Verify config file references the correct rules path
+    let config_content = std::fs::read_to_string(config_dir.join("cull-gmail.toml")).unwrap();
+    let rules_path = rules_dir.join("rules.toml");
+    assert!(config_content.contains(&rules_path.to_string_lossy().to_string()));
+
+    temp_dir.close().unwrap();
+}
+
+#[test]
+fn test_init_rules_dir_dry_run() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("config");
+    let rules_dir = temp_dir.path().join("rules");
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--config-dir",
+        &format!("c:{}", config_dir.to_string_lossy()),
+        "--rules-dir",
+        &format!("c:{}", rules_dir.to_string_lossy()),
+        "--dry-run",
+    ]);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("DRY RUN: No changes will be made"))
+        .stdout(predicate::str::contains("Create directory:"))
+        .stdout(predicate::str::contains("rules.toml"));
+
+    // Verify no directories were created in dry-run
+    assert!(!config_dir.exists());
+    assert!(!rules_dir.exists());
+
+    temp_dir.close().unwrap();
+}
+
+#[test]
 fn test_init_dry_run_with_credential_file() {
     let temp_dir = assert_fs::TempDir::new().unwrap();
     let config_dir = temp_dir.path().join("test-config");
