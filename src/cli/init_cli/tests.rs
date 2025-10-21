@@ -72,6 +72,7 @@ mod unit_tests {
         create_mock_credential_file(temp_dir.path()).unwrap();
 
         let init_cli = InitCli {
+            rules_dir: None,
             config_dir: "test".to_string(),
             credential_file: None,
             force: false,
@@ -88,6 +89,7 @@ mod unit_tests {
     fn test_validate_credential_file_not_found() {
         let temp_dir = TempDir::new().unwrap();
         let init_cli = InitCli {
+            rules_dir: None,
             config_dir: "test".to_string(),
             credential_file: None,
             force: false,
@@ -108,6 +110,7 @@ mod unit_tests {
         fs::write(&credential_path, "invalid json content").unwrap();
 
         let init_cli = InitCli {
+            rules_dir: None,
             config_dir: "test".to_string(),
             credential_file: None,
             force: false,
@@ -131,6 +134,7 @@ mod unit_tests {
         let config_path = temp_dir.path().join("new-config");
 
         let init_cli = InitCli {
+            rules_dir: None,
             config_dir: "test".to_string(),
             credential_file: None,
             force: false,
@@ -183,6 +187,7 @@ mod unit_tests {
         fs::rename(temp_dir.path().join("credential.json"), &cred_path).unwrap();
 
         let init_cli = InitCli {
+            rules_dir: None,
             config_dir: "test".to_string(),
             credential_file: None,
             force: false,
@@ -220,6 +225,7 @@ mod unit_tests {
         fs::write(config_path.join("cull-gmail.toml"), "existing config").unwrap();
 
         let init_cli = InitCli {
+            rules_dir: None,
             config_dir: "test".to_string(),
             credential_file: None,
             force: false,
@@ -243,6 +249,7 @@ mod unit_tests {
         fs::write(config_path.join("rules.toml"), "existing rules").unwrap();
 
         let init_cli = InitCli {
+            rules_dir: None,
             config_dir: "test".to_string(),
             credential_file: None,
             force: true,
@@ -275,6 +282,7 @@ mod unit_tests {
         fs::write(&test_file, "test content").unwrap();
 
         let init_cli = InitCli {
+            rules_dir: None,
             config_dir: "test".to_string(),
             credential_file: None,
             force: false,
@@ -317,6 +325,7 @@ mod unit_tests {
         fs::write(&test_file, "test content").unwrap();
 
         let init_cli = InitCli {
+            rules_dir: None,
             config_dir: "test".to_string(),
             credential_file: None,
             force: false,

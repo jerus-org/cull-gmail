@@ -60,7 +60,13 @@ use cull_gmail::{ClientConfig, Error, GmailClient, Result};
 use lazy_regex::{Lazy, Regex, lazy_regex};
 
 /// Parse configuration root path with h:, c:, r: prefixes.
-fn parse_config_root(path_str: &str) -> PathBuf {
+///
+/// Supports:
+/// - `h:path` - Relative to home directory
+/// - `c:path` - Relative to current directory
+/// - `r:path` - Relative to filesystem root
+/// - `path` - Use path as-is
+pub fn parse_config_root(path_str: &str) -> PathBuf {
     static ROOT_CONFIG: Lazy<Regex> = lazy_regex!(r"^(?P<class>[hrc]):(?P<path>.+)$");
 
     if let Some(captures) = ROOT_CONFIG.captures(path_str) {

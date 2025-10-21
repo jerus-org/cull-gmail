@@ -263,7 +263,21 @@ impl RulesCli {
     /// - **Error isolation**: Subcommand errors don't affect rule loading
     /// - **State preservation**: Configuration errors don't corrupt existing rules
     pub async fn run(&self, client: &mut GmailClient) -> Result<()> {
-        let rules = get_rules()?;
+        self.run_with_rules_path(client, None).await
+    }
+
+    /// Executes the rules command with an optional custom rules path.
+    ///
+    /// # Arguments
+    ///
+    /// * `client` - Mutable Gmail client for API operations
+    /// * `rules_path` - Optional path to rules file
+    pub async fn run_with_rules_path(
+        &self,
+        client: &mut GmailClient,
+        rules_path: Option<&Path>,
+    ) -> Result<()> {
+        let rules = get_rules_from(rules_path)?;
 
         match &self.sub_command {
             SubCmds::Config(config_cli) => config_cli.run(rules),
