@@ -417,13 +417,13 @@ impl InitCli {
                 .with_prompt("Do you have a credential file to set up now?")
                 .default(true)
                 .interact()
-                .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {}", e)))?;
+                .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {e}")))?;
 
             if should_provide {
                 let cred_path: String = Input::new()
                     .with_prompt("Path to credential JSON file")
                     .interact_text()
-                    .map_err(|e| Error::FileIo(format!("Interactive input failed: {}", e)))?;
+                    .map_err(|e| Error::FileIo(format!("Interactive input failed: {e}")))?;
 
                 let cred_file = PathBuf::from(cred_path);
                 self.validate_credential_file(&cred_file)?;
@@ -446,11 +446,11 @@ impl InitCli {
         }
 
         let content = fs::read_to_string(path)
-            .map_err(|e| Error::FileIo(format!("Cannot read credential file: {}", e)))?;
+            .map_err(|e| Error::FileIo(format!("Cannot read credential file: {e}")))?;
 
         // Try to parse as ConsoleApplicationSecret to validate format
         serde_json::from_str::<ConsoleApplicationSecret>(&content).map_err(|e| {
-            Error::SerializationError(format!("Invalid credential file format: {}", e))
+            Error::SerializationError(format!("Invalid credential file format: {e}"))
         })?;
 
         log::info!("Credential file validated: {}", path.display());
@@ -588,7 +588,7 @@ impl InitCli {
 
         for (i, operation) in operations.iter().enumerate() {
             pb.set_position(i as u64);
-            pb.set_message(format!("{}", operation));
+            pb.set_message(format!("{operation}"));
 
             self.execute_operation(operation).await?;
 
@@ -608,7 +608,7 @@ impl InitCli {
             Operation::CreateDir { path, .. } => {
                 log::info!("Creating directory: {}", path.display());
                 fs::create_dir_all(path)
-                    .map_err(|e| Error::FileIo(format!("Failed to create directory: {}", e)))?;
+                    .map_err(|e| Error::FileIo(format!("Failed to create directory: {e}")))?;
 
                 #[cfg(unix)]
                 if let Some(mode) = operation.get_mode() {
@@ -626,10 +626,10 @@ impl InitCli {
                     self.create_backup(to)?;
                 } else if to.exists() && self.interactive {
                     let should_overwrite = Confirm::new()
-                        .with_prompt(&format!("Overwrite existing file {}?", to.display()))
+                        .with_prompt(format!("Overwrite existing file {}?", to.display()))
                         .default(false)
                         .interact()
-                        .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {}", e)))?;
+                        .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {e}")))?;
 
                     if !should_overwrite {
                         log::info!("Skipping file copy due to user choice");
@@ -641,7 +641,7 @@ impl InitCli {
 
                 log::info!("Copying file: {} → {}", from.display(), to.display());
                 fs::copy(from, to)
-                    .map_err(|e| Error::FileIo(format!("Failed to copy file: {}", e)))?;
+                    .map_err(|e| Error::FileIo(format!("Failed to copy file: {e}")))?;
 
                 #[cfg(unix)]
                 if let Some(mode) = operation.get_mode() {
@@ -659,10 +659,10 @@ impl InitCli {
                     self.create_backup(path)?;
                 } else if path.exists() && self.interactive {
                     let should_overwrite = Confirm::new()
-                        .with_prompt(&format!("Overwrite existing file {}?", path.display()))
+                        .with_prompt(format!("Overwrite existing file {}?", path.display()))
                         .default(false)
                         .interact()
-                        .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {}", e)))?;
+                        .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {e}")))?;
 
                     if !should_overwrite {
                         log::info!("Skipping file write due to user choice");
@@ -674,7 +674,7 @@ impl InitCli {
 
                 log::info!("Writing file: {}", path.display());
                 fs::write(path, contents)
-                    .map_err(|e| Error::FileIo(format!("Failed to write file: {}", e)))?;
+                    .map_err(|e| Error::FileIo(format!("Failed to write file: {e}")))?;
 
                 #[cfg(unix)]
                 if let Some(mode) = operation.get_mode() {
@@ -685,7 +685,7 @@ impl InitCli {
             Operation::EnsureTokenDir { path, .. } => {
                 log::info!("Ensuring token directory: {}", path.display());
                 fs::create_dir_all(path).map_err(|e| {
-                    Error::FileIo(format!("Failed to create token directory: {}", e))
+                    Error::FileIo(format!("Failed to create token directory: {e}"))
                 })?;
 
                 #[cfg(unix)]
@@ -713,7 +713,7 @@ impl InitCli {
     /// Create a timestamped backup of a file.
     fn create_backup(&self, file_path: &Path) -> Result<()> {
         let timestamp = Local::now().format("%Y%m%d%H%M%S");
-        let backup_path = file_path.with_extension(format!("bak-{}", timestamp));
+        let backup_path = file_path.with_extension(format!("bak-{timestamp}"));
 
         log::info!(
             "Creating backup: {} → {}",
@@ -721,7 +721,7 @@ impl InitCli {
             backup_path.display()
         );
         fs::copy(file_path, &backup_path)
-            .map_err(|e| Error::FileIo(format!("Failed to create backup: {}", e)))?;
+            .map_err(|e| Error::FileIo(format!("Failed to create backup: {e}")))?;
 
         Ok(())
     }
@@ -732,13 +732,13 @@ impl InitCli {
         use std::os::unix::fs::PermissionsExt;
 
         let metadata = fs::metadata(path)
-            .map_err(|e| Error::FileIo(format!("Failed to get file metadata: {}", e)))?;
+            .map_err(|e| Error::FileIo(format!("Failed to get file metadata: {e}")))?;
 
         let mut permissions = metadata.permissions();
         permissions.set_mode(mode);
 
         fs::set_permissions(path, permissions)
-            .map_err(|e| Error::FileIo(format!("Failed to set file permissions: {}", e)))?;
+            .map_err(|e| Error::FileIo(format!("Failed to set file permissions: {e}")))?;
 
         log::debug!("Set permissions {:o} on {}", mode, path.display());
         Ok(())
@@ -760,7 +760,7 @@ impl InitCli {
         // Initialize Gmail client which will trigger OAuth flow if needed
         let client = GmailClient::new_with_config(client_config)
             .await
-            .map_err(|e| Error::FileIo(format!("OAuth2 authentication failed: {}", e)))?;
+            .map_err(|e| Error::FileIo(format!("OAuth2 authentication failed: {e}")))?;
 
         // The client initialization already verified the connection by fetching labels
         // We can just show some labels to confirm it's working
@@ -821,3 +821,6 @@ impl Operation {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

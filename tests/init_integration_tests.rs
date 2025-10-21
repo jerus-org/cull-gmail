@@ -1,0 +1,319 @@
+//! Integration tests for the init CLI command.
+
+use assert_cmd::prelude::*;
+use assert_fs::prelude::*;
+use predicates::prelude::*;
+use std::process::Command;
+
+#[test]
+fn test_init_help() {
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args(["init", "--help"]);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Initialize cull-gmail configuration"))
+        .stdout(predicate::str::contains("--config-dir"))
+        .stdout(predicate::str::contains("--credential-file"))
+        .stdout(predicate::str::contains("--dry-run"))
+        .stdout(predicate::str::contains("--interactive"))
+        .stdout(predicate::str::contains("--force"));
+}
+
+#[test]
+fn test_init_dry_run_new_setup() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("test-config");
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--config-dir", 
+        &format!("c:{}", config_dir.to_string_lossy()),
+        "--dry-run"
+    ]);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("DRY RUN: No changes will be made"))
+        .stdout(predicate::str::contains("Planned operations:"))
+        .stdout(predicate::str::contains("Create directory:"))
+        .stdout(predicate::str::contains("Write file:"))
+        .stdout(predicate::str::contains("cull-gmail.toml"))
+        .stdout(predicate::str::contains("rules.toml"))
+        .stdout(predicate::str::contains("Ensure token directory:"))
+        .stdout(predicate::str::contains("gmail1"))
+        .stdout(predicate::str::contains("OAuth2 authentication skipped"))
+        .stdout(predicate::str::contains("To apply these changes, run without --dry-run"));
+
+    // Verify no files were actually created
+    assert!(!config_dir.exists());
+
+    temp_dir.close().unwrap();
+}
+
+#[test]
+fn test_init_dry_run_with_credential_file() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("test-config");
+    let credential_file = temp_dir.child("credential.json");
+    
+    // Create a mock credential file
+    credential_file.write_str(r#"{
+        "installed": {
+            "client_id": "test-client-id.googleusercontent.com",
+            "client_secret": "test-client-secret",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": ["http://localhost"]
+        }
+    }"#).unwrap();
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--config-dir", 
+        &format!("c:{}", config_dir.to_string_lossy()),
+        "--credential-file",
+        credential_file.path().to_str().unwrap(),
+        "--dry-run"
+    ]);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("DRY RUN: No changes will be made"))
+        .stdout(predicate::str::contains("Planned operations:"))
+        .stdout(predicate::str::contains("Copy file:"))
+        .stdout(predicate::str::contains("credential.json"))
+        .stdout(predicate::str::contains("OAuth2 authentication would open"));
+
+    // Verify no files were actually created
+    assert!(!config_dir.exists());
+
+    temp_dir.close().unwrap();
+}
+
+#[test]
+fn test_init_actual_execution() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("test-config");
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--config-dir", 
+        &format!("c:{}", config_dir.to_string_lossy()),
+    ]);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("Initialization completed successfully!"))
+        .stdout(predicate::str::contains("Configuration directory:"))
+        .stdout(predicate::str::contains("Files created:"))
+        .stdout(predicate::str::contains("cull-gmail.toml"))
+        .stdout(predicate::str::contains("rules.toml"))
+        .stdout(predicate::str::contains("Next steps:"));
+
+    // Verify files were actually created
+    assert!(config_dir.exists());
+    assert!(config_dir.join("cull-gmail.toml").exists());
+    assert!(config_dir.join("rules.toml").exists());
+    assert!(config_dir.join("gmail1").exists());
+
+    // Verify file contents
+    let config_content = std::fs::read_to_string(config_dir.join("cull-gmail.toml")).unwrap();
+    assert!(config_content.contains("credential_file = \"credential.json\""));
+    assert!(config_content.contains("execute = false"));
+
+    let rules_content = std::fs::read_to_string(config_dir.join("rules.toml")).unwrap();
+    assert!(rules_content.contains("# Example rules for cull-gmail"));
+
+    temp_dir.close().unwrap();
+}
+
+#[test]
+fn test_init_force_overwrite() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("test-config");
+    
+    // Create config directory and file first
+    std::fs::create_dir_all(&config_dir).unwrap();
+    std::fs::write(config_dir.join("cull-gmail.toml"), "old config").unwrap();
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--config-dir", 
+        &format!("c:{}", config_dir.to_string_lossy()),
+        "--force",
+        "--dry-run"
+    ]);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("DRY RUN: No changes will be made"))
+        .stdout(predicate::str::contains("(with backup)"));
+
+    temp_dir.close().unwrap();
+}
+
+#[test]
+fn test_init_existing_config_no_force_fails() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("test-config");
+    
+    // Create config directory and file first
+    std::fs::create_dir_all(&config_dir).unwrap();
+    std::fs::write(config_dir.join("cull-gmail.toml"), "existing config").unwrap();
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--config-dir", 
+        &format!("c:{}", config_dir.to_string_lossy()),
+    ]);
+
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("already exists"))
+        .stderr(predicate::str::contains("--force"))
+        .stderr(predicate::str::contains("--interactive"));
+
+    temp_dir.close().unwrap();
+}
+
+#[test]
+fn test_init_with_credential_file_copy() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("test-config");
+    let credential_file = temp_dir.child("source_credential.json");
+    
+    // Create a mock credential file
+    credential_file.write_str(r#"{
+        "installed": {
+            "client_id": "test-client-id.googleusercontent.com",
+            "client_secret": "test-client-secret",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": ["http://localhost"]
+        }
+    }"#).unwrap();
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--config-dir", 
+        &format!("c:{}", config_dir.to_string_lossy()),
+        "--credential-file",
+        credential_file.path().to_str().unwrap(),
+        // Skip OAuth for this test since we don't have real credentials
+    ]);
+
+    // This will fail at OAuth step, but we can check that files were created correctly
+    let _output = cmd.output().unwrap();
+    
+    // Verify files were created up to the OAuth step
+    assert!(config_dir.exists());
+    assert!(config_dir.join("cull-gmail.toml").exists());
+    assert!(config_dir.join("rules.toml").exists());
+    assert!(config_dir.join("credential.json").exists());
+    assert!(config_dir.join("gmail1").exists());
+
+    // Verify credential file was copied
+    let copied_credential_content = std::fs::read_to_string(config_dir.join("credential.json")).unwrap();
+    assert!(copied_credential_content.contains("test-client-id.googleusercontent.com"));
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        // Verify credential file has secure permissions
+        let metadata = std::fs::metadata(config_dir.join("credential.json")).unwrap();
+        let permissions = metadata.permissions();
+        assert_eq!(permissions.mode() & 0o777, 0o600);
+    }
+
+    temp_dir.close().unwrap();
+}
+
+#[test]
+fn test_init_invalid_credential_file() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("test-config");
+    let credential_file = temp_dir.child("invalid_credential.json");
+    
+    // Create an invalid credential file
+    credential_file.write_str("invalid json content").unwrap();
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--config-dir", 
+        &format!("c:{}", config_dir.to_string_lossy()),
+        "--credential-file",
+        credential_file.path().to_str().unwrap(),
+    ]);
+
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("Invalid credential file format"));
+
+    temp_dir.close().unwrap();
+}
+
+#[test]
+fn test_init_nonexistent_credential_file() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("test-config");
+    let nonexistent_file = temp_dir.path().join("nonexistent.json");
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--config-dir", 
+        &format!("c:{}", config_dir.to_string_lossy()),
+        "--credential-file",
+        nonexistent_file.to_str().unwrap(),
+    ]);
+
+    cmd.assert()
+        .failure()
+        .stderr(predicate::str::contains("not found"));
+
+    temp_dir.close().unwrap();
+}
+
+// This test would require real Gmail credentials and should be ignored by default
+#[test]
+#[ignore = "requires real Gmail OAuth2 credentials"]
+fn test_init_oauth_integration() {
+    // This test should only run when CULL_GMAIL_TEST_CREDENTIAL_FILE is set
+    let credential_file = std::env::var("CULL_GMAIL_TEST_CREDENTIAL_FILE")
+        .expect("CULL_GMAIL_TEST_CREDENTIAL_FILE must be set for OAuth integration test");
+
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("test-config");
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--config-dir", 
+        &format!("c:{}", config_dir.to_string_lossy()),
+        "--credential-file",
+        &credential_file,
+    ]);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("OAuth2 authentication successful!"))
+        .stdout(predicate::str::contains("gmail1/ (OAuth2 token cache)"));
+
+    // Verify token files were created
+    assert!(config_dir.join("gmail1").exists());
+    
+    // Check if there are token-related files in the gmail1 directory
+    let gmail_dir_contents = std::fs::read_dir(config_dir.join("gmail1")).unwrap();
+    let has_token_files = gmail_dir_contents.count() > 0;
+    assert!(has_token_files, "Expected token files to be created in gmail1 directory");
+
+    temp_dir.close().unwrap();
+}
