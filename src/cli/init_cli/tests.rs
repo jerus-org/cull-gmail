@@ -21,6 +21,30 @@ mod unit_tests {
         fs::write(dir.join("credential.json"), credential_content)
     }
 
+    /// Test helper to create a default InitCli instance
+    fn create_test_init_cli() -> InitCli {
+        InitCli {
+            rules_dir: None,
+            config_dir: "test".to_string(),
+            credential_file: None,
+            force: false,
+            dry_run: false,
+            interactive: false,
+        }
+    }
+
+    /// Test helper to create an InitCli instance with force enabled
+    fn create_test_init_cli_with_force() -> InitCli {
+        InitCli {
+            rules_dir: None,
+            config_dir: "test".to_string(),
+            credential_file: None,
+            force: true,
+            dry_run: false,
+            interactive: false,
+        }
+    }
+
     #[test]
     fn test_parse_config_root_home() {
         let result = parse_config_root("h:.test-config");
@@ -71,14 +95,7 @@ mod unit_tests {
         let temp_dir = TempDir::new().unwrap();
         create_mock_credential_file(temp_dir.path()).unwrap();
 
-        let init_cli = InitCli {
-            rules_dir: None,
-            config_dir: "test".to_string(),
-            credential_file: None,
-            force: false,
-            dry_run: false,
-            interactive: false,
-        };
+        let init_cli = create_test_init_cli();
 
         let credential_path = temp_dir.path().join("credential.json");
         let result = init_cli.validate_credential_file(&credential_path);
@@ -88,14 +105,7 @@ mod unit_tests {
     #[test]
     fn test_validate_credential_file_not_found() {
         let temp_dir = TempDir::new().unwrap();
-        let init_cli = InitCli {
-            rules_dir: None,
-            config_dir: "test".to_string(),
-            credential_file: None,
-            force: false,
-            dry_run: false,
-            interactive: false,
-        };
+        let init_cli = create_test_init_cli();
 
         let nonexistent_path = temp_dir.path().join("nonexistent.json");
         let result = init_cli.validate_credential_file(&nonexistent_path);
@@ -109,14 +119,7 @@ mod unit_tests {
         let credential_path = temp_dir.path().join("invalid.json");
         fs::write(&credential_path, "invalid json content").unwrap();
 
-        let init_cli = InitCli {
-            rules_dir: None,
-            config_dir: "test".to_string(),
-            credential_file: None,
-            force: false,
-            dry_run: false,
-            interactive: false,
-        };
+        let init_cli = create_test_init_cli();
 
         let result = init_cli.validate_credential_file(&credential_path);
         assert!(result.is_err());
@@ -133,14 +136,7 @@ mod unit_tests {
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("new-config");
 
-        let init_cli = InitCli {
-            rules_dir: None,
-            config_dir: "test".to_string(),
-            credential_file: None,
-            force: false,
-            dry_run: false,
-            interactive: false,
-        };
+        let init_cli = create_test_init_cli();
 
         let operations = init_cli.plan_operations(&config_path, None).unwrap();
 
@@ -186,14 +182,7 @@ mod unit_tests {
         create_mock_credential_file(temp_dir.path()).unwrap();
         fs::rename(temp_dir.path().join("credential.json"), &cred_path).unwrap();
 
-        let init_cli = InitCli {
-            rules_dir: None,
-            config_dir: "test".to_string(),
-            credential_file: None,
-            force: false,
-            dry_run: false,
-            interactive: false,
-        };
+        let init_cli = create_test_init_cli();
 
         let operations = init_cli
             .plan_operations(&config_path, Some(&cred_path))
@@ -224,14 +213,7 @@ mod unit_tests {
         // Create existing config file
         fs::write(config_path.join("cull-gmail.toml"), "existing config").unwrap();
 
-        let init_cli = InitCli {
-            rules_dir: None,
-            config_dir: "test".to_string(),
-            credential_file: None,
-            force: false,
-            dry_run: false,
-            interactive: false,
-        };
+        let init_cli = create_test_init_cli();
 
         let result = init_cli.plan_operations(&config_path, None);
         assert!(result.is_err());
@@ -248,14 +230,7 @@ mod unit_tests {
         fs::write(config_path.join("cull-gmail.toml"), "existing config").unwrap();
         fs::write(config_path.join("rules.toml"), "existing rules").unwrap();
 
-        let init_cli = InitCli {
-            rules_dir: None,
-            config_dir: "test".to_string(),
-            credential_file: None,
-            force: true,
-            dry_run: false,
-            interactive: false,
-        };
+        let init_cli = create_test_init_cli_with_force();
 
         let operations = init_cli.plan_operations(&config_path, None).unwrap();
 
@@ -281,14 +256,7 @@ mod unit_tests {
         let test_file = temp_dir.path().join("test.txt");
         fs::write(&test_file, "test content").unwrap();
 
-        let init_cli = InitCli {
-            rules_dir: None,
-            config_dir: "test".to_string(),
-            credential_file: None,
-            force: false,
-            dry_run: false,
-            interactive: false,
-        };
+        let init_cli = create_test_init_cli();
 
         let result = init_cli.create_backup(&test_file);
         assert!(result.is_ok());
@@ -324,14 +292,7 @@ mod unit_tests {
         let test_file = temp_dir.path().join("test.txt");
         fs::write(&test_file, "test content").unwrap();
 
-        let init_cli = InitCli {
-            rules_dir: None,
-            config_dir: "test".to_string(),
-            credential_file: None,
-            force: false,
-            dry_run: false,
-            interactive: false,
-        };
+        let init_cli = create_test_init_cli();
 
         let result = init_cli.set_permissions(&test_file, 0o600);
         assert!(result.is_ok());
