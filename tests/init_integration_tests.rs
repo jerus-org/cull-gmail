@@ -2,8 +2,29 @@
 
 use assert_cmd::prelude::*;
 use assert_fs::prelude::*;
+use assert_fs::fixture::ChildPath;
 use predicates::prelude::*;
 use std::process::Command;
+
+/// Creates a mock OAuth2 credential file with test data.
+/// 
+/// This helper function creates a valid OAuth2 credential JSON file
+/// suitable for testing credential file handling without using real credentials.
+fn create_mock_credential_file(credential_file: &ChildPath) {
+    credential_file
+        .write_str(
+            r#"{
+        "installed": {
+            "client_id": "test-client-id.googleusercontent.com",
+            "client_secret": "test-client-secret",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "redirect_uris": ["http://localhost"]
+        }
+    }"#,
+        )
+        .unwrap();
+}
 
 #[test]
 fn test_init_help() {
@@ -63,19 +84,7 @@ fn test_init_dry_run_with_credential_file() {
     let credential_file = temp_dir.child("credential.json");
 
     // Create a mock credential file
-    credential_file
-        .write_str(
-            r#"{
-        "installed": {
-            "client_id": "test-client-id.googleusercontent.com",
-            "client_secret": "test-client-secret",
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "redirect_uris": ["http://localhost"]
-        }
-    }"#,
-        )
-        .unwrap();
+    create_mock_credential_file(&credential_file);
 
     let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
     cmd.args([
@@ -199,19 +208,7 @@ fn test_init_with_credential_file_copy() {
     let credential_file = temp_dir.child("source_credential.json");
 
     // Create a mock credential file
-    credential_file
-        .write_str(
-            r#"{
-        "installed": {
-            "client_id": "test-client-id.googleusercontent.com",
-            "client_secret": "test-client-secret",
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "redirect_uris": ["http://localhost"]
-        }
-    }"#,
-        )
-        .unwrap();
+    create_mock_credential_file(&credential_file);
 
     let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
     cmd.args([
