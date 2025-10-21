@@ -506,13 +506,13 @@ impl InitCli {
         &self,
         operations: &mut Vec<Operation>,
         config_path: &Path,
-        cred_file: &PathBuf,
+        cred_file: &Path,
     ) -> Result<()> {
         let dest_path = config_path.join(InitDefaults::credential_filename());
         self.check_file_conflicts(&dest_path, "Credential file")?;
 
         operations.push(Operation::CopyFile {
-            from: cred_file.clone(),
+            from: cred_file.to_path_buf(),
             to: dest_path.clone(),
             #[cfg(unix)]
             mode: Some(0o600),
@@ -674,9 +674,7 @@ impl InitCli {
             Operation::RunOAuth2 {
                 config_root,
                 credential_file,
-            } => {
-                self.execute_oauth_flow(config_root, credential_file).await
-            }
+            } => self.execute_oauth_flow(config_root, credential_file).await,
         }
     }
 
@@ -697,7 +695,8 @@ impl InitCli {
         backup_if_exists: bool,
         operation: &Operation,
     ) -> Result<()> {
-        self.handle_existing_file(to, backup_if_exists, "file copy").await?;
+        self.handle_existing_file(to, backup_if_exists, "file copy")
+            .await?;
 
         log::info!("Copying file: {} → {}", from.display(), to.display());
         fs::copy(from, to).map_err(|e| Error::FileIo(format!("Failed to copy file: {e}")))?;
@@ -713,16 +712,22 @@ impl InitCli {
         backup_if_exists: bool,
         operation: &Operation,
     ) -> Result<()> {
-        self.handle_existing_file(path, backup_if_exists, "file write").await?;
+        self.handle_existing_file(path, backup_if_exists, "file write")
+            .await?;
 
         log::info!("Writing file: {}", path.display());
-        fs::write(path, contents).map_err(|e| Error::FileIo(format!("Failed to write file: {e}")))?;
+        fs::write(path, contents)
+            .map_err(|e| Error::FileIo(format!("Failed to write file: {e}")))?;
 
         self.apply_permissions_if_needed(path, operation)
     }
 
     /// Execute token directory creation operation.
-    async fn execute_ensure_token_directory(&self, path: &Path, operation: &Operation) -> Result<()> {
+    async fn execute_ensure_token_directory(
+        &self,
+        path: &Path,
+        operation: &Operation,
+    ) -> Result<()> {
         log::info!("Ensuring token directory: {}", path.display());
         fs::create_dir_all(path)
             .map_err(|e| Error::FileIo(format!("Failed to create token directory: {e}")))?;
@@ -774,7 +779,7 @@ impl InitCli {
             .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {e}")))?;
 
         if !should_overwrite {
-            log::info!("Skipping {} due to user choice", operation_name);
+            log::info!("Skipping {operation_name} due to user choice");
             return Ok(());
         }
 
