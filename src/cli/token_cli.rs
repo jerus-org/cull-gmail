@@ -6,7 +6,7 @@
 //! ## Overview
 //!
 //! The token management system allows users to:
-//! 
+//!
 //! - **Export tokens**: Extract current OAuth2 tokens to a compressed base64 string
 //! - **Import tokens**: Recreate token files from environment variables
 //! - **Ephemeral workflows**: Run in clean environments by restoring tokens from env vars
@@ -17,7 +17,7 @@
 //! ```bash
 //! # Export tokens from development environment
 //! cull-gmail token export
-//! 
+//!
 //! # Set environment variable in container
 //! docker run -e CULL_GMAIL_TOKEN_CACHE="<exported-string>" my-app
 //! ```
@@ -26,7 +26,7 @@
 //! ```bash
 //! # Store tokens as secret in CI system
 //! cull-gmail token export > token.secret
-//! 
+//!
 //! # Use in pipeline
 //! export CULL_GMAIL_TOKEN_CACHE=$(cat token.secret)
 //! cull-gmail messages list --query "older_than:30d"
@@ -36,7 +36,7 @@
 //! ```bash
 //! # One-time setup: export tokens
 //! TOKENS=$(cull-gmail token export)
-//! 
+//!
 //! # Recurring job: restore and use
 //! export CULL_GMAIL_TOKEN_CACHE="$TOKENS"
 //! cull-gmail rules run
@@ -57,12 +57,12 @@
 //! - Token metadata and expiration
 //! - Encoded as base64 for environment variable compatibility
 
+use crate::{ClientConfig, Result};
+use base64::{Engine as _, engine::general_purpose::STANDARD as Base64Engine};
+use clap::Subcommand;
+use cull_gmail::Error;
 use std::fs;
 use std::path::Path;
-use clap::Subcommand;
-use base64::{Engine as _, engine::general_purpose::STANDARD as Base64Engine};
-use crate::{Result, ClientConfig};
-use cull_gmail::Error;
 
 /// Token management operations for ephemeral environments.
 ///
@@ -81,10 +81,10 @@ use cull_gmail::Error;
 /// ```bash
 /// # Export to stdout
 /// cull-gmail token export
-/// 
+///
 /// # Export to file
 /// cull-gmail token export > tokens.env
-/// 
+///
 /// # Export to environment variable
 /// export MY_TOKENS=$(cull-gmail token export)
 /// ```
@@ -93,7 +93,7 @@ use cull_gmail::Error;
 /// ```bash
 /// # Set environment variable
 /// export CULL_GMAIL_TOKEN_CACHE="<base64-string>"
-/// 
+///
 /// # Run normally - tokens will be restored automatically
 /// cull-gmail labels
 /// ```
@@ -116,7 +116,7 @@ pub enum TokenCommand {
     /// or CI/CD secret systems.
     ///
     /// ## Output Format
-    /// 
+    ///
     /// The output is a single line containing a base64-encoded string that represents
     /// the compressed JSON structure of all OAuth2 tokens and metadata.
     ///
@@ -125,15 +125,15 @@ pub enum TokenCommand {
     /// ```bash
     /// # Basic export
     /// cull-gmail token export
-    /// 
+    ///
     /// # Store in environment variable
     /// export TOKENS=$(cull-gmail token export)
-    /// 
+    ///
     /// # Save to file
     /// cull-gmail token export > token.secret
     /// ```
     Export,
-    
+
     /// Import OAuth2 tokens from environment variable.
     ///
     /// This command is typically not called directly, as token import happens
@@ -145,7 +145,7 @@ pub enum TokenCommand {
     /// ```bash
     /// # Set the environment variable
     /// export CULL_GMAIL_TOKEN_CACHE="<base64-string>"
-    /// 
+    ///
     /// # Import explicitly (usually automatic)
     /// cull-gmail token import
     /// ```
@@ -210,66 +210,73 @@ impl TokenCli {
 async fn export_tokens(config: &ClientConfig) -> Result<()> {
     let token_path = Path::new(config.persist_path());
     let mut token_data = std::collections::HashMap::new();
-    
+
     if token_path.is_file() {
         // OAuth2 token is stored as a single file
-        let filename = token_path.file_name()
+        let filename = token_path
+            .file_name()
             .and_then(|n| n.to_str())
             .ok_or_else(|| Error::FileIo("Invalid token filename".to_string()))?;
-            
-        let content = fs::read_to_string(&token_path)
-            .map_err(|e| Error::FileIo(format!("Failed to read token file: {}", e)))?;
-            
+
+        let content = fs::read_to_string(token_path)
+            .map_err(|e| Error::FileIo(format!("Failed to read token file: {e}")))?;
+
         token_data.insert(filename.to_string(), content);
     } else if token_path.is_dir() {
         // Token directory with multiple files (legacy support)
         for entry in fs::read_dir(token_path).map_err(|e| Error::FileIo(e.to_string()))? {
             let entry = entry.map_err(|e| Error::FileIo(e.to_string()))?;
             let path = entry.path();
-            
+
             if path.is_file() {
-                let filename = path.file_name()
+                let filename = path
+                    .file_name()
                     .and_then(|n| n.to_str())
                     .ok_or_else(|| Error::FileIo("Invalid filename in token cache".to_string()))?;
-                    
-                let content = fs::read_to_string(&path)
-                    .map_err(|e| Error::FileIo(format!("Failed to read token file {}: {}", filename, e)))?;
-                    
+
+                let content = fs::read_to_string(&path).map_err(|e| {
+                    Error::FileIo(format!("Failed to read token file {filename}: {e}"))
+                })?;
+
                 token_data.insert(filename.to_string(), content);
             }
         }
     } else {
         return Err(Error::TokenNotFound(format!(
-            "Token cache not found: {}", 
+            "Token cache not found: {}",
             token_path.display()
         )));
     }
-    
+
     if token_data.is_empty() {
-        return Err(Error::TokenNotFound("No token data found in cache".to_string()));
+        return Err(Error::TokenNotFound(
+            "No token data found in cache".to_string(),
+        ));
     }
-    
+
     // Serialize to JSON
     let json_data = serde_json::to_string(&token_data)
-        .map_err(|e| Error::SerializationError(format!("Failed to serialize token data: {}", e)))?;
-    
+        .map_err(|e| Error::SerializationError(format!("Failed to serialize token data: {e}")))?;
+
     // Compress using flate2
-    use flate2::write::GzEncoder;
     use flate2::Compression;
+    use flate2::write::GzEncoder;
     use std::io::Write;
-    
+
     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-    encoder.write_all(json_data.as_bytes())
-        .map_err(|e| Error::SerializationError(format!("Failed to compress token data: {}", e)))?;
-    let compressed_data = encoder.finish()
-        .map_err(|e| Error::SerializationError(format!("Failed to finalize compression: {}", e)))?;
-    
+    encoder
+        .write_all(json_data.as_bytes())
+        .map_err(|e| Error::SerializationError(format!("Failed to compress token data: {e}")))?;
+    let compressed_data = encoder
+        .finish()
+        .map_err(|e| Error::SerializationError(format!("Failed to finalize compression: {e}")))?;
+
     // Encode to base64
     let encoded = Base64Engine.encode(&compressed_data);
-    
+
     // Output to stdout
-    println!("{}", encoded);
-    
+    println!("{encoded}");
+
     Ok(())
 }
 
@@ -302,13 +309,12 @@ async fn export_tokens(config: &ClientConfig) -> Result<()> {
 /// - Decoding/decompression errors for malformed token data
 /// - I/O errors creating token files
 pub async fn import_tokens(config: &ClientConfig) -> Result<()> {
-    let token_env = std::env::var("CULL_GMAIL_TOKEN_CACHE")
-        .map_err(|_| Error::TokenNotFound(
-            "CULL_GMAIL_TOKEN_CACHE environment variable not set".to_string()
-        ))?;
-    
+    let token_env = std::env::var("CULL_GMAIL_TOKEN_CACHE").map_err(|_| {
+        Error::TokenNotFound("CULL_GMAIL_TOKEN_CACHE environment variable not set".to_string())
+    })?;
+
     restore_tokens_from_string(&token_env, config.persist_path())?;
-    
+
     log::info!("Tokens successfully imported from environment variable");
     Ok(())
 }
@@ -332,85 +338,100 @@ pub async fn import_tokens(config: &ClientConfig) -> Result<()> {
 /// Created token files are set to 600 (owner read/write only) for security.
 pub fn restore_tokens_from_string(token_string: &str, persist_path: &str) -> Result<()> {
     // Decode from base64
-    let compressed_data = Base64Engine.decode(token_string.trim())
-        .map_err(|e| Error::SerializationError(format!("Failed to decode base64 token data: {}", e)))?;
-    
+    let compressed_data = Base64Engine.decode(token_string.trim()).map_err(|e| {
+        Error::SerializationError(format!("Failed to decode base64 token data: {e}"))
+    })?;
+
     // Decompress
     use flate2::read::GzDecoder;
     use std::io::Read;
-    
+
     let mut decoder = GzDecoder::new(compressed_data.as_slice());
     let mut json_data = String::new();
-    decoder.read_to_string(&mut json_data)
-        .map_err(|e| Error::SerializationError(format!("Failed to decompress token data: {}", e)))?;
-    
+    decoder
+        .read_to_string(&mut json_data)
+        .map_err(|e| Error::SerializationError(format!("Failed to decompress token data: {e}")))?;
+
     // Parse JSON
-    let token_files: std::collections::HashMap<String, String> = serde_json::from_str(&json_data)
-        .map_err(|e| Error::SerializationError(format!("Failed to parse token JSON: {}", e)))?;
-    
+    let token_files: std::collections::HashMap<String, String> =
+        serde_json::from_str(&json_data)
+            .map_err(|e| Error::SerializationError(format!("Failed to parse token JSON: {e}")))?;
+
     let token_path = Path::new(persist_path);
-    
+
     // Count files for logging
     let file_count = token_files.len();
-    
-    if file_count == 1 && token_files.keys().next().map(|k| k.as_str()) == token_path.file_name().and_then(|n| n.to_str()) {
+
+    if file_count == 1
+        && token_files.keys().next().map(|k| k.as_str())
+            == token_path.file_name().and_then(|n| n.to_str())
+    {
         // Single file case - write directly to the persist path
         let content = token_files.into_values().next().unwrap();
-        
+
         // Create parent directory if needed
         if let Some(parent) = token_path.parent() {
-            fs::create_dir_all(parent)
-                .map_err(|e| Error::FileIo(format!("Failed to create token directory {}: {}", parent.display(), e)))?;
+            fs::create_dir_all(parent).map_err(|e| {
+                Error::FileIo(format!(
+                    "Failed to create token directory {}: {}",
+                    parent.display(),
+                    e
+                ))
+            })?;
         }
-        
-        fs::write(&token_path, &content)
-            .map_err(|e| Error::FileIo(format!("Failed to write token file: {}", e)))?;
-        
+
+        fs::write(token_path, &content)
+            .map_err(|e| Error::FileIo(format!("Failed to write token file: {e}")))?;
+
         // Set secure permissions (600 - owner read/write only)
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
-            let mut perms = fs::metadata(&token_path)
-                .map_err(|e| Error::FileIo(format!("Failed to get file metadata: {}", e)))?
+            let mut perms = fs::metadata(token_path)
+                .map_err(|e| Error::FileIo(format!("Failed to get file metadata: {e}")))?
                 .permissions();
             perms.set_mode(0o600);
-            fs::set_permissions(&token_path, perms)
-                .map_err(|e| Error::FileIo(format!("Failed to set file permissions: {}", e)))?;
+            fs::set_permissions(token_path, perms)
+                .map_err(|e| Error::FileIo(format!("Failed to set file permissions: {e}")))?;
         }
     } else {
         // Multiple files case - create directory structure
-        fs::create_dir_all(token_path)
-            .map_err(|e| Error::FileIo(format!("Failed to create token directory {}: {}", persist_path, e)))?;
-        
+        fs::create_dir_all(token_path).map_err(|e| {
+            Error::FileIo(format!(
+                "Failed to create token directory {persist_path}: {e}"
+            ))
+        })?;
+
         // Write token files
         for (filename, content) in token_files {
             let file_path = token_path.join(&filename);
-            fs::write(&file_path, &content)
-                .map_err(|e| Error::FileIo(format!("Failed to write token file {}: {}", filename, e)))?;
-            
+            fs::write(&file_path, &content).map_err(|e| {
+                Error::FileIo(format!("Failed to write token file {filename}: {e}"))
+            })?;
+
             // Set secure permissions (600 - owner read/write only)
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
                 let mut perms = fs::metadata(&file_path)
-                    .map_err(|e| Error::FileIo(format!("Failed to get file metadata: {}", e)))?
+                    .map_err(|e| Error::FileIo(format!("Failed to get file metadata: {e}")))?
                     .permissions();
                 perms.set_mode(0o600);
                 fs::set_permissions(&file_path, perms)
-                    .map_err(|e| Error::FileIo(format!("Failed to set file permissions: {}", e)))?;
+                    .map_err(|e| Error::FileIo(format!("Failed to set file permissions: {e}")))?;
             }
         }
     }
-    
-    log::info!("Restored {} token files to {}", file_count, persist_path);
+
+    log::info!("Restored {file_count} token files to {persist_path}");
     Ok(())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use tempfile::TempDir;
     use std::collections::HashMap;
+    use tempfile::TempDir;
 
     #[test]
     fn test_token_export_import_cycle() {
@@ -418,69 +439,72 @@ mod tests {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let token_dir = temp_dir.path().join("gmail1");
         fs::create_dir_all(&token_dir).expect("Failed to create token dir");
-        
+
         // Create mock token files
         let mut test_files = HashMap::new();
-        test_files.insert("tokencache.json".to_string(), 
-                         r#"{"access_token":"test_access","refresh_token":"test_refresh"}"#.to_string());
-        test_files.insert("metadata.json".to_string(), 
-                         r#"{"created":"2023-01-01","expires":"2023-12-31"}"#.to_string());
-        
+        test_files.insert(
+            "tokencache.json".to_string(),
+            r#"{"access_token":"test_access","refresh_token":"test_refresh"}"#.to_string(),
+        );
+        test_files.insert(
+            "metadata.json".to_string(),
+            r#"{"created":"2023-01-01","expires":"2023-12-31"}"#.to_string(),
+        );
+
         for (filename, content) in &test_files {
-            fs::write(token_dir.join(filename), content)
-                .expect("Failed to write test token file");
+            fs::write(token_dir.join(filename), content).expect("Failed to write test token file");
         }
-        
+
         // Test export
         let config = crate::ClientConfig::builder()
             .with_client_id("test")
             .with_config_path(temp_dir.path().to_str().unwrap())
             .build();
-        
+
         // Export tokens (this would normally print to stdout)
         // We'll test the internal function instead
         let result = tokio_test::block_on(export_tokens(&config));
         assert!(result.is_ok(), "Export should succeed");
-        
+
         // For full integration test, we would capture stdout and test import
         // but that requires more complex setup with process isolation
     }
-    
+
     #[test]
     fn test_restore_tokens_from_string() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let persist_path = temp_dir.path().join("gmail1").to_string_lossy().to_string();
-        
+
         // Create test data
         let mut token_data = HashMap::new();
         token_data.insert("test.json".to_string(), r#"{"token":"value"}"#.to_string());
-        
+
         let json_str = serde_json::to_string(&token_data).unwrap();
-        
+
         // Compress
-        use flate2::write::GzEncoder;
         use flate2::Compression;
+        use flate2::write::GzEncoder;
         use std::io::Write;
-        
+
         let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
         encoder.write_all(json_str.as_bytes()).unwrap();
         let compressed = encoder.finish().unwrap();
-        
+
         // Encode
         let encoded = Base64Engine.encode(&compressed);
-        
+
         // Test restore
         let result = restore_tokens_from_string(&encoded, &persist_path);
-        assert!(result.is_ok(), "Restore should succeed: {:?}", result);
-        
+        assert!(result.is_ok(), "Restore should succeed: {result:?}");
+
         // Verify file was created
         let restored_path = Path::new(&persist_path).join("test.json");
         assert!(restored_path.exists(), "Token file should be restored");
-        
+
         let restored_content = fs::read_to_string(restored_path).unwrap();
         assert_eq!(restored_content, r#"{"token":"value"}"#);
     }
-    
+
     #[test]
     fn test_missing_token_directory() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
@@ -488,17 +512,17 @@ mod tests {
             .with_client_id("test")
             .with_config_path(temp_dir.path().join("nonexistent").to_str().unwrap())
             .build();
-        
+
         let result = tokio_test::block_on(export_tokens(&config));
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), Error::TokenNotFound(_)));
     }
-    
+
     #[test]
     fn test_invalid_base64_restore() {
         let temp_dir = TempDir::new().expect("Failed to create temp dir");
         let persist_path = temp_dir.path().to_string_lossy().to_string();
-        
+
         let result = restore_tokens_from_string("invalid-base64!", &persist_path);
         assert!(result.is_err());
         assert!(matches!(result.unwrap_err(), Error::SerializationError(_)));

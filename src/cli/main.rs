@@ -195,7 +195,7 @@ enum SubCmds {
     /// retention periods, label targeting, and automated actions.
     #[clap(name = "rules", display_order = 2)]
     Rules(RulesCli),
-    
+
     /// Export and import OAuth2 tokens for ephemeral environments.
     ///
     /// Supports token export to compressed strings and automatic import from
@@ -511,17 +511,20 @@ async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Res
 /// - CI/CD pipelines with stored token secrets
 /// - Ephemeral compute environments requiring periodic Gmail access
 fn restore_tokens_if_available(config: &Config, client_config: &ClientConfig) -> Result<()> {
-    let token_env_var = config.get_string("token_cache_env")
+    let token_env_var = config
+        .get_string("token_cache_env")
         .unwrap_or_else(|_| "CULL_GMAIL_TOKEN_CACHE".to_string());
-    
+
     if let Ok(token_data) = env::var(&token_env_var) {
-        log::info!("Found {} environment variable, restoring tokens", token_env_var);
+        log::info!("Found {token_env_var} environment variable, restoring tokens");
         restore_tokens_from_string(&token_data, client_config.persist_path())?;
         log::info!("Tokens successfully restored from environment variable");
     } else {
-        log::debug!("No {} environment variable found, proceeding with normal token flow", token_env_var);
+        log::debug!(
+            "No {token_env_var} environment variable found, proceeding with normal token flow"
+        );
     }
-    
+
     Ok(())
 }
 
