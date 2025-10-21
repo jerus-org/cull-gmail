@@ -114,6 +114,7 @@ use clap::{Parser, Subcommand};
 mod labels_cli;
 mod messages_cli;
 mod rules_cli;
+mod token_cli;
 
 use config::Config;
 use cull_gmail::{ClientConfig, EolAction, GmailClient, Result, RuleProcessor, Rules};
@@ -122,6 +123,7 @@ use std::{env, error::Error as stdError};
 use labels_cli::LabelsCli;
 use messages_cli::MessagesCli;
 use rules_cli::RulesCli;
+use token_cli::{TokenCli, restore_tokens_from_string};
 
 /// Main CLI application structure defining global options and subcommands.
 ///
@@ -193,6 +195,13 @@ enum SubCmds {
     /// retention periods, label targeting, and automated actions.
     #[clap(name = "rules", display_order = 2)]
     Rules(RulesCli),
+    
+    /// Export and import OAuth2 tokens for ephemeral environments.
+    ///
+    /// Supports token export to compressed strings and automatic import from
+    /// environment variables for container deployments and CI/CD pipelines.
+    #[clap(name = "token", display_order = 4)]
+    Token(TokenCli),
 }
 
 /// CLI application entry point with comprehensive error handling and logging setup.
@@ -274,6 +283,9 @@ async fn main() {
 async fn run(args: Cli) -> Result<()> {
     let (config, client_config) = get_config()?;
 
+    // Check for token restoration before client initialization
+    restore_tokens_if_available(&config, &client_config)?;
+
     let mut client = GmailClient::new_with_config(client_config).await?;
 
     let Some(sub_command) = args.sub_command else {
@@ -286,6 +298,12 @@ async fn run(args: Cli) -> Result<()> {
         SubCmds::Message(messages_cli) => messages_cli.run(&mut client).await,
         SubCmds::Labels(labels_cli) => labels_cli.run(client).await,
         SubCmds::Rules(rules_cli) => rules_cli.run(&mut client).await,
+        SubCmds::Token(token_cli) => {
+            // Token commands don't need an initialized client, just the config
+            // We need to get a fresh client_config since the original was moved
+            let (_, token_client_config) = get_config()?;
+            token_cli.run(&token_client_config).await
+        }
     }
 }
 
@@ -386,6 +404,7 @@ fn get_config() -> Result<(Config, ClientConfig)> {
         .set_default("config_root", "h:.cull-gmail")?
         .set_default("rules", "rules.toml")?
         .set_default("execute", true)?
+        .set_default("token_cache_env", "CULL_GMAIL_TOKEN_CACHE")?
         .add_source(config::File::with_name(
             path.to_path_buf().to_str().unwrap(),
         ))
@@ -461,6 +480,48 @@ async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Res
         }
     }
 
+    Ok(())
+}
+
+/// Restores OAuth2 tokens from environment variable if available.
+///
+/// This function checks if the token cache environment variable is set and,
+/// if found, restores the token files before client initialization to enable
+/// ephemeral environment workflows.
+///
+/// # Arguments
+///
+/// * `config` - Application configuration containing token environment variable name
+/// * `client_config` - Client configuration containing token persistence path
+///
+/// # Returns
+///
+/// Returns `Result<()>` indicating success or failure. Non-critical errors
+/// (like missing environment variables) are logged but don't cause failure.
+///
+/// # Process
+///
+/// 1. **Check Environment**: Look for configured token cache environment variable
+/// 2. **Skip if Missing**: Continue normally if environment variable not set
+/// 3. **Restore Tokens**: Decode and restore token files if variable present
+/// 4. **Log Results**: Report restoration success or failures
+///
+/// This function enables seamless token restoration for:
+/// - Container deployments with injected token environment variables
+/// - CI/CD pipelines with stored token secrets
+/// - Ephemeral compute environments requiring periodic Gmail access
+fn restore_tokens_if_available(config: &Config, client_config: &ClientConfig) -> Result<()> {
+    let token_env_var = config.get_string("token_cache_env")
+        .unwrap_or_else(|_| "CULL_GMAIL_TOKEN_CACHE".to_string());
+    
+    if let Ok(token_data) = env::var(&token_env_var) {
+        log::info!("Found {} environment variable, restoring tokens", token_env_var);
+        restore_tokens_from_string(&token_data, client_config.persist_path())?;
+        log::info!("Tokens successfully restored from environment variable");
+    } else {
+        log::debug!("No {} environment variable found, proceeding with normal token flow", token_env_var);
+    }
+    
     Ok(())
 }
 
