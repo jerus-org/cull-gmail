@@ -102,6 +102,7 @@
 //! - **Logging system**: Comprehensive operation tracking
 
 use clap::{Parser, Subcommand};
+use std::path::Path;
 
 mod config_cli;
 mod run_cli;
@@ -327,13 +328,27 @@ impl RulesCli {
 /// - **Rules CLI**: To load rules before configuration or execution
 /// - **Main CLI**: For default rule execution when no subcommand is specified
 /// - **Validation systems**: To verify rule configuration integrity
+/// Loads rules from the default location.
 pub fn get_rules() -> Result<Rules> {
-    match Rules::load() {
+    get_rules_from(None)
+}
+
+/// Loads rules from a specified path, or the default location if None.
+///
+/// # Arguments
+///
+/// * `path` - Optional path to the rules file
+///
+/// # Returns
+///
+/// Returns the loaded rules, or creates and saves default rules if not found.
+pub fn get_rules_from(path: Option<&Path>) -> Result<Rules> {
+    match Rules::load_from(path) {
         Ok(c) => Ok(c),
         Err(_) => {
             log::warn!("Configuration not found, creating default config.");
             let rules = Rules::new();
-            rules.save()?;
+            rules.save_to(path)?;
             Ok(rules)
         }
     }
