@@ -29,13 +29,33 @@
 
 The `cull-gmail` provides a software library and command line program to enable the culling of emails using the Gmail API.
 
+## Quick Start
+
+Get started with cull-gmail in minutes using the built-in setup command:
+
+1. **Get OAuth2 credentials** from [Google Cloud Console](https://console.cloud.google.com/)
+2. **Initialize cull-gmail** with guided setup:
+   ```bash
+   # Interactive setup (recommended)
+   cull-gmail init --interactive --credential-file ~/Downloads/client_secret.json
+   
+   # Or preview first
+   cull-gmail init --dry-run
+   ```
+3. **Verify your setup**:
+   ```bash
+   cull-gmail labels
+   ```
+
 ## Main Features
 
-- list labels and messages to aid planning rules
-- configure the rules list 
-- run the rules list 
-- run the rules list be default 
-- configure api client by file or environment variables
+- **Easy initialization**: Guided setup with OAuth2 credential validation and secure file handling
+- **Flexible configuration**: Support for file-based config, environment variables, and ephemeral tokens
+- **Safety first**: Dry-run mode by default, interactive confirmations, and timestamped backups
+- **Label management**: List and inspect Gmail labels for rule planning
+- **Message operations**: Query, filter, and perform batch operations on Gmail messages  
+- **Rule-based automation**: Configure retention rules with time-based filtering and automated actions
+- **Token portability**: Export/import OAuth2 tokens for containerized and CI/CD environments
 
 ### Running the optional Gmail integration test
 
