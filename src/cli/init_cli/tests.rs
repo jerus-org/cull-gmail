@@ -3,9 +3,9 @@
 #[cfg(test)]
 mod unit_tests {
     use super::super::*;
-    use tempfile::TempDir;
     use std::fs;
     use std::path::Path;
+    use tempfile::TempDir;
 
     /// Test helper to create a mock credential file
     fn create_mock_credential_file(dir: &Path) -> std::io::Result<()> {
@@ -59,7 +59,7 @@ mod unit_tests {
         assert!(config_content.contains("credential_file = \"credential.json\""));
         assert!(config_content.contains("config_root = \"h:.cull-gmail\""));
         assert!(config_content.contains("execute = false"));
-        
+
         // Test that rules content is a valid template
         let rules_content = InitDefaults::RULES_FILE_CONTENT;
         assert!(rules_content.contains("# Example rules for cull-gmail"));
@@ -117,7 +117,12 @@ mod unit_tests {
 
         let result = init_cli.validate_credential_file(&credential_path);
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("Invalid credential file format"));
+        assert!(
+            result
+                .unwrap_err()
+                .to_string()
+                .contains("Invalid credential file format")
+        );
     }
 
     #[test]
@@ -185,17 +190,23 @@ mod unit_tests {
             interactive: false,
         };
 
-        let operations = init_cli.plan_operations(&config_path, Some(&cred_path)).unwrap();
+        let operations = init_cli
+            .plan_operations(&config_path, Some(&cred_path))
+            .unwrap();
 
         // Should have: CreateDir, CopyFile (credential), WriteFile (config), WriteFile (rules), EnsureTokenDir, RunOAuth2
         assert_eq!(operations.len(), 6);
 
         // Check that CopyFile operation exists
-        let copy_op = operations.iter().find(|op| matches!(op, Operation::CopyFile { .. }));
+        let copy_op = operations
+            .iter()
+            .find(|op| matches!(op, Operation::CopyFile { .. }));
         assert!(copy_op.is_some());
 
         // Check that RunOAuth2 operation exists
-        let oauth_op = operations.iter().find(|op| matches!(op, Operation::RunOAuth2 { .. }));
+        let oauth_op = operations
+            .iter()
+            .find(|op| matches!(op, Operation::RunOAuth2 { .. }));
         assert!(oauth_op.is_some());
     }
 
@@ -204,7 +215,7 @@ mod unit_tests {
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("existing-config");
         fs::create_dir_all(&config_path).unwrap();
-        
+
         // Create existing config file
         fs::write(config_path.join("cull-gmail.toml"), "existing config").unwrap();
 
@@ -226,7 +237,7 @@ mod unit_tests {
         let temp_dir = TempDir::new().unwrap();
         let config_path = temp_dir.path().join("existing-config");
         fs::create_dir_all(&config_path).unwrap();
-        
+
         // Create existing config file
         fs::write(config_path.join("cull-gmail.toml"), "existing config").unwrap();
         fs::write(config_path.join("rules.toml"), "existing rules").unwrap();
@@ -243,7 +254,12 @@ mod unit_tests {
 
         // Should succeed and plan backup operations
         let config_op = operations.iter().find(|op| {
-            if let Operation::WriteFile { path, backup_if_exists, .. } = op {
+            if let Operation::WriteFile {
+                path,
+                backup_if_exists,
+                ..
+            } = op
+            {
                 path.file_name().unwrap() == "cull-gmail.toml" && *backup_if_exists
             } else {
                 false
@@ -284,7 +300,7 @@ mod unit_tests {
             .collect();
 
         assert_eq!(backup_files.len(), 1);
-        
+
         // Verify backup content
         let backup_path = temp_dir.path().join(&backup_files[0]);
         let backup_content = fs::read_to_string(backup_path).unwrap();
@@ -295,7 +311,7 @@ mod unit_tests {
     #[test]
     fn test_set_permissions() {
         use std::os::unix::fs::PermissionsExt;
-        
+
         let temp_dir = TempDir::new().unwrap();
         let test_file = temp_dir.path().join("test.txt");
         fs::write(&test_file, "test content").unwrap();
@@ -319,7 +335,7 @@ mod unit_tests {
     #[test]
     fn test_operation_display() {
         let temp_path = std::path::PathBuf::from("/tmp/test");
-        
+
         let create_dir_op = Operation::CreateDir {
             path: temp_path.clone(),
             #[cfg(unix)]
@@ -334,7 +350,10 @@ mod unit_tests {
             mode: Some(0o600),
             backup_if_exists: false,
         };
-        assert_eq!(format!("{copy_file_op}"), "Copy file: /tmp/test → /tmp/test/dest");
+        assert_eq!(
+            format!("{copy_file_op}"),
+            "Copy file: /tmp/test → /tmp/test/dest"
+        );
 
         let write_file_op = Operation::WriteFile {
             path: temp_path.clone(),
@@ -356,7 +375,7 @@ mod unit_tests {
     #[test]
     fn test_operation_get_mode() {
         let temp_path = std::path::PathBuf::from("/tmp/test");
-        
+
         let create_dir_op = Operation::CreateDir {
             path: temp_path.clone(),
             mode: Some(0o755),

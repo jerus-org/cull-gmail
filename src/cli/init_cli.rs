@@ -684,9 +684,8 @@ impl InitCli {
 
             Operation::EnsureTokenDir { path, .. } => {
                 log::info!("Ensuring token directory: {}", path.display());
-                fs::create_dir_all(path).map_err(|e| {
-                    Error::FileIo(format!("Failed to create token directory: {e}"))
-                })?;
+                fs::create_dir_all(path)
+                    .map_err(|e| Error::FileIo(format!("Failed to create token directory: {e}")))?;
 
                 #[cfg(unix)]
                 if let Some(mode) = operation.get_mode() {
