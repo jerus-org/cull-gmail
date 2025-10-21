@@ -466,6 +466,32 @@ impl InitCli {
         let mut operations = Vec::new();
 
         // 1. Create config directory if it doesn't exist
+        self.plan_config_directory(&mut operations, config_path);
+
+        // 2. Copy credential file if provided
+        if let Some(cred_file) = credential_file {
+            self.plan_credential_file_operation(&mut operations, config_path, cred_file)?;
+        }
+
+        // 3. Write config file
+        self.plan_config_file_operation(&mut operations, config_path)?;
+
+        // 4. Write rules file
+        self.plan_rules_file_operation(&mut operations, config_path)?;
+
+        // 5. Ensure token directory exists
+        self.plan_token_directory(&mut operations, config_path);
+
+        // 6. Run OAuth2 if we have credentials
+        if credential_file.is_some() {
+            self.plan_oauth_operation(&mut operations);
+        }
+
+        Ok(operations)
+    }
+
+    /// Plan config directory creation.
+    fn plan_config_directory(&self, operations: &mut Vec<Operation>, config_path: &Path) {
         if !config_path.exists() {
             operations.push(Operation::CreateDir {
                 path: config_path.to_path_buf(),
@@ -473,83 +499,99 @@ impl InitCli {
                 mode: Some(0o755),
             });
         }
+    }
 
-        // 2. Copy credential file if provided
-        if let Some(cred_file) = credential_file {
-            let dest_path = config_path.join(InitDefaults::credential_filename());
-            let backup_needed = dest_path.exists() && !self.force;
+    /// Plan credential file copy operation.
+    fn plan_credential_file_operation(
+        &self,
+        operations: &mut Vec<Operation>,
+        config_path: &Path,
+        cred_file: &PathBuf,
+    ) -> Result<()> {
+        let dest_path = config_path.join(InitDefaults::credential_filename());
+        self.check_file_conflicts(&dest_path, "Credential file")?;
 
-            if dest_path.exists() && !self.force && !self.interactive {
-                return Err(Error::FileIo(format!(
-                    "Credential file already exists: {}\nUse --force to overwrite or --interactive for prompts",
-                    dest_path.display()
-                )));
-            }
+        operations.push(Operation::CopyFile {
+            from: cred_file.clone(),
+            to: dest_path.clone(),
+            #[cfg(unix)]
+            mode: Some(0o600),
+            backup_if_exists: self.should_backup(&dest_path),
+        });
+        Ok(())
+    }
 
-            operations.push(Operation::CopyFile {
-                from: cred_file.clone(),
-                to: dest_path,
-                #[cfg(unix)]
-                mode: Some(0o600),
-                backup_if_exists: backup_needed || self.force,
-            });
-        }
-
-        // 3. Write config file
+    /// Plan config file write operation.
+    fn plan_config_file_operation(
+        &self,
+        operations: &mut Vec<Operation>,
+        config_path: &Path,
+    ) -> Result<()> {
         let config_file_path = config_path.join(InitDefaults::config_filename());
-        let config_backup_needed = config_file_path.exists() && !self.force;
-
-        if config_file_path.exists() && !self.force && !self.interactive {
-            return Err(Error::FileIo(format!(
-                "Configuration file already exists: {}\nUse --force to overwrite or --interactive for prompts",
-                config_file_path.display()
-            )));
-        }
+        self.check_file_conflicts(&config_file_path, "Configuration file")?;
 
         operations.push(Operation::WriteFile {
-            path: config_file_path,
+            path: config_file_path.clone(),
             contents: InitDefaults::CONFIG_FILE_CONTENT.to_string(),
             #[cfg(unix)]
             mode: Some(0o644),
-            backup_if_exists: config_backup_needed || self.force,
+            backup_if_exists: self.should_backup(&config_file_path),
         });
+        Ok(())
+    }
 
-        // 4. Write rules file
+    /// Plan rules file write operation.
+    fn plan_rules_file_operation(
+        &self,
+        operations: &mut Vec<Operation>,
+        config_path: &Path,
+    ) -> Result<()> {
         let rules_file_path = config_path.join(InitDefaults::rules_filename());
-        let rules_backup_needed = rules_file_path.exists() && !self.force;
-
-        if rules_file_path.exists() && !self.force && !self.interactive {
-            return Err(Error::FileIo(format!(
-                "Rules file already exists: {}\nUse --force to overwrite or --interactive for prompts",
-                rules_file_path.display()
-            )));
-        }
+        self.check_file_conflicts(&rules_file_path, "Rules file")?;
 
         operations.push(Operation::WriteFile {
-            path: rules_file_path,
+            path: rules_file_path.clone(),
             contents: InitDefaults::RULES_FILE_CONTENT.to_string(),
             #[cfg(unix)]
             mode: Some(0o644),
-            backup_if_exists: rules_backup_needed || self.force,
+            backup_if_exists: self.should_backup(&rules_file_path),
         });
+        Ok(())
+    }
 
-        // 5. Ensure token directory exists
+    /// Plan token directory creation.
+    fn plan_token_directory(&self, operations: &mut Vec<Operation>, config_path: &Path) {
         let token_dir = config_path.join(InitDefaults::token_dir_name());
         operations.push(Operation::EnsureTokenDir {
             path: token_dir,
             #[cfg(unix)]
             mode: Some(0o700),
         });
+    }
 
-        // 6. Run OAuth2 if we have credentials
-        if credential_file.is_some() {
-            operations.push(Operation::RunOAuth2 {
-                config_root: self.config_dir.clone(),
-                credential_file: Some(InitDefaults::credential_filename().to_string()),
-            });
+    /// Plan OAuth2 operation.
+    fn plan_oauth_operation(&self, operations: &mut Vec<Operation>) {
+        operations.push(Operation::RunOAuth2 {
+            config_root: self.config_dir.clone(),
+            credential_file: Some(InitDefaults::credential_filename().to_string()),
+        });
+    }
+
+    /// Check for file conflicts and return appropriate error if needed.
+    fn check_file_conflicts(&self, file_path: &Path, file_type: &str) -> Result<()> {
+        if file_path.exists() && !self.force && !self.interactive {
+            return Err(Error::FileIo(format!(
+                "{} already exists: {}\nUse --force to overwrite or --interactive for prompts",
+                file_type,
+                file_path.display()
+            )));
         }
+        Ok(())
+    }
 
-        Ok(operations)
+    /// Determine if a file should be backed up.
+    fn should_backup(&self, file_path: &Path) -> bool {
+        file_path.exists() && self.force
     }
 
     /// Show the planned operations in dry-run mode.
@@ -606,106 +648,145 @@ impl InitCli {
     async fn execute_operation(&self, operation: &Operation) -> Result<()> {
         match operation {
             Operation::CreateDir { path, .. } => {
-                log::info!("Creating directory: {}", path.display());
-                fs::create_dir_all(path)
-                    .map_err(|e| Error::FileIo(format!("Failed to create directory: {e}")))?;
-
-                #[cfg(unix)]
-                if let Some(mode) = operation.get_mode() {
-                    self.set_permissions(path, mode)?;
-                }
+                self.execute_create_directory(path, operation).await
             }
-
             Operation::CopyFile {
                 from,
                 to,
                 backup_if_exists,
                 ..
             } => {
-                if *backup_if_exists && to.exists() {
-                    self.create_backup(to)?;
-                } else if to.exists() && self.interactive {
-                    let should_overwrite = Confirm::new()
-                        .with_prompt(format!("Overwrite existing file {}?", to.display()))
-                        .default(false)
-                        .interact()
-                        .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {e}")))?;
-
-                    if !should_overwrite {
-                        log::info!("Skipping file copy due to user choice");
-                        return Ok(());
-                    }
-
-                    self.create_backup(to)?;
-                }
-
-                log::info!("Copying file: {} → {}", from.display(), to.display());
-                fs::copy(from, to)
-                    .map_err(|e| Error::FileIo(format!("Failed to copy file: {e}")))?;
-
-                #[cfg(unix)]
-                if let Some(mode) = operation.get_mode() {
-                    self.set_permissions(to, mode)?;
-                }
+                self.execute_copy_file(from, to, *backup_if_exists, operation)
+                    .await
             }
-
             Operation::WriteFile {
                 path,
                 contents,
                 backup_if_exists,
                 ..
             } => {
-                if *backup_if_exists && path.exists() {
-                    self.create_backup(path)?;
-                } else if path.exists() && self.interactive {
-                    let should_overwrite = Confirm::new()
-                        .with_prompt(format!("Overwrite existing file {}?", path.display()))
-                        .default(false)
-                        .interact()
-                        .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {e}")))?;
-
-                    if !should_overwrite {
-                        log::info!("Skipping file write due to user choice");
-                        return Ok(());
-                    }
-
-                    self.create_backup(path)?;
-                }
-
-                log::info!("Writing file: {}", path.display());
-                fs::write(path, contents)
-                    .map_err(|e| Error::FileIo(format!("Failed to write file: {e}")))?;
-
-                #[cfg(unix)]
-                if let Some(mode) = operation.get_mode() {
-                    self.set_permissions(path, mode)?;
-                }
+                self.execute_write_file(path, contents, *backup_if_exists, operation)
+                    .await
             }
-
             Operation::EnsureTokenDir { path, .. } => {
-                log::info!("Ensuring token directory: {}", path.display());
-                fs::create_dir_all(path)
-                    .map_err(|e| Error::FileIo(format!("Failed to create token directory: {e}")))?;
-
-                #[cfg(unix)]
-                if let Some(mode) = operation.get_mode() {
-                    self.set_permissions(path, mode)?;
-                }
+                self.execute_ensure_token_directory(path, operation).await
             }
-
             Operation::RunOAuth2 {
                 config_root,
                 credential_file,
             } => {
-                if credential_file.is_some() {
-                    log::info!("Starting OAuth2 authentication flow");
-                    self.run_oauth_flow(config_root).await?;
-                } else {
-                    log::warn!("Skipping OAuth2 - no credential file available");
-                }
+                self.execute_oauth_flow(config_root, credential_file).await
             }
         }
+    }
 
+    /// Execute directory creation operation.
+    async fn execute_create_directory(&self, path: &Path, operation: &Operation) -> Result<()> {
+        log::info!("Creating directory: {}", path.display());
+        fs::create_dir_all(path)
+            .map_err(|e| Error::FileIo(format!("Failed to create directory: {e}")))?;
+
+        self.apply_permissions_if_needed(path, operation)
+    }
+
+    /// Execute file copy operation.
+    async fn execute_copy_file(
+        &self,
+        from: &Path,
+        to: &Path,
+        backup_if_exists: bool,
+        operation: &Operation,
+    ) -> Result<()> {
+        self.handle_existing_file(to, backup_if_exists, "file copy").await?;
+
+        log::info!("Copying file: {} → {}", from.display(), to.display());
+        fs::copy(from, to).map_err(|e| Error::FileIo(format!("Failed to copy file: {e}")))?;
+
+        self.apply_permissions_if_needed(to, operation)
+    }
+
+    /// Execute file write operation.
+    async fn execute_write_file(
+        &self,
+        path: &Path,
+        contents: &str,
+        backup_if_exists: bool,
+        operation: &Operation,
+    ) -> Result<()> {
+        self.handle_existing_file(path, backup_if_exists, "file write").await?;
+
+        log::info!("Writing file: {}", path.display());
+        fs::write(path, contents).map_err(|e| Error::FileIo(format!("Failed to write file: {e}")))?;
+
+        self.apply_permissions_if_needed(path, operation)
+    }
+
+    /// Execute token directory creation operation.
+    async fn execute_ensure_token_directory(&self, path: &Path, operation: &Operation) -> Result<()> {
+        log::info!("Ensuring token directory: {}", path.display());
+        fs::create_dir_all(path)
+            .map_err(|e| Error::FileIo(format!("Failed to create token directory: {e}")))?;
+
+        self.apply_permissions_if_needed(path, operation)
+    }
+
+    /// Execute OAuth2 authentication flow.
+    async fn execute_oauth_flow(
+        &self,
+        config_root: &str,
+        credential_file: &Option<String>,
+    ) -> Result<()> {
+        if credential_file.is_some() {
+            log::info!("Starting OAuth2 authentication flow");
+            self.run_oauth_flow(config_root).await
+        } else {
+            log::warn!("Skipping OAuth2 - no credential file available");
+            Ok(())
+        }
+    }
+
+    /// Handle existing file logic (backup or interactive prompt).
+    async fn handle_existing_file(
+        &self,
+        path: &Path,
+        backup_if_exists: bool,
+        operation_name: &str,
+    ) -> Result<()> {
+        if !path.exists() {
+            return Ok(());
+        }
+
+        if backup_if_exists {
+            self.create_backup(path)
+        } else if self.interactive {
+            self.prompt_for_overwrite(path, operation_name).await
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Prompt user for file overwrite confirmation.
+    async fn prompt_for_overwrite(&self, path: &Path, operation_name: &str) -> Result<()> {
+        let should_overwrite = Confirm::new()
+            .with_prompt(format!("Overwrite existing file {}?", path.display()))
+            .default(false)
+            .interact()
+            .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {e}")))?;
+
+        if !should_overwrite {
+            log::info!("Skipping {} due to user choice", operation_name);
+            return Ok(());
+        }
+
+        self.create_backup(path)
+    }
+
+    /// Apply file permissions if needed (Unix only).
+    fn apply_permissions_if_needed(&self, path: &Path, operation: &Operation) -> Result<()> {
+        #[cfg(unix)]
+        if let Some(mode) = operation.get_mode() {
+            self.set_permissions(path, mode)?;
+        }
         Ok(())
     }
 
