@@ -334,14 +334,15 @@ mod unit_tests {
 
     #[test]
     fn test_operation_display() {
-        let temp_path = std::path::PathBuf::from("/tmp/test");
+        let temp_dir = TempDir::new().unwrap();
+        let temp_path = temp_dir.path().join("test");
 
         let create_dir_op = Operation::CreateDir {
             path: temp_path.clone(),
             #[cfg(unix)]
             mode: Some(0o755),
         };
-        assert_eq!(format!("{create_dir_op}"), "Create directory: /tmp/test");
+        assert_eq!(format!("{create_dir_op}"), format!("Create directory: {}", temp_path.display()));
 
         let copy_file_op = Operation::CopyFile {
             from: temp_path.clone(),
@@ -352,7 +353,7 @@ mod unit_tests {
         };
         assert_eq!(
             format!("{copy_file_op}"),
-            "Copy file: /tmp/test → /tmp/test/dest"
+            format!("Copy file: {} → {}", temp_path.display(), temp_path.join("dest").display())
         );
 
         let write_file_op = Operation::WriteFile {
@@ -362,7 +363,7 @@ mod unit_tests {
             mode: Some(0o644),
             backup_if_exists: false,
         };
-        assert_eq!(format!("{write_file_op}"), "Write file: /tmp/test");
+        assert_eq!(format!("{write_file_op}"), format!("Write file: {}", temp_path.display()));
 
         let oauth_op = Operation::RunOAuth2 {
             config_root: "h:.config".to_string(),
@@ -374,7 +375,8 @@ mod unit_tests {
     #[cfg(unix)]
     #[test]
     fn test_operation_get_mode() {
-        let temp_path = std::path::PathBuf::from("/tmp/test");
+        let temp_dir = TempDir::new().unwrap();
+        let temp_path = temp_dir.path().join("test");
 
         let create_dir_op = Operation::CreateDir {
             path: temp_path.clone(),
