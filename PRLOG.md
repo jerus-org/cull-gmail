@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - 🔐 Add token export/import for ephemeral environments(pr [#87])
+- ✨ guided setup to create config, rules, and OAuth2 tokens(pr [#90])
 
 ### Changed
 
@@ -267,6 +268,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#86]: https://github.com/jerus-org/cull-gmail/pull/86
 [#87]: https://github.com/jerus-org/cull-gmail/pull/87
 [#89]: https://github.com/jerus-org/cull-gmail/pull/89
+[#90]: https://github.com/jerus-org/cull-gmail/pull/90
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...HEAD
 [0.0.11]: https://github.com/jerus-org/cull-gmail/compare/v0.0.10...v0.0.11
 [0.0.10]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...v0.0.10
