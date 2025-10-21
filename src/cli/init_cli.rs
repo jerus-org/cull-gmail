@@ -623,8 +623,12 @@ impl InitCli {
         operations: &mut Vec<Operation>,
         rules_dir: &Path,
     ) -> Result<()> {
-        // Create rules directory if it doesn't exist and is different from config dir
-        if !rules_dir.exists() {
+        // Create rules directory if it doesn't exist and hasn't been planned already
+        let already_planned = operations.iter().any(|op| {
+            matches!(op, Operation::CreateDir { path, .. } if path == rules_dir)
+        });
+        
+        if !rules_dir.exists() && !already_planned {
             operations.push(Operation::CreateDir {
                 path: rules_dir.to_path_buf(),
                 #[cfg(unix)]
