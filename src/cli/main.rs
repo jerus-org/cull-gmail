@@ -111,6 +111,7 @@
 
 use clap::{Parser, Subcommand};
 
+mod init_cli;
 mod labels_cli;
 mod messages_cli;
 mod rules_cli;
@@ -120,6 +121,7 @@ use config::Config;
 use cull_gmail::{ClientConfig, EolAction, GmailClient, Result, RuleProcessor, Rules};
 use std::{env, error::Error as stdError};
 
+use init_cli::InitCli;
 use labels_cli::LabelsCli;
 use messages_cli::MessagesCli;
 use rules_cli::RulesCli;
@@ -175,6 +177,13 @@ struct Cli {
 /// then query specific messages, and finally configure automated rules.
 #[derive(Subcommand, Debug)]
 enum SubCmds {
+    /// Initialize cull-gmail configuration, credentials, and OAuth2 tokens.
+    ///
+    /// Sets up the complete cull-gmail environment including configuration directory,
+    /// OAuth2 credentials, default configuration files, and initial authentication flow.
+    #[clap(name = "init", display_order = 1)]
+    Init(InitCli),
+
     /// Query, filter, and perform batch operations on Gmail messages.
     ///
     /// Supports advanced Gmail query syntax, label filtering, and batch actions
@@ -295,6 +304,10 @@ async fn run(args: Cli) -> Result<()> {
     };
 
     match sub_command {
+        SubCmds::Init(init_cli) => {
+            // Init commands don't need a Gmail client since they set up the config
+            init_cli.run().await
+        }
         SubCmds::Message(messages_cli) => messages_cli.run(&mut client).await,
         SubCmds::Labels(labels_cli) => labels_cli.run(client).await,
         SubCmds::Rules(rules_cli) => rules_cli.run(&mut client).await,

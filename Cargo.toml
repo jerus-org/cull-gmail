@@ -39,6 +39,8 @@ tokio = { version = "1.47.1", features = ["macros", "rt-multi-thread", "process"
 toml = "0.9.7"
 base64 = "0.22"
 flate2 = "1.0"
+dialoguer = "0.11"
+indicatif = "0.17"
 
 [dev-dependencies]
 httpmock = "0.8"
@@ -46,6 +48,9 @@ tokio-test = "0.4"
 temp-env = "0.3"
 tempfile = "3.12"
 futures = "0.3"
+assert_cmd = "2.0"
+assert_fs = "1.1"
+predicates = "3.1"
 
 [lints.clippy]
 uninlined-format-args = "warn"
