@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - 🔐 Add token export/import for ephemeral environments(pr [#87])
 
+### Changed
+
+- 📝 Add WARP.md with development guidance(pr [#88])
+
 ## [0.0.11] - 2025-10-20
 
 ### Added
@@ -262,6 +266,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#85]: https://github.com/jerus-org/cull-gmail/pull/85
 [#86]: https://github.com/jerus-org/cull-gmail/pull/86
 [#87]: https://github.com/jerus-org/cull-gmail/pull/87
+[#88]: https://github.com/jerus-org/cull-gmail/pull/88
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...HEAD
 [0.0.11]: https://github.com/jerus-org/cull-gmail/compare/v0.0.10...v0.0.11
 [0.0.10]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...v0.0.10
