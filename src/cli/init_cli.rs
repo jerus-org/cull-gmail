@@ -48,8 +48,35 @@
 //! - **Backup Safety**: Existing files are backed up with timestamps before overwriting
 //! - **Interactive Confirmation**: Prompts for confirmation before overwriting existing files
 
+use chrono::Local;
 use clap::Parser;
-use std::path::PathBuf;
+use dialoguer::{Confirm, Input};
+use google_gmail1::yup_oauth2::ConsoleApplicationSecret;
+use indicatif::{ProgressBar, ProgressStyle};
+use std::path::{Path, PathBuf};
+use std::{env, fs};
+
+use cull_gmail::{ClientConfig, Error, GmailClient, Result};
+use lazy_regex::{Lazy, Regex, lazy_regex};
+
+/// Parse configuration root path with h:, c:, r: prefixes.
+fn parse_config_root(path_str: &str) -> PathBuf {
+    static ROOT_CONFIG: Lazy<Regex> = lazy_regex!(r"^(?P<class>[hrc]):(?P<path>.+)$");
+
+    if let Some(captures) = ROOT_CONFIG.captures(path_str) {
+        let path_part = captures.name("path").map_or("", |m| m.as_str());
+        let class = captures.name("class").map_or("", |m| m.as_str());
+
+        match class {
+            "h" => env::home_dir().unwrap_or_default().join(path_part),
+            "c" => env::current_dir().unwrap_or_default().join(path_part),
+            "r" => PathBuf::from("/").join(path_part),
+            _ => PathBuf::from(path_str),
+        }
+    } else {
+        PathBuf::from(path_str)
+    }
+}
 
 /// Initialize cull-gmail configuration, credentials, and OAuth2 tokens.
 ///
@@ -135,10 +162,7 @@ pub struct InitCli {
     /// Enables preview mode where all planned operations are displayed
     /// but no files are created, modified, or removed. OAuth2 authentication
     /// flow is also skipped in dry-run mode.
-    #[arg(
-        long = "dry-run", 
-        help = "Preview actions without making changes"
-    )]
+    #[arg(long = "dry-run", help = "Preview actions without making changes")]
     pub dry_run: bool,
 
     /// Enable interactive prompts and confirmations.
@@ -152,6 +176,167 @@ pub struct InitCli {
         help = "Prompt for missing information and confirmations"
     )]
     pub interactive: bool,
+}
+
+/// Operations that can be performed during initialization.
+///
+/// Each operation represents a discrete action that needs to be taken
+/// to set up the cull-gmail environment. Operations are planned first
+/// and then executed in the correct order with appropriate error handling.
+#[derive(Debug, Clone)]
+enum Operation {
+    /// Create a directory with specified permissions.
+    CreateDir {
+        path: PathBuf,
+        #[cfg(unix)]
+        mode: Option<u32>,
+    },
+
+    /// Copy a file from source to destination with optional chmod and backup.
+    CopyFile {
+        from: PathBuf,
+        to: PathBuf,
+        #[cfg(unix)]
+        mode: Option<u32>,
+        backup_if_exists: bool,
+    },
+
+    /// Write content to a file with optional permissions and backup.
+    WriteFile {
+        path: PathBuf,
+        contents: String,
+        #[cfg(unix)]
+        mode: Option<u32>,
+        backup_if_exists: bool,
+    },
+
+    /// Ensure token directory exists with secure permissions.
+    EnsureTokenDir {
+        path: PathBuf,
+        #[cfg(unix)]
+        mode: Option<u32>,
+    },
+
+    /// Run OAuth2 authentication flow.
+    RunOAuth2 {
+        config_root: String,
+        credential_file: Option<String>,
+    },
+}
+
+impl std::fmt::Display for Operation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Operation::CreateDir { path, .. } => {
+                write!(f, "Create directory: {}", path.display())
+            }
+            Operation::CopyFile {
+                from,
+                to,
+                backup_if_exists,
+                ..
+            } => {
+                if *backup_if_exists && to.exists() {
+                    write!(
+                        f,
+                        "Copy file: {} → {} (with backup)",
+                        from.display(),
+                        to.display()
+                    )
+                } else {
+                    write!(f, "Copy file: {} → {}", from.display(), to.display())
+                }
+            }
+            Operation::WriteFile {
+                path,
+                backup_if_exists,
+                ..
+            } => {
+                if *backup_if_exists && path.exists() {
+                    write!(f, "Write file: {} (with backup)", path.display())
+                } else {
+                    write!(f, "Write file: {}", path.display())
+                }
+            }
+            Operation::EnsureTokenDir { path, .. } => {
+                write!(f, "Ensure token directory: {}", path.display())
+            }
+            Operation::RunOAuth2 { .. } => {
+                write!(f, "Run OAuth2 authentication flow")
+            }
+        }
+    }
+}
+
+/// Configuration defaults for initialization.
+struct InitDefaults;
+
+impl InitDefaults {
+    const CONFIG_FILE_CONTENT: &'static str = r#"# cull-gmail configuration
+# This file configures the cull-gmail application.
+
+# OAuth2 credential file (relative to config_root)
+credential_file = "credential.json"
+
+# Configuration root directory  
+config_root = "h:.cull-gmail"
+
+# Rules configuration file
+rules = "rules.toml"
+
+# Default execution mode (false = dry-run, true = execute)
+# Set to false for safety - you can override with --execute flag
+execute = false
+
+# Environment variable name for token cache (for ephemeral environments)
+token_cache_env = "CULL_GMAIL_TOKEN_CACHE"
+"#;
+
+    const RULES_FILE_CONTENT: &'static str = r#"# Example rules for cull-gmail
+# Each rule targets a Gmail label and specifies an action.
+# 
+# Actions:
+#   - "Trash" is recoverable (messages go to Trash folder ~30 days)
+#   - "Delete" is irreversible (messages are permanently deleted)
+#
+# Time formats:
+#   - "older_than:30d" (30 days)
+#   - "older_than:6m" (6 months) 
+#   - "older_than:2y" (2 years)
+#
+# Example rule for promotional emails:
+# [[rules]]
+# id = 1
+# label = "Promotions"
+# query = "category:promotions older_than:30d"
+# action = "Trash"
+#
+# Example rule for old newsletters:
+# [[rules]]
+# id = 2
+# label = "Updates"
+# query = "category:updates older_than:90d"
+# action = "Trash"
+#
+# Uncomment and modify the examples above to create your own rules.
+# Run 'cull-gmail rules run --dry-run' to test rules before execution.
+"#;
+
+    fn credential_filename() -> &'static str {
+        "credential.json"
+    }
+
+    fn config_filename() -> &'static str {
+        "cull-gmail.toml"
+    }
+
+    fn rules_filename() -> &'static str {
+        "rules.toml"
+    }
+
+    fn token_dir_name() -> &'static str {
+        "gmail1"
+    }
 }
 
 impl InitCli {
@@ -182,16 +367,457 @@ impl InitCli {
     /// - Configuration conflicts without force or interactive resolution
     /// - OAuth2 authentication failures
     /// - Network connectivity issues during authentication
-    pub async fn run(&self) -> cull_gmail::Result<()> {
+    pub async fn run(&self) -> Result<()> {
         log::info!("Starting cull-gmail initialization");
-        
+
         if self.dry_run {
-            println!("DRY RUN: No changes will be made");
+            println!("🔍 DRY RUN: No changes will be made\n");
         }
 
-        // TODO: Implement initialization logic
-        println!("Init command called with options: {self:?}");
-        
+        // Resolve configuration directory path
+        let config_path = parse_config_root(&self.config_dir);
+
+        log::info!("Configuration directory: {}", config_path.display());
+
+        // Handle interactive credential file prompt if needed
+        let credential_file = self.get_credential_file().await?;
+
+        // Plan all operations
+        let operations = self.plan_operations(&config_path, credential_file.as_ref())?;
+
+        // Show plan in dry-run mode
+        if self.dry_run {
+            self.show_plan(&operations);
+            return Ok(());
+        }
+
+        // Execute operations
+        self.execute_operations(&operations).await?;
+
+        // Show success message and next steps
+        self.show_completion(&config_path);
+
         Ok(())
+    }
+
+    /// Get credential file path, prompting if interactive and not provided.
+    async fn get_credential_file(&self) -> Result<Option<PathBuf>> {
+        if let Some(ref cred_file) = self.credential_file {
+            // Validate the provided credential file
+            self.validate_credential_file(cred_file)?;
+            return Ok(Some(cred_file.clone()));
+        }
+
+        if self.interactive {
+            println!("📋 OAuth2 credential file setup");
+            println!("You need a credential JSON file from Google Cloud Console.");
+            println!("Visit: https://console.cloud.google.com/apis/credentials\n");
+
+            let should_provide = Confirm::new()
+                .with_prompt("Do you have a credential file to set up now?")
+                .default(true)
+                .interact()
+                .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {}", e)))?;
+
+            if should_provide {
+                let cred_path: String = Input::new()
+                    .with_prompt("Path to credential JSON file")
+                    .interact_text()
+                    .map_err(|e| Error::FileIo(format!("Interactive input failed: {}", e)))?;
+
+                let cred_file = PathBuf::from(cred_path);
+                self.validate_credential_file(&cred_file)?;
+                return Ok(Some(cred_file));
+            } else {
+                println!("⏭️  Skipping credential setup - you can add it later\n");
+            }
+        }
+
+        Ok(None)
+    }
+
+    /// Validate that a credential file exists and can be parsed.
+    fn validate_credential_file(&self, path: &Path) -> Result<()> {
+        if !path.exists() {
+            return Err(Error::FileIo(format!(
+                "Credential file not found: {}",
+                path.display()
+            )));
+        }
+
+        let content = fs::read_to_string(path)
+            .map_err(|e| Error::FileIo(format!("Cannot read credential file: {}", e)))?;
+
+        // Try to parse as ConsoleApplicationSecret to validate format
+        serde_json::from_str::<ConsoleApplicationSecret>(&content).map_err(|e| {
+            Error::SerializationError(format!("Invalid credential file format: {}", e))
+        })?;
+
+        log::info!("Credential file validated: {}", path.display());
+        Ok(())
+    }
+
+    /// Plan all operations needed for initialization.
+    fn plan_operations(
+        &self,
+        config_path: &Path,
+        credential_file: Option<&PathBuf>,
+    ) -> Result<Vec<Operation>> {
+        let mut operations = Vec::new();
+
+        // 1. Create config directory if it doesn't exist
+        if !config_path.exists() {
+            operations.push(Operation::CreateDir {
+                path: config_path.to_path_buf(),
+                #[cfg(unix)]
+                mode: Some(0o755),
+            });
+        }
+
+        // 2. Copy credential file if provided
+        if let Some(cred_file) = credential_file {
+            let dest_path = config_path.join(InitDefaults::credential_filename());
+            let backup_needed = dest_path.exists() && !self.force;
+
+            if dest_path.exists() && !self.force && !self.interactive {
+                return Err(Error::FileIo(format!(
+                    "Credential file already exists: {}\nUse --force to overwrite or --interactive for prompts",
+                    dest_path.display()
+                )));
+            }
+
+            operations.push(Operation::CopyFile {
+                from: cred_file.clone(),
+                to: dest_path,
+                #[cfg(unix)]
+                mode: Some(0o600),
+                backup_if_exists: backup_needed || self.force,
+            });
+        }
+
+        // 3. Write config file
+        let config_file_path = config_path.join(InitDefaults::config_filename());
+        let config_backup_needed = config_file_path.exists() && !self.force;
+
+        if config_file_path.exists() && !self.force && !self.interactive {
+            return Err(Error::FileIo(format!(
+                "Configuration file already exists: {}\nUse --force to overwrite or --interactive for prompts",
+                config_file_path.display()
+            )));
+        }
+
+        operations.push(Operation::WriteFile {
+            path: config_file_path,
+            contents: InitDefaults::CONFIG_FILE_CONTENT.to_string(),
+            #[cfg(unix)]
+            mode: Some(0o644),
+            backup_if_exists: config_backup_needed || self.force,
+        });
+
+        // 4. Write rules file
+        let rules_file_path = config_path.join(InitDefaults::rules_filename());
+        let rules_backup_needed = rules_file_path.exists() && !self.force;
+
+        if rules_file_path.exists() && !self.force && !self.interactive {
+            return Err(Error::FileIo(format!(
+                "Rules file already exists: {}\nUse --force to overwrite or --interactive for prompts",
+                rules_file_path.display()
+            )));
+        }
+
+        operations.push(Operation::WriteFile {
+            path: rules_file_path,
+            contents: InitDefaults::RULES_FILE_CONTENT.to_string(),
+            #[cfg(unix)]
+            mode: Some(0o644),
+            backup_if_exists: rules_backup_needed || self.force,
+        });
+
+        // 5. Ensure token directory exists
+        let token_dir = config_path.join(InitDefaults::token_dir_name());
+        operations.push(Operation::EnsureTokenDir {
+            path: token_dir,
+            #[cfg(unix)]
+            mode: Some(0o700),
+        });
+
+        // 6. Run OAuth2 if we have credentials
+        if credential_file.is_some() {
+            operations.push(Operation::RunOAuth2 {
+                config_root: self.config_dir.clone(),
+                credential_file: Some(InitDefaults::credential_filename().to_string()),
+            });
+        }
+
+        Ok(operations)
+    }
+
+    /// Show the planned operations in dry-run mode.
+    fn show_plan(&self, operations: &[Operation]) {
+        println!("📋 Planned operations:");
+        for (i, op) in operations.iter().enumerate() {
+            println!("  {}. {}", i + 1, op);
+        }
+        println!();
+
+        if operations
+            .iter()
+            .any(|op| matches!(op, Operation::RunOAuth2 { .. }))
+        {
+            println!("🔐 OAuth2 authentication would open your browser for Gmail authorization");
+        } else {
+            println!("⚠️  OAuth2 authentication skipped - no credential file provided");
+            println!("   Add a credential file later and run 'cull-gmail init' again");
+        }
+
+        println!();
+        println!("To apply these changes, run without --dry-run");
+    }
+
+    /// Execute all planned operations.
+    async fn execute_operations(&self, operations: &[Operation]) -> Result<()> {
+        let pb = ProgressBar::new(operations.len() as u64);
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template(
+                    "{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} {msg}",
+                )
+                .unwrap()
+                .progress_chars("#>-"),
+        );
+
+        for (i, operation) in operations.iter().enumerate() {
+            pb.set_position(i as u64);
+            pb.set_message(format!("{}", operation));
+
+            self.execute_operation(operation).await?;
+
+            // Small delay to make progress visible
+            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        }
+
+        pb.finish_with_message("✅ All operations completed");
+        println!();
+
+        Ok(())
+    }
+
+    /// Execute a single operation.
+    async fn execute_operation(&self, operation: &Operation) -> Result<()> {
+        match operation {
+            Operation::CreateDir { path, .. } => {
+                log::info!("Creating directory: {}", path.display());
+                fs::create_dir_all(path)
+                    .map_err(|e| Error::FileIo(format!("Failed to create directory: {}", e)))?;
+
+                #[cfg(unix)]
+                if let Some(mode) = operation.get_mode() {
+                    self.set_permissions(path, mode)?;
+                }
+            }
+
+            Operation::CopyFile {
+                from,
+                to,
+                backup_if_exists,
+                ..
+            } => {
+                if *backup_if_exists && to.exists() {
+                    self.create_backup(to)?;
+                } else if to.exists() && self.interactive {
+                    let should_overwrite = Confirm::new()
+                        .with_prompt(&format!("Overwrite existing file {}?", to.display()))
+                        .default(false)
+                        .interact()
+                        .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {}", e)))?;
+
+                    if !should_overwrite {
+                        log::info!("Skipping file copy due to user choice");
+                        return Ok(());
+                    }
+
+                    self.create_backup(to)?;
+                }
+
+                log::info!("Copying file: {} → {}", from.display(), to.display());
+                fs::copy(from, to)
+                    .map_err(|e| Error::FileIo(format!("Failed to copy file: {}", e)))?;
+
+                #[cfg(unix)]
+                if let Some(mode) = operation.get_mode() {
+                    self.set_permissions(to, mode)?;
+                }
+            }
+
+            Operation::WriteFile {
+                path,
+                contents,
+                backup_if_exists,
+                ..
+            } => {
+                if *backup_if_exists && path.exists() {
+                    self.create_backup(path)?;
+                } else if path.exists() && self.interactive {
+                    let should_overwrite = Confirm::new()
+                        .with_prompt(&format!("Overwrite existing file {}?", path.display()))
+                        .default(false)
+                        .interact()
+                        .map_err(|e| Error::FileIo(format!("Interactive prompt failed: {}", e)))?;
+
+                    if !should_overwrite {
+                        log::info!("Skipping file write due to user choice");
+                        return Ok(());
+                    }
+
+                    self.create_backup(path)?;
+                }
+
+                log::info!("Writing file: {}", path.display());
+                fs::write(path, contents)
+                    .map_err(|e| Error::FileIo(format!("Failed to write file: {}", e)))?;
+
+                #[cfg(unix)]
+                if let Some(mode) = operation.get_mode() {
+                    self.set_permissions(path, mode)?;
+                }
+            }
+
+            Operation::EnsureTokenDir { path, .. } => {
+                log::info!("Ensuring token directory: {}", path.display());
+                fs::create_dir_all(path).map_err(|e| {
+                    Error::FileIo(format!("Failed to create token directory: {}", e))
+                })?;
+
+                #[cfg(unix)]
+                if let Some(mode) = operation.get_mode() {
+                    self.set_permissions(path, mode)?;
+                }
+            }
+
+            Operation::RunOAuth2 {
+                config_root,
+                credential_file,
+            } => {
+                if credential_file.is_some() {
+                    log::info!("Starting OAuth2 authentication flow");
+                    self.run_oauth_flow(config_root).await?;
+                } else {
+                    log::warn!("Skipping OAuth2 - no credential file available");
+                }
+            }
+        }
+
+        Ok(())
+    }
+
+    /// Create a timestamped backup of a file.
+    fn create_backup(&self, file_path: &Path) -> Result<()> {
+        let timestamp = Local::now().format("%Y%m%d%H%M%S");
+        let backup_path = file_path.with_extension(format!("bak-{}", timestamp));
+
+        log::info!(
+            "Creating backup: {} → {}",
+            file_path.display(),
+            backup_path.display()
+        );
+        fs::copy(file_path, &backup_path)
+            .map_err(|e| Error::FileIo(format!("Failed to create backup: {}", e)))?;
+
+        Ok(())
+    }
+
+    /// Set file permissions (Unix only).
+    #[cfg(unix)]
+    fn set_permissions(&self, path: &Path, mode: u32) -> Result<()> {
+        use std::os::unix::fs::PermissionsExt;
+
+        let metadata = fs::metadata(path)
+            .map_err(|e| Error::FileIo(format!("Failed to get file metadata: {}", e)))?;
+
+        let mut permissions = metadata.permissions();
+        permissions.set_mode(mode);
+
+        fs::set_permissions(path, permissions)
+            .map_err(|e| Error::FileIo(format!("Failed to set file permissions: {}", e)))?;
+
+        log::debug!("Set permissions {:o} on {}", mode, path.display());
+        Ok(())
+    }
+
+    /// Run OAuth2 authentication flow.
+    async fn run_oauth_flow(&self, config_root: &str) -> Result<()> {
+        println!("🔐 Starting OAuth2 authentication...");
+        println!("This will open your web browser for Gmail authorization.");
+
+        // Parse config root and build ClientConfig
+        let config_path = parse_config_root(config_root);
+
+        let client_config = ClientConfig::builder()
+            .with_credential_file(InitDefaults::credential_filename())
+            .with_config_path(config_path.to_string_lossy().as_ref())
+            .build();
+
+        // Initialize Gmail client which will trigger OAuth flow if needed
+        let client = GmailClient::new_with_config(client_config)
+            .await
+            .map_err(|e| Error::FileIo(format!("OAuth2 authentication failed: {}", e)))?;
+
+        // The client initialization already verified the connection by fetching labels
+        // We can just show some labels to confirm it's working
+        client.show_label();
+        println!("✅ OAuth2 authentication successful!");
+        log::info!("OAuth2 tokens generated and cached");
+
+        Ok(())
+    }
+
+    /// Show completion message and next steps.
+    fn show_completion(&self, config_path: &Path) {
+        println!("🎉 Initialization completed successfully!\n");
+
+        println!("📁 Configuration directory: {}", config_path.display());
+        println!("📄 Files created:");
+        println!("   - cull-gmail.toml (main configuration)");
+        println!("   - rules.toml (retention rules template)");
+        if self.credential_file.is_some() {
+            println!("   - credential.json (OAuth2 credentials)");
+            println!("   - gmail1/ (OAuth2 token cache)");
+        }
+        println!();
+
+        println!("📋 Next steps:");
+        if self.credential_file.is_some() {
+            println!("   1. Test Gmail connection: cull-gmail labels");
+            println!("   2. Review rules template: cull-gmail rules run --dry-run");
+            println!("   3. Customize rules.toml as needed");
+            println!("   4. Run rules safely: cull-gmail rules run --dry-run");
+            println!("   5. Execute for real: cull-gmail rules run --execute");
+        } else {
+            println!("   1. Add your OAuth2 credential file to:");
+            println!("      {}/credential.json", config_path.display());
+            println!("   2. Complete setup: cull-gmail init");
+            println!("   3. Or get credentials from:");
+            println!("      https://console.cloud.google.com/apis/credentials");
+        }
+        println!();
+
+        println!("💡 Tips:");
+        println!("   - All operations use dry-run mode by default for safety");
+        println!("   - Use --execute flag or set execute=true in config for real actions");
+        println!("   - See 'cull-gmail --help' for all available commands");
+    }
+}
+
+impl Operation {
+    /// Get the file mode for this operation (Unix only).
+    #[cfg(unix)]
+    fn get_mode(&self) -> Option<u32> {
+        match self {
+            Operation::CreateDir { mode, .. }
+            | Operation::CopyFile { mode, .. }
+            | Operation::WriteFile { mode, .. }
+            | Operation::EnsureTokenDir { mode, .. } => *mode,
+            Operation::RunOAuth2 { .. } => None,
+        }
     }
 }
