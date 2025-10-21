@@ -16,10 +16,19 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 - Run CLI without installing: `cargo run --bin cull-gmail -- --help`
 - Test a single test by pattern: `cargo test test_rules_new_creates_default_rules`
 
+### Init Command Examples
+- Interactive setup: `cargo run --bin cull-gmail -- init --interactive`
+- Dry-run preview: `cargo run --bin cull-gmail -- init --dry-run`
+- Force overwrite: `cargo run --bin cull-gmail -- init --force`
+- Custom config dir: `cargo run --bin cull-gmail -- init --config-dir /tmp/test-config`
+
 ### Special Tests
 - Run ignored Gmail API integration test: `cargo test --test gmail_message_list_integration -- --ignored`
   - Requires valid OAuth2 credentials configured
   - Only use with test Gmail account
+- Run ignored init OAuth integration test: `CULL_GMAIL_TEST_CREDENTIAL_FILE=/path/to/creds.json cargo test --test init_integration_tests test_init_oauth_integration -- --ignored`
+  - Requires `CULL_GMAIL_TEST_CREDENTIAL_FILE` environment variable with path to valid OAuth2 credential file
+  - Tests complete init flow including OAuth2 token generation
 
 ## High-level Architecture
 
@@ -35,6 +44,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 - **CLI**: Command-line interface with subcommands for `labels`, `messages`, `rules`, and `token`; implements dry-run-first behavior for safety
 
 ### CLI Subcommands
+- `init` - Initialize cull-gmail configuration, credentials, and OAuth2 tokens with guided setup
 - `labels` - List and inspect available Gmail labels
 - `messages` - Query, filter, and perform batch operations on Gmail messages
 - `rules` - Configure and execute automated message retention rules
