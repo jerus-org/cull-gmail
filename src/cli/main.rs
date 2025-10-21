@@ -290,6 +290,13 @@ async fn main() {
 /// - Subcommand execution
 /// - Rule processing operations
 async fn run(args: Cli) -> Result<()> {
+    // Handle init command first, before trying to load config
+    if let Some(SubCmds::Init(init_cli)) = args.sub_command {
+        // Init commands don't need existing config since they set up the config
+        return init_cli.run().await;
+    }
+
+    // For all other commands, load config normally
     let (config, client_config) = get_config()?;
 
     // Check for token restoration before client initialization
@@ -304,9 +311,9 @@ async fn run(args: Cli) -> Result<()> {
     };
 
     match sub_command {
-        SubCmds::Init(init_cli) => {
-            // Init commands don't need a Gmail client since they set up the config
-            init_cli.run().await
+        SubCmds::Init(_) => {
+            // This should never be reached due to early return above
+            unreachable!("Init command should have been handled earlier");
         }
         SubCmds::Message(messages_cli) => messages_cli.run(&mut client).await,
         SubCmds::Labels(labels_cli) => labels_cli.run(client).await,
