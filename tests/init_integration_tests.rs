@@ -1,13 +1,13 @@
 //! Integration tests for the init CLI command.
 
 use assert_cmd::prelude::*;
-use assert_fs::prelude::*;
 use assert_fs::fixture::ChildPath;
+use assert_fs::prelude::*;
 use predicates::prelude::*;
 use std::process::Command;
 
 /// Creates a mock OAuth2 credential file with test data.
-/// 
+///
 /// This helper function creates a valid OAuth2 credential JSON file
 /// suitable for testing credential file handling without using real credentials.
 fn create_mock_credential_file(credential_file: &ChildPath) {
