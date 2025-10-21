@@ -92,11 +92,9 @@ fn test_init_with_separate_rules_directory() {
         &format!("c:{}", rules_dir.to_string_lossy()),
     ]);
 
-    cmd.assert()
-        .success()
-        .stdout(predicate::str::contains(
-            "Initialization completed successfully!",
-        ));
+    cmd.assert().success().stdout(predicate::str::contains(
+        "Initialization completed successfully!",
+    ));
 
     // Verify config directory was created
     assert!(config_dir.exists());

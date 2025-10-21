@@ -342,6 +342,7 @@ impl RulesCli {
 /// - **Rules CLI**: To load rules before configuration or execution
 /// - **Main CLI**: For default rule execution when no subcommand is specified
 /// - **Validation systems**: To verify rule configuration integrity
+///
 /// Loads rules from the default location.
 pub fn get_rules() -> Result<Rules> {
     get_rules_from(None)

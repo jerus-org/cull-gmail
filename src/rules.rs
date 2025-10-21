@@ -45,7 +45,7 @@ use std::{
     collections::BTreeMap,
     env,
     fs::{self, read_to_string},
-    path::{Path, PathBuf},
+    path::Path,
 };
 
 use serde::{Deserialize, Serialize};
@@ -524,8 +524,9 @@ impl Rules {
         let save_path = if let Some(p) = path {
             p.to_path_buf()
         } else {
-            let home_dir = env::home_dir()
-                .ok_or_else(|| Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string()))?;
+            let home_dir = env::home_dir().ok_or_else(|| {
+                Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string())
+            })?;
             home_dir.join(".cull-gmail/rules.toml")
         };
 
@@ -600,8 +601,9 @@ impl Rules {
         let load_path = if let Some(p) = path {
             p.to_path_buf()
         } else {
-            let home_dir = env::home_dir()
-                .ok_or_else(|| Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string()))?;
+            let home_dir = env::home_dir().ok_or_else(|| {
+                Error::HomeExpansionFailed("~/.cull-gmail/rules.toml".to_string())
+            })?;
             home_dir.join(".cull-gmail/rules.toml")
         };
 
