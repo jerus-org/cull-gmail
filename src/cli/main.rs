@@ -127,6 +127,8 @@ use messages_cli::MessagesCli;
 use rules_cli::RulesCli;
 use token_cli::{TokenCli, restore_tokens_from_string};
 
+use std::path::PathBuf;
+
 /// Main CLI application structure defining global options and subcommands.
 ///
 /// This struct represents the root of the command-line interface, providing
@@ -304,8 +306,11 @@ async fn run(args: Cli) -> Result<()> {
 
     let mut client = GmailClient::new_with_config(client_config).await?;
 
+    // Get configured rules path
+    let rules_path = get_rules_path(&config)?;
+
     let Some(sub_command) = args.sub_command else {
-        let rules = rules_cli::get_rules()?;
+        let rules = rules_cli::get_rules_from(rules_path.as_deref())?;
         let execute = config.get_bool("execute").unwrap_or(false);
         return run_rules(&mut client, rules, execute).await;
     };
@@ -317,7 +322,11 @@ async fn run(args: Cli) -> Result<()> {
         }
         SubCmds::Message(messages_cli) => messages_cli.run(&mut client).await,
         SubCmds::Labels(labels_cli) => labels_cli.run(client).await,
-        SubCmds::Rules(rules_cli) => rules_cli.run(&mut client).await,
+        SubCmds::Rules(rules_cli) => {
+            rules_cli
+                .run_with_rules_path(&mut client, rules_path.as_deref())
+                .await
+        }
         SubCmds::Token(token_cli) => {
             // Token commands don't need an initialized client, just the config
             // We need to get a fresh client_config since the original was moved
@@ -530,6 +539,33 @@ async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Res
 /// - Container deployments with injected token environment variables
 /// - CI/CD pipelines with stored token secrets
 /// - Ephemeral compute environments requiring periodic Gmail access
+/// Gets the rules file path from configuration.
+///
+/// Reads the `rules` configuration value and resolves it using path prefixes.
+/// Supports h:, c:, r: prefixes for home, current, and root directories.
+///
+/// # Arguments
+///
+/// * `config` - Application configuration
+///
+/// # Returns
+///
+/// Returns the resolved rules file path, or None if using default location.
+fn get_rules_path(config: &Config) -> Result<Option<PathBuf>> {
+    let rules_config = config
+        .get_string("rules")
+        .unwrap_or_else(|_| "rules.toml".to_string());
+
+    // If it's just "rules.toml" (the default), return None to use default location
+    if rules_config == "rules.toml" {
+        return Ok(None);
+    }
+
+    // Otherwise, parse the path with prefix support
+    let path = init_cli::parse_config_root(&rules_config);
+    Ok(Some(path))
+}
+
 fn restore_tokens_if_available(config: &Config, client_config: &ClientConfig) -> Result<()> {
     let token_env_var = config
         .get_string("token_cache_env")
