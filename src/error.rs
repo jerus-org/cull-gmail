@@ -51,4 +51,13 @@ pub enum Error {
     /// Invalid message age specification
     #[error("Invalid message age: {0}")]
     InvalidMessageAge(String),
+    /// Token not found or missing
+    #[error("Token error: {0}")]
+    TokenNotFound(String),
+    /// File I/O error with context
+    #[error("File I/O error: {0}")]
+    FileIo(String),
+    /// Serialization/deserialization error
+    #[error("Serialization error: {0}")]
+    SerializationError(String),
 }
