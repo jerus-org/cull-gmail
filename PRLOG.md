@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - 📘 Add WARP.md developer guidance file(pr [#89])
 - ✨ Add configurable rules directory support(pr [#91])
+- 📦 build(ci)-upgrade circleci-toolkit orb to v2.13.5(pr [#93])
 
 ### Fixed
 
@@ -276,6 +277,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#90]: https://github.com/jerus-org/cull-gmail/pull/90
 [#91]: https://github.com/jerus-org/cull-gmail/pull/91
 [#92]: https://github.com/jerus-org/cull-gmail/pull/92
+[#93]: https://github.com/jerus-org/cull-gmail/pull/93
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...HEAD
 [0.0.11]: https://github.com/jerus-org/cull-gmail/compare/v0.0.10...v0.0.11
 [0.0.10]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...v0.0.10
