@@ -59,7 +59,7 @@
 //!
 //! ## Safety Features
 //!
-//! - **Dry-run mode**: Default behavior prevents accidental data loss
+//! - **Dry-run mode**: Default behaviour prevents accidental data loss
 //! - **Comprehensive logging**: Detailed operation tracking with multiple verbosity levels
 //! - **Error handling**: Graceful error recovery with meaningful error messages
 //! - **Confirmation prompts**: For destructive operations
@@ -140,7 +140,7 @@ use std::path::PathBuf;
 /// - **Logging**: Configurable verbosity levels for operation visibility
 /// - **Subcommands**: Optional command selection (defaults to rule execution)
 ///
-/// # Default Behavior
+/// # Default behaviour
 ///
 /// When no subcommand is provided, the CLI executes the default rule processing
 /// workflow, loading rules from the configuration file and executing them
@@ -263,7 +263,7 @@ async fn main() {
     });
 }
 
-/// Main application logic dispatcher handling subcommand execution and default behavior.
+/// Main application logic dispatcher handling subcommand execution and default behaviour.
 ///
 /// This function orchestrates the core application workflow by:
 /// 1. Loading configuration from files and environment
@@ -278,7 +278,7 @@ async fn main() {
 ///
 /// Returns `Result<()>` indicating success or failure of the operation.
 ///
-/// # Default Behavior
+/// # Default behaviour
 ///
 /// When no subcommand is specified, the function executes the default rule processing
 /// workflow, loading rules from configuration and executing them based on the
@@ -360,7 +360,7 @@ async fn run(args: Cli) -> Result<()> {
 /// - **Debug**: Detailed operation info, API calls, configuration values
 /// - **Trace**: Very detailed debugging information
 ///
-/// # Default Behavior
+/// # Default behaviour
 ///
 /// The function enforces a minimum of Info-level logging to ensure users
 /// receive adequate feedback about application operations, even when
