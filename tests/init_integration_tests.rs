@@ -26,6 +26,59 @@ fn create_mock_credential_file(credential_file: &ChildPath) {
         .unwrap();
 }
 
+/// Helper to run init command with config and rules directories.
+///
+/// This helper reduces duplication when testing init with separate directories.
+fn run_init_with_dirs(
+    config_dir: &std::path::Path,
+    rules_dir: &std::path::Path,
+    dry_run: bool,
+) -> assert_cmd::assert::Assert {
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let config_arg = format!("c:{}", config_dir.to_string_lossy());
+    let rules_arg = format!("c:{}", rules_dir.to_string_lossy());
+
+    cmd.args([
+        "init",
+        "--config-dir",
+        &config_arg,
+        "--rules-dir",
+        &rules_arg,
+    ]);
+
+    if dry_run {
+        cmd.arg("--dry-run");
+    }
+
+    cmd.assert()
+}
+
+/// Helper to run init command with credential file.
+///
+/// This helper reduces duplication when testing init with credential files.
+fn run_init_with_credential(
+    config_dir: &std::path::Path,
+    credential_path: &std::path::Path,
+    dry_run: bool,
+) -> assert_cmd::assert::Assert {
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let config_arg = format!("c:{}", config_dir.to_string_lossy());
+
+    cmd.args([
+        "init",
+        "--config-dir",
+        &config_arg,
+        "--credential-file",
+        credential_path.to_str().unwrap(),
+    ]);
+
+    if dry_run {
+        cmd.arg("--dry-run");
+    }
+
+    cmd.assert()
+}
+
 #[test]
 fn test_init_help() {
     let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
@@ -83,18 +136,11 @@ fn test_init_with_separate_rules_directory() {
     let config_dir = temp_dir.path().join("config");
     let rules_dir = temp_dir.path().join("rules");
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
-    cmd.args([
-        "init",
-        "--config-dir",
-        &format!("c:{}", config_dir.to_string_lossy()),
-        "--rules-dir",
-        &format!("c:{}", rules_dir.to_string_lossy()),
-    ]);
-
-    cmd.assert().success().stdout(predicate::str::contains(
-        "Initialization completed successfully!",
-    ));
+    run_init_with_dirs(&config_dir, &rules_dir, false)
+        .success()
+        .stdout(predicate::str::contains(
+            "Initialization completed successfully!",
+        ));
 
     // Verify config directory was created
     assert!(config_dir.exists());
@@ -122,17 +168,7 @@ fn test_init_rules_dir_dry_run() {
     let config_dir = temp_dir.path().join("config");
     let rules_dir = temp_dir.path().join("rules");
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
-    cmd.args([
-        "init",
-        "--config-dir",
-        &format!("c:{}", config_dir.to_string_lossy()),
-        "--rules-dir",
-        &format!("c:{}", rules_dir.to_string_lossy()),
-        "--dry-run",
-    ]);
-
-    cmd.assert()
+    run_init_with_dirs(&config_dir, &rules_dir, true)
         .success()
         .stdout(predicate::str::contains("DRY RUN: No changes will be made"))
         .stdout(predicate::str::contains("Create directory:"))
@@ -154,17 +190,7 @@ fn test_init_dry_run_with_credential_file() {
     // Create a mock credential file
     create_mock_credential_file(&credential_file);
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
-    cmd.args([
-        "init",
-        "--config-dir",
-        &format!("c:{}", config_dir.to_string_lossy()),
-        "--credential-file",
-        credential_file.path().to_str().unwrap(),
-        "--dry-run",
-    ]);
-
-    cmd.assert()
+    run_init_with_credential(&config_dir, credential_file.path(), true)
         .success()
         .stdout(predicate::str::contains("DRY RUN: No changes will be made"))
         .stdout(predicate::str::contains("Planned operations:"))
@@ -278,18 +304,10 @@ fn test_init_with_credential_file_copy() {
     // Create a mock credential file
     create_mock_credential_file(&credential_file);
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
-    cmd.args([
-        "init",
-        "--config-dir",
-        &format!("c:{}", config_dir.to_string_lossy()),
-        "--credential-file",
-        credential_file.path().to_str().unwrap(),
-        // Skip OAuth for this test since we don't have real credentials
-    ]);
-
     // This will fail at OAuth step, but we can check that files were created correctly
-    let _output = cmd.output().unwrap();
+    let _output = run_init_with_credential(&config_dir, credential_file.path(), false)
+        .get_output()
+        .clone();
 
     // Verify files were created up to the OAuth step
     assert!(config_dir.exists());
