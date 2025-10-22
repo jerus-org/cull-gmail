@@ -5,17 +5,44 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.12] - 2025-10-22
+
+Summary: Added[6], Build[1], Changed[2], Chore[6], Documentation[1], Fixed[6], Testing[2]
+
+### Added
+
+ - ✨ feat: integrate configurable rules path throughout CLI
+ - ✨ feat: add get_rules_from() to load rules from custom path
+ - ✨ feat: add configurable rules directory support to Rules and InitCli
+ - 🏗️ feat(init): implement plan and apply operations
+ - ✨ feat(cli): scaffold InitCli subcommand and clap wiring
+ - 🔐 feat: Add token export/import for ephemeral environments
+
+### Fixed
+
+ - 🐛 fix(ci): correct default test runner value
+ - 🔧 fix: address clippy warnings after refactoring
+ - 🐛 fix: allow init command to run without existing config file
+ - 🔧 fix: address clippy warnings and improve code formatting
+ - 🐛 fix: replace hardcoded paths in tests with temp directories for CI compatibility
+ - 🔧 fix: Resolve clippy warnings and formatting issues
+
+### Changed
+
+ - ♻️ refactor: reduce cognitive complexity of plan_operations and execute_operation
+ - ♻️ refactor: extract mock credential file creation into helper function
+
 ## [0.0.11] - 2025-10-20
 
-Summary: Added[7], Changed[7], Chore[12], Continuous Integration[5], Documentation[24], Fixed[7], Testing[12]
+Summary: Added[7], Changed[7], Chore[13], Continuous Integration[5], Documentation[24], Fixed[7], Testing[12]
 
 ### Added
 
  - ✨ feat(test): add junit report
  - ✨ feat(ci): introduce nextest test runner
+ - ✨ feat(retention): enhance message age with parsing and validation
  - ✨ feat(retention): implement retention policy configuration
  - ✨ feat(error): add invalid message age error
- - ✨ feat(retention): enhance message age with parsing and validation
  - ✨ feat(retention): introduce message age specification
  - ✨ feat(retention): enhance retention policy configuration
 
@@ -36,8 +63,8 @@ Summary: Added[7], Changed[7], Chore[12], Continuous Integration[5], Documentati
  - ♻️ refactor(message-list): extract helper to append messages from ListMessagesResponse and add unit test
  - ♻️ refactor(rule_processor): extract process_label and add internal ops trait for unit testing
  - ♻️ refactor(rule_processor): add TRASH_LABEL, correct Gmail scopes, early returns, and improve idioms
- - refactor(rules): replace unwrap() with explicit error handling and propagate errors safely
  - refactor(rules): apply idiomatic patterns and resolve clippy warnings
+ - refactor(rules): replace unwrap() with explicit error handling and propagate errors safely
 
 ## [0.0.10] - 2025-10-16
 
@@ -474,7 +501,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.10...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...HEAD
+[0.0.11]: https://github.com/jerus-org/cull-gmail/compare/v0.0.10...v0.0.11
 [0.0.10]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...v0.0.9
 [0.0.8]: https://github.com/jerus-org/cull-gmail/compare/v0.0.7...v0.0.8
