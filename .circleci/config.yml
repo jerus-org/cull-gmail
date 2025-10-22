@@ -138,10 +138,10 @@ jobs:
         description: "Required: The minimum version of the rust compiler to use"
         type: string
       test_runner:
-        default: cargo
+        default: test
         description: The test runner to use
         enum:
-          - cargo
+          - test
           - nextest
         type: enum
       nextest_profile:
@@ -162,7 +162,7 @@ jobs:
           condition:
             equal:
               - << parameters.test_runner >>
-              - cargo
+              - test
           steps:
             - toolkit/cargo_test:
                 cargo_all_features: << parameters.cargo_all_features >>
