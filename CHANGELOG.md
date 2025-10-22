@@ -5,9 +5,25 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.13] - 2025-10-22
+
+Summary: Added[1], Chore[1], Fixed[5]
+
+### Added
+
+ - ✨ feat(cli): enhance configuration loading with logging
+
+### Fixed
+
+ - 🐛 fix(cli): load config file as optional
+ - 🐛 fix(cli): correct spelling errors in documentation
+ - 🐛 fix(client_config): print config for debugging
+ - 🐛 fix(cli): fix config file loading
+ - 🐛 fix(cli): load config file only if it exists
+
 ## [0.0.12] - 2025-10-22
 
-Summary: Added[6], Build[1], Changed[2], Chore[6], Documentation[1], Fixed[6], Testing[2]
+Summary: Added[6], Build[1], Changed[2], Chore[7], Documentation[1], Fixed[6], Testing[2]
 
 ### Added
 
@@ -23,8 +39,8 @@ Summary: Added[6], Build[1], Changed[2], Chore[6], Documentation[1], Fixed[6], T
  - 🐛 fix(ci): correct default test runner value
  - 🔧 fix: address clippy warnings after refactoring
  - 🐛 fix: allow init command to run without existing config file
- - 🔧 fix: address clippy warnings and improve code formatting
  - 🐛 fix: replace hardcoded paths in tests with temp directories for CI compatibility
+ - 🔧 fix: address clippy warnings and improve code formatting
  - 🔧 fix: Resolve clippy warnings and formatting issues
 
 ### Changed
@@ -501,7 +517,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.12...HEAD
+[0.0.12]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...v0.0.12
 [0.0.11]: https://github.com/jerus-org/cull-gmail/compare/v0.0.10...v0.0.11
 [0.0.10]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...v0.0.10
 [0.0.9]: https://github.com/jerus-org/cull-gmail/compare/v0.0.8...v0.0.9
