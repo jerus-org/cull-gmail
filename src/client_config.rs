@@ -299,6 +299,8 @@ impl ClientConfig {
         let root = configs.get_string("config_root")?;
         let config_root = ConfigRoot::parse(&root);
 
+        log::info!("Configs are: {configs:?}");
+
         let secret = if let Ok(client_id) = configs.get_string("client_id")
             && let Ok(client_secret) = configs.get_string("client_secret")
             && let Ok(token_uri) = configs.get_string("token_uri")
