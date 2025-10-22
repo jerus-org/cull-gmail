@@ -428,15 +428,16 @@ fn get_config() -> Result<(Config, ClientConfig)> {
     let path = home_dir.join(".cull-gmail/cull-gmail.toml");
     log::info!("Loading config from {}", path.display());
 
+    let config_file = config::File::with_name(path.to_path_buf().to_str().unwrap());
+    let config_file = config_file.required(false);
+
     let configurations = config::Config::builder()
         .set_default("credential_file", "credential.json")?
         .set_default("config_root", "h:.cull-gmail")?
         .set_default("rules", "rules.toml")?
         .set_default("execute", true)?
         .set_default("token_cache_env", "CULL_GMAIL_TOKEN_CACHE")?
-        .add_source(config::File::with_name(
-            path.to_path_buf().to_str().unwrap(),
-        ))
+        .add_source(config_file)
         .add_source(config::Environment::with_prefix("APP"))
         .build()?;
 
