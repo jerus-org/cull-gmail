@@ -429,7 +429,7 @@ fn get_config() -> Result<(Config, ClientConfig)> {
     log::info!("Loading config from {}", path.display());
 
     let config_file = config::File::with_name(path.to_path_buf().to_str().unwrap());
-    let config_file = config_file.required(false);
+    // let config_file = config_file.required(false);
     log::info!("Optional Config file {config_file:?}");
 
     let configurations = config::Config::builder()
