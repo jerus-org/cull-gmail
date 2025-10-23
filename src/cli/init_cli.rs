@@ -369,6 +369,33 @@ token_cache_env = "CULL_GMAIL_TOKEN_CACHE"
         )
     }
 
+    /// Generate config file content with skip-rules comment.
+    fn config_content_with_skip_rules(rules_path: &str) -> String {
+        format!(
+            r#"# cull-gmail configuration
+# This file configures the cull-gmail application.
+
+# OAuth2 credential file (relative to config_root)
+credential_file = "credential.json"
+
+# Configuration root directory  
+config_root = "h:.cull-gmail"
+
+# Rules configuration file (supports h:, c:, r: prefixes)
+# NOTE: rules.toml creation was skipped via --skip-rules flag
+# The rules file is expected to be provided externally (e.g., in ephemeral environments)
+rules = "{rules_path}"
+
+# Default execution mode (false = dry-run, true = execute)
+# Set to false for safety - you can override with --execute flag
+execute = false
+
+# Environment variable name for token cache (for ephemeral environments)
+token_cache_env = "CULL_GMAIL_TOKEN_CACHE"
+"#
+        )
+    }
+
     const RULES_FILE_CONTENT: &'static str = r#"# Example rules for cull-gmail
 # Each rule targets a Gmail label and specifies an action.
 # 
@@ -628,7 +655,14 @@ impl InitCli {
         let rules_path = rules_dir.join(InitDefaults::rules_filename());
         let rules_path_str = rules_path.to_string_lossy().to_string();
 
-        let config_contents = if rules_dir == config_path {
+        let config_contents = if self.skip_rules {
+            // Skip rules mode - add comment about external provision
+            if rules_dir == config_path {
+                InitDefaults::config_content_with_skip_rules(InitDefaults::rules_filename())
+            } else {
+                InitDefaults::config_content_with_skip_rules(&rules_path_str)
+            }
+        } else if rules_dir == config_path {
             // Rules in same directory - use relative path
             InitDefaults::CONFIG_FILE_CONTENT.to_string()
         } else {
@@ -663,6 +697,12 @@ impl InitCli {
                 #[cfg(unix)]
                 mode: Some(0o755),
             });
+        }
+
+        // Skip rules file creation if --skip-rules is set
+        if self.skip_rules {
+            log::info!("Skipping rules.toml creation due to --skip-rules flag");
+            return Ok(());
         }
 
         let rules_file_path = rules_dir.join(InitDefaults::rules_filename());
@@ -720,6 +760,14 @@ impl InitCli {
             println!("  {}. {}", i + 1, op);
         }
         println!();
+
+        // Show skip-rules notice if applicable
+        if self.skip_rules {
+            println!("📝 rules.toml: skipped (per --skip-rules flag)");
+            println!("   The rules file path is configured in cull-gmail.toml");
+            println!("   Expected to be provided externally (e.g., in ephemeral environments)");
+            println!();
+        }
 
         if operations
             .iter()
@@ -982,7 +1030,16 @@ impl InitCli {
         println!("📁 Configuration directory: {}", config_path.display());
         println!("📄 Files created:");
         println!("   - cull-gmail.toml (main configuration)");
-        println!("   - rules.toml (retention rules template)");
+
+        if self.skip_rules {
+            println!("   - rules.toml (SKIPPED - expected to be provided externally)");
+            let rules_dir = self.get_rules_directory(config_path);
+            let rules_path = rules_dir.join(InitDefaults::rules_filename());
+            println!("     Configured path: {}", rules_path.display());
+        } else {
+            println!("   - rules.toml (retention rules template)");
+        }
+
         if self.credential_file.is_some() {
             println!("   - credential.json (OAuth2 credentials)");
             println!("   - gmail1/ (OAuth2 token cache)");
@@ -992,14 +1049,24 @@ impl InitCli {
         println!("📋 Next steps:");
         if self.credential_file.is_some() {
             println!("   1. Test Gmail connection: cull-gmail labels");
-            println!("   2. Review rules template: cull-gmail rules run --dry-run");
-            println!("   3. Customize rules.toml as needed");
-            println!("   4. Run rules safely: cull-gmail rules run --dry-run");
-            println!("   5. Execute for real: cull-gmail rules run --execute");
+            if self.skip_rules {
+                println!("   2. Ensure rules.toml is provided at the configured path");
+                println!("   3. Review rules: cull-gmail rules run --dry-run");
+                println!("   4. Run rules safely: cull-gmail rules run --dry-run");
+                println!("   5. Execute for real: cull-gmail rules run --execute");
+            } else {
+                println!("   2. Review rules template: cull-gmail rules run --dry-run");
+                println!("   3. Customize rules.toml as needed");
+                println!("   4. Run rules safely: cull-gmail rules run --dry-run");
+                println!("   5. Execute for real: cull-gmail rules run --execute");
+            }
         } else {
             println!("   1. Add your OAuth2 credential file to:");
             println!("      {}/credential.json", config_path.display());
             println!("   2. Complete setup: cull-gmail init");
+            if self.skip_rules {
+                println!("   3. Ensure rules.toml is provided at the configured path");
+            }
             println!("   3. Or get credentials from:");
             println!("      https://console.cloud.google.com/apis/credentials");
         }
