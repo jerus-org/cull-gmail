@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - ✨ load application secret with logging(pr [#95])
+- ✨ add token and auth uri config options(pr [#98])
 
 ### Changed
 
@@ -302,6 +303,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#95]: https://github.com/jerus-org/cull-gmail/pull/95
 [#96]: https://github.com/jerus-org/cull-gmail/pull/96
 [#97]: https://github.com/jerus-org/cull-gmail/pull/97
+[#98]: https://github.com/jerus-org/cull-gmail/pull/98
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...HEAD
 [0.0.13]: https://github.com/jerus-org/cull-gmail/compare/v0.0.12...v0.0.13
 [0.0.12]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...v0.0.12
