@@ -97,6 +97,24 @@ fn verify_standard_config_content(config_dir: &std::path::Path) {
     assert!(config_content.contains("execute = false"));
 }
 
+/// Helper to run init command with basic options.
+///
+/// This helper reduces duplication when testing basic init command execution.
+fn run_init_basic(config_dir: &std::path::Path, skip_rules: bool) -> assert_cmd::assert::Assert {
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let config_arg = format!("c:{}", config_dir.to_string_lossy());
+
+    cmd.arg("init");
+    cmd.arg("--config-dir");
+    cmd.arg(config_arg);
+
+    if skip_rules {
+        cmd.arg("--skip-rules");
+    }
+
+    cmd.assert()
+}
+
 #[test]
 fn test_init_help() {
     let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
@@ -227,14 +245,7 @@ fn test_init_actual_execution() {
     let temp_dir = assert_fs::TempDir::new().unwrap();
     let config_dir = temp_dir.path().join("test-config");
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
-    cmd.args([
-        "init",
-        "--config-dir",
-        &format!("c:{}", config_dir.to_string_lossy()),
-    ]);
-
-    cmd.assert()
+    run_init_basic(&config_dir, false)
         .success()
         .stdout(predicate::str::contains(
             "Initialization completed successfully!",
@@ -475,15 +486,7 @@ fn test_init_with_skip_rules_creates_config_but_not_rules() {
     let temp_dir = assert_fs::TempDir::new().unwrap();
     let config_dir = temp_dir.path().join("test-config");
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
-    cmd.args([
-        "init",
-        "--skip-rules",
-        "--config-dir",
-        &format!("c:{}", config_dir.to_string_lossy()),
-    ]);
-
-    cmd.assert()
+    run_init_basic(&config_dir, true)
         .success()
         .stdout(predicate::str::contains(
             "Initialization completed successfully!",
