@@ -372,4 +372,105 @@ mod unit_tests {
         };
         assert_eq!(oauth_op.get_mode(), None);
     }
+
+    #[test]
+    fn test_plan_operations_with_skip_rules_no_rules_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let config_path = temp_dir.path().join("new-config");
+
+        let init_cli = InitCli {
+            rules_dir: None,
+            config_dir: "test".to_string(),
+            credential_file: None,
+            force: false,
+            dry_run: false,
+            interactive: false,
+            skip_rules: true,
+        };
+
+        let operations = init_cli.plan_operations(&config_path, None).unwrap();
+
+        // Should have: CreateDir, WriteFile (config only, no rules), EnsureTokenDir
+        assert_eq!(operations.len(), 3);
+
+        // Verify no WriteFile operation for rules.toml
+        let has_rules_write = operations.iter().any(|op| {
+            if let Operation::WriteFile { path, .. } = op {
+                path.file_name().unwrap() == "rules.toml"
+            } else {
+                false
+            }
+        });
+        assert!(
+            !has_rules_write,
+            "rules.toml should not be written when skip_rules is true"
+        );
+    }
+
+    #[test]
+    fn test_plan_operations_with_skip_rules_and_rules_dir() {
+        let temp_dir = TempDir::new().unwrap();
+        let config_path = temp_dir.path().join("config");
+
+        let init_cli = InitCli {
+            rules_dir: Some("c:rules".to_string()),
+            config_dir: "test".to_string(),
+            credential_file: None,
+            force: false,
+            dry_run: false,
+            interactive: false,
+            skip_rules: true,
+        };
+
+        let operations = init_cli.plan_operations(&config_path, None).unwrap();
+
+        // Should have: CreateDir (config), CreateDir (rules), WriteFile (config only), EnsureTokenDir
+        // The rules directory should still be created even though the file isn't
+        let rules_dir_created = operations.iter().any(|op| {
+            if let Operation::CreateDir { path, .. } = op {
+                path.ends_with("rules")
+            } else {
+                false
+            }
+        });
+        assert!(rules_dir_created, "Rules directory should still be created");
+
+        // Verify no WriteFile operation for rules.toml
+        let has_rules_write = operations.iter().any(|op| {
+            if let Operation::WriteFile { path, .. } = op {
+                path.file_name().unwrap() == "rules.toml"
+            } else {
+                false
+            }
+        });
+        assert!(
+            !has_rules_write,
+            "rules.toml should not be written when skip_rules is true"
+        );
+    }
+
+    #[test]
+    fn test_config_content_has_skip_rules_comment() {
+        // Test that config content includes skip-rules comment
+        let content_with_skip = InitDefaults::config_content_with_skip_rules("rules.toml");
+
+        assert!(
+            content_with_skip
+                .contains("NOTE: rules.toml creation was skipped via --skip-rules flag")
+        );
+        assert!(content_with_skip.contains("expected to be provided externally"));
+        assert!(content_with_skip.contains("rules = \"rules.toml\""));
+    }
+
+    #[test]
+    fn test_config_content_skip_rules_with_custom_path() {
+        let custom_path = "/mnt/rules/rules.toml";
+        let content_with_skip = InitDefaults::config_content_with_skip_rules(custom_path);
+
+        assert!(
+            content_with_skip
+                .contains("NOTE: rules.toml creation was skipped via --skip-rules flag")
+        );
+        assert!(content_with_skip.contains(&format!("rules = \"{custom_path}\"")));
+    }
 }
