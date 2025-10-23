@@ -306,6 +306,7 @@ impl ClientConfig {
             && let Ok(token_uri) = configs.get_string("token_uri")
             && let Ok(auth_uri) = configs.get_string("auth_uri")
         {
+            log::info!("Generating the application secret from the environment!");
             ApplicationSecret {
                 client_id,
                 client_secret,
@@ -318,6 +319,7 @@ impl ClientConfig {
                 client_x509_cert_url: None,
             }
         } else {
+            log::info!("Generating the application secret from the credential file!");
             let credential_file = configs.get_string("credential_file")?;
             log::info!("root: {config_root}");
             let path = config_root.full_path().join(credential_file);
