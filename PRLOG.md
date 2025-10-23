@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - 🐛 config: improve config logging format(pr [#96])
+- 🐛 config: reduce log verbosity(pr [#99])
 
 ## [0.0.13] - 2025-10-22
 
@@ -304,6 +305,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#96]: https://github.com/jerus-org/cull-gmail/pull/96
 [#97]: https://github.com/jerus-org/cull-gmail/pull/97
 [#98]: https://github.com/jerus-org/cull-gmail/pull/98
+[#99]: https://github.com/jerus-org/cull-gmail/pull/99
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...HEAD
 [0.0.13]: https://github.com/jerus-org/cull-gmail/compare/v0.0.12...v0.0.13
 [0.0.12]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...v0.0.12
