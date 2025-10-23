@@ -5,9 +5,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.14] - 2025-10-23
+
+Summary: Added[2], Chore[6], Fixed[2]
+
+### Added
+
+ - ✨ feat(cli): add token and auth uri config options
+ - ✨ feat(config): load application secret with logging
+
+### Fixed
+
+ - 🐛 fix(config): reduce log verbosity
+ - 🐛 fix(config): improve config logging format
+
 ## [0.0.13] - 2025-10-22
 
-Summary: Added[1], Chore[1], Fixed[5]
+Summary: Added[1], Chore[2], Fixed[5]
 
 ### Added
 
@@ -15,11 +29,11 @@ Summary: Added[1], Chore[1], Fixed[5]
 
 ### Fixed
 
- - 🐛 fix(cli): load config file as optional
- - 🐛 fix(cli): correct spelling errors in documentation
- - 🐛 fix(client_config): print config for debugging
- - 🐛 fix(cli): fix config file loading
  - 🐛 fix(cli): load config file only if it exists
+ - 🐛 fix(cli): fix config file loading
+ - 🐛 fix(client_config): print config for debugging
+ - 🐛 fix(cli): correct spelling errors in documentation
+ - 🐛 fix(cli): load config file as optional
 
 ## [0.0.12] - 2025-10-22
 
@@ -517,7 +531,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.12...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...HEAD
+[0.0.13]: https://github.com/jerus-org/cull-gmail/compare/v0.0.12...v0.0.13
 [0.0.12]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...v0.0.12
 [0.0.11]: https://github.com/jerus-org/cull-gmail/compare/v0.0.10...v0.0.11
 [0.0.10]: https://github.com/jerus-org/cull-gmail/compare/v0.0.9...v0.0.10
