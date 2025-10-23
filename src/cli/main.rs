@@ -433,6 +433,8 @@ fn get_config() -> Result<(Config, ClientConfig)> {
         .set_default("config_root", "h:.cull-gmail")?
         .set_default("rules", "rules.toml")?
         .set_default("execute", true)?
+        .set_default("token_uri", "https://oauth2.googleapis.com/token")?
+        .set_default("auth_uri", "https://accounts.google.com/o/oauth2/auth")?
         .set_default("token_cache_env", "CULL_GMAIL_TOKEN_CACHE")?;
 
     if path.exists() {
