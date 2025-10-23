@@ -30,6 +30,7 @@ mod unit_tests {
             force: false,
             dry_run: false,
             interactive: false,
+            skip_rules: false,
         }
     }
 
@@ -42,6 +43,7 @@ mod unit_tests {
             force: true,
             dry_run: false,
             interactive: false,
+            skip_rules: false,
         }
     }
 
