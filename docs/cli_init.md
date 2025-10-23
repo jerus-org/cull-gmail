@@ -37,6 +37,19 @@ cull-gmail init [OPTIONS]
   - Must be for Desktop application type
   - Will be copied to config directory as `credential.json`
 
+### Rules Configuration
+
+- `--rules-dir <DIR>`: Optional separate directory for rules.toml file
+  - Useful for version controlling rules separately from credentials
+  - Supports the same path prefixes as `--config-dir` (h:, c:, r:)
+  - If not provided, rules.toml is created in the configuration directory
+
+- `--skip-rules`: Skip rules.toml file creation
+  - The rules.toml file will not be created during initialization
+  - Useful for ephemeral compute environments where rules.toml is provided externally
+  - The cull-gmail.toml will still reference the rules.toml path with a comment
+  - If combined with `--rules-dir`, the directory is created but the file is not
+
 ### Execution Modes
 
 - `--dry-run`: Preview all planned actions without making changes
@@ -94,6 +107,33 @@ cull-gmail init --force
 # Force with specific credential file
 cull-gmail init --force --credential-file new_credentials.json
 ```
+
+### Ephemeral Environments
+
+```bash
+# Skip rules.toml creation when it's provided externally
+cull-gmail init --skip-rules
+
+# Skip rules with dry-run to preview
+cull-gmail init --skip-rules --dry-run
+
+# Skip rules with custom rules directory
+cull-gmail init --skip-rules --rules-dir /mnt/rules
+
+# Skip rules with custom config directory (e.g., in a container)
+cull-gmail init --skip-rules --config-dir /app/config
+```
+
+When using `--skip-rules`:
+
+- The `rules.toml` file is **not created** during initialization
+- The `cull-gmail.toml` file includes a comment indicating that `rules.toml` should be provided externally
+- The `rules = "rules.toml"` line (or custom path if `--rules-dir` is used) remains in the configuration
+- If `--rules-dir` is specified, the rules directory is still created, but without the `rules.toml` file
+- This is ideal for:
+  - Docker/Kubernetes environments where rules.toml is mounted as a volume
+  - CI/CD pipelines that provide rules.toml from version control
+  - Configuration management systems that supply rules.toml separately
 
 ## File Structure Created
 
