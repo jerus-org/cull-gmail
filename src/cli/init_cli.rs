@@ -24,6 +24,9 @@
 //!
 //! # Non-interactive setup (credential file copied manually later)
 //! cull-gmail init --config-dir ~/.cull-gmail
+//!
+//! # Skip rules.toml creation for ephemeral environments
+//! cull-gmail init --skip-rules
 //! ```
 //!
 //! ### Planning and Verification
@@ -39,6 +42,15 @@
 //! ```bash
 //! # Recreate configuration, backing up existing files
 //! cull-gmail init --force
+//! ```
+//!
+//! ### Ephemeral Environments
+//! ```bash
+//! # Skip rules.toml creation when it's provided externally
+//! cull-gmail init --skip-rules --config-dir /app/config
+//!
+//! # Skip rules with custom rules directory
+//! cull-gmail init --skip-rules --rules-dir /mnt/rules
 //! ```
 //!
 //! ## Security Considerations
@@ -199,6 +211,23 @@ pub struct InitCli {
         help = "Prompt for missing information and confirmations"
     )]
     pub interactive: bool,
+
+    /// Skip rules.toml file creation.
+    ///
+    /// When enabled, the rules.toml file will not be created during initialization.
+    /// This is useful for ephemeral compute environments where rules.toml is provided
+    /// externally (e.g., mounted from a volume or supplied via configuration management).
+    ///
+    /// The cull-gmail.toml configuration file will still reference the rules.toml path
+    /// with a comment indicating that it should be provided separately.
+    ///
+    /// If --rules-dir is also specified, the rules directory will be created but the
+    /// rules.toml file within it will not be generated.
+    #[arg(
+        long = "skip-rules",
+        help = "Do not create rules.toml; expect it to be provided externally"
+    )]
+    pub skip_rules: bool,
 }
 
 /// Operations that can be performed during initialization.
