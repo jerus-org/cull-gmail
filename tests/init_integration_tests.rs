@@ -79,6 +79,24 @@ fn run_init_with_credential(
     cmd.assert()
 }
 
+/// Helper to verify standard init file creation.
+///
+/// Checks that config directory, cull-gmail.toml, and gmail1 directory were created.
+fn verify_standard_init_files(config_dir: &std::path::Path) {
+    assert!(config_dir.exists());
+    assert!(config_dir.join("cull-gmail.toml").exists());
+    assert!(config_dir.join("gmail1").exists());
+}
+
+/// Helper to verify standard config file content.
+///
+/// Checks for common configuration entries.
+fn verify_standard_config_content(config_dir: &std::path::Path) {
+    let config_content = std::fs::read_to_string(config_dir.join("cull-gmail.toml")).unwrap();
+    assert!(config_content.contains("credential_file = \"credential.json\""));
+    assert!(config_content.contains("execute = false"));
+}
+
 #[test]
 fn test_init_help() {
     let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
@@ -227,16 +245,12 @@ fn test_init_actual_execution() {
         .stdout(predicate::str::contains("rules.toml"))
         .stdout(predicate::str::contains("Next steps:"));
 
-    // Verify files were actually created
-    assert!(config_dir.exists());
-    assert!(config_dir.join("cull-gmail.toml").exists());
+    // Verify standard files were created
+    verify_standard_init_files(&config_dir);
     assert!(config_dir.join("rules.toml").exists());
-    assert!(config_dir.join("gmail1").exists());
 
     // Verify file contents
-    let config_content = std::fs::read_to_string(config_dir.join("cull-gmail.toml")).unwrap();
-    assert!(config_content.contains("credential_file = \"credential.json\""));
-    assert!(config_content.contains("execute = false"));
+    verify_standard_config_content(&config_dir);
 
     let rules_content = std::fs::read_to_string(config_dir.join("rules.toml")).unwrap();
     assert!(rules_content.contains("# Example rules for cull-gmail"));
@@ -478,10 +492,8 @@ fn test_init_with_skip_rules_creates_config_but_not_rules() {
             "rules.toml (SKIPPED - expected to be provided externally)",
         ));
 
-    // Verify config directory was created
-    assert!(config_dir.exists());
-    assert!(config_dir.join("cull-gmail.toml").exists());
-    assert!(config_dir.join("gmail1").exists());
+    // Verify standard files were created
+    verify_standard_init_files(&config_dir);
 
     // Verify rules.toml was NOT created
     assert!(!config_dir.join("rules.toml").exists());
