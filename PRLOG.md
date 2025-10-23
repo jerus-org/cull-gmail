@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ✨ load application secret with logging(pr [#95])
 
+### Changed
+
+- ✨ init-add --skip-rules to suppress rules.toml creation for ephemeral environments(pr [#97])
+
 ### Fixed
 
 - 🐛 config: improve config logging format(pr [#96])
@@ -297,6 +301,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#94]: https://github.com/jerus-org/cull-gmail/pull/94
 [#95]: https://github.com/jerus-org/cull-gmail/pull/95
 [#96]: https://github.com/jerus-org/cull-gmail/pull/96
+[#97]: https://github.com/jerus-org/cull-gmail/pull/97
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...HEAD
 [0.0.13]: https://github.com/jerus-org/cull-gmail/compare/v0.0.12...v0.0.13
 [0.0.12]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...v0.0.12
