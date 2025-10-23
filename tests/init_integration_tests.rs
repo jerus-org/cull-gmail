@@ -420,3 +420,117 @@ fn test_init_oauth_integration() {
 
     temp_dir.close().unwrap();
 }
+
+#[test]
+fn test_init_with_skip_rules_dry_run_shows_skipped() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("test-config");
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--skip-rules",
+        "--dry-run",
+        "--config-dir",
+        &format!("c:{}", config_dir.to_string_lossy()),
+    ]);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains("DRY RUN: No changes will be made"))
+        .stdout(predicate::str::contains("Planned operations:"))
+        .stdout(predicate::str::contains("cull-gmail.toml"))
+        .stdout(predicate::str::contains(
+            "rules.toml: skipped (per --skip-rules flag)",
+        ))
+        .stdout(predicate::str::contains(
+            "The rules file path is configured in cull-gmail.toml",
+        ))
+        .stdout(predicate::str::contains(
+            "Expected to be provided externally",
+        ));
+
+    // Verify no files were actually created
+    assert!(!config_dir.exists());
+
+    temp_dir.close().unwrap();
+}
+
+#[test]
+fn test_init_with_skip_rules_creates_config_but_not_rules() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("test-config");
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--skip-rules",
+        "--config-dir",
+        &format!("c:{}", config_dir.to_string_lossy()),
+    ]);
+
+    cmd.assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Initialization completed successfully!",
+        ))
+        .stdout(predicate::str::contains(
+            "rules.toml (SKIPPED - expected to be provided externally)",
+        ));
+
+    // Verify config directory was created
+    assert!(config_dir.exists());
+    assert!(config_dir.join("cull-gmail.toml").exists());
+    assert!(config_dir.join("gmail1").exists());
+
+    // Verify rules.toml was NOT created
+    assert!(!config_dir.join("rules.toml").exists());
+
+    // Verify config file contains skip-rules comment
+    let config_content = std::fs::read_to_string(config_dir.join("cull-gmail.toml")).unwrap();
+    assert!(config_content.contains("NOTE: rules.toml creation was skipped via --skip-rules flag"));
+    assert!(config_content.contains("expected to be provided externally"));
+    assert!(config_content.contains("rules = \"rules.toml\""));
+
+    temp_dir.close().unwrap();
+}
+
+#[test]
+fn test_init_with_skip_rules_and_rules_dir_creates_dir_only() {
+    let temp_dir = assert_fs::TempDir::new().unwrap();
+    let config_dir = temp_dir.path().join("config");
+    let rules_dir = temp_dir.path().join("rules");
+
+    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    cmd.args([
+        "init",
+        "--skip-rules",
+        "--config-dir",
+        &format!("c:{}", config_dir.to_string_lossy()),
+        "--rules-dir",
+        &format!("c:{}", rules_dir.to_string_lossy()),
+    ]);
+
+    cmd.assert().success().stdout(predicate::str::contains(
+        "Initialization completed successfully!",
+    ));
+
+    // Verify config directory was created
+    assert!(config_dir.exists());
+    assert!(config_dir.join("cull-gmail.toml").exists());
+
+    // Verify rules directory was created
+    assert!(rules_dir.exists());
+
+    // Verify rules.toml was NOT created in either directory
+    assert!(!config_dir.join("rules.toml").exists());
+    assert!(!rules_dir.join("rules.toml").exists());
+
+    // Verify config file references the correct rules path
+    let config_content = std::fs::read_to_string(config_dir.join("cull-gmail.toml")).unwrap();
+    let expected_rules_path = rules_dir.join("rules.toml");
+    assert!(config_content.contains(&expected_rules_path.to_string_lossy().to_string()));
+    assert!(config_content.contains("NOTE: rules.toml creation was skipped via --skip-rules flag"));
+
+    temp_dir.close().unwrap();
+}
