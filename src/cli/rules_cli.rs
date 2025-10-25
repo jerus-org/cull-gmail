@@ -139,7 +139,7 @@ enum SubCmds {
     /// - **Action setting**: Specify trash or delete actions
     /// - **Rule modification**: Update existing rule parameters
     ///
-    /// The config subcommand enables fine-grained control over rule behavior
+    /// The config subcommand enables fine-grained control over rule behaviour
     /// and provides validation to ensure rules are properly configured
     /// before execution.
     #[clap(name = "config")]
