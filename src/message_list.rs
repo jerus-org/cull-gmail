@@ -95,6 +95,11 @@ pub trait MessageList {
     /// This method retrieves the subject line and date for each message currently
     /// stored in the message list and outputs them to the log.
     ///
+    /// # Parameters
+    ///
+    /// - `pre` text to display before the date/subject message identifier
+    /// - `post` text to display after the date/subject message identifier
+    ///
     /// # Returns
     ///
     /// Returns `Result<()>` on success, or an error if the Gmail API request fails.
@@ -106,7 +111,11 @@ pub trait MessageList {
     /// - Authentication credentials are invalid or expired
     /// - Network connectivity issues occur
     /// - Individual message retrieval fails
-    fn log_messages(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn log_messages(
+        &mut self,
+        pre: &str,
+        post: &str,
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Retrieves a list of messages from Gmail based on current filter settings.
     ///
@@ -543,13 +552,13 @@ impl MessageList for GmailClient {
         Ok(list)
     }
 
-    async fn log_messages(&mut self) -> Result<()> {
+    async fn log_messages(&mut self, pre: &str, post: &str) -> Result<()> {
         for i in 0..self.messages.len() {
             let id = self.messages[i].id().to_string();
             log::trace!("{id}");
             let m = self.get_message_metadata(&id).await?;
             let message = &mut self.messages[i];
-
+            log::trace!("Got the message: {m:?}");
             let Some(payload) = m.payload else { continue };
             let Some(headers) = payload.headers else {
                 continue;
@@ -566,8 +575,7 @@ impl MessageList for GmailClient {
                     continue;
                 }
             }
-
-            log::info!("{}", message.list_date_and_subject());
+            log::info!("{pre}{}{post}", message.list_date_and_subject());
         }
 
         Ok(())
@@ -601,7 +609,7 @@ mod tests {
     }
 
     impl MessageList for MockList {
-        async fn log_messages(&mut self) -> Result<()> {
+        async fn log_messages(&mut self, _pre: &str, _post: &str) -> Result<()> {
             Ok(())
         }
         async fn list_messages(
@@ -761,7 +769,7 @@ mod tests {
 
             Ok(list)
         }
-        async fn log_messages(&mut self) -> Result<()> {
+        async fn log_messages(&mut self, _pre: &str, _post: &str) -> Result<()> {
             Ok(())
         }
     }
@@ -770,7 +778,7 @@ mod tests {
     fn set_query_updates_state() {
         let mut ml = MockList::new();
         ml.set_query("from:noreply@example.com");
-        // not directly accessible; rely on behavior by calling again
+        // not directly accessible; rely on behaviour by calling again
         ml.set_query("is:unread");
         assert_eq!(ml.query, "is:unread");
     }
