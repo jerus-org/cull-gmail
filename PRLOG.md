@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- ♻️ refactor(message_list)-allow pre/post text in log_messages(pr [#100])
+
 ## [0.0.14] - 2025-10-23
 
 ### Added
@@ -306,6 +312,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#97]: https://github.com/jerus-org/cull-gmail/pull/97
 [#98]: https://github.com/jerus-org/cull-gmail/pull/98
 [#99]: https://github.com/jerus-org/cull-gmail/pull/99
+[#100]: https://github.com/jerus-org/cull-gmail/pull/100
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...HEAD
 [0.0.14]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...v0.0.14
 [0.0.13]: https://github.com/jerus-org/cull-gmail/compare/v0.0.12...v0.0.13
 [0.0.12]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...v0.0.12
