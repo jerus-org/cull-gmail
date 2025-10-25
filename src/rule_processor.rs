@@ -84,7 +84,7 @@ pub(crate) trait MailOperations {
     fn prepare(&mut self, pages: u32) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Execute trash operation on prepared messages
-    fn batch_trash(&self) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn batch_trash(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
 /// Internal orchestration function for rule processing that can be unit tested.
@@ -144,7 +144,7 @@ impl MailOperations for GmailClient {
         self.get_messages(pages).await
     }
 
-    async fn batch_trash(&self) -> Result<()> {
+    async fn batch_trash(&mut self) -> Result<()> {
         RuleProcessor::batch_trash(self).await
     }
 }
@@ -266,7 +266,7 @@ pub trait RuleProcessor {
     /// # Gmail API Requirements
     ///
     /// Requires the `https://www.googleapis.com/auth/gmail.modify` scope or broader.
-    fn batch_delete(&self) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn batch_delete(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Moves all prepared messages to the Gmail trash folder.
     ///
@@ -286,7 +286,7 @@ pub trait RuleProcessor {
     /// # Gmail API Requirements
     ///
     /// Requires the `https://www.googleapis.com/auth/gmail.modify` scope.
-    fn batch_trash(&self) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn batch_trash(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
 impl RuleProcessor for GmailClient {
@@ -365,7 +365,7 @@ impl RuleProcessor for GmailClient {
     /// Uses `https://www.googleapis.com/auth/gmail.modify` scope for secure,
     /// minimal privilege access. This scope provides sufficient permissions
     /// for message deletion while following security best practices.
-    async fn batch_delete(&self) -> Result<()> {
+    async fn batch_delete(&mut self) -> Result<()> {
         let message_ids = MessageList::message_ids(self);
 
         // Early return if no messages to delete, avoiding unnecessary API calls
@@ -377,6 +377,9 @@ impl RuleProcessor for GmailClient {
         let ids = Some(message_ids);
         let batch_request = BatchDeleteMessagesRequest { ids };
 
+        self.log_messages("Message with subject `", "` permanently deleted")
+            .await?;
+
         log::trace!("{batch_request:#?}");
 
         let _res = self
@@ -387,10 +390,6 @@ impl RuleProcessor for GmailClient {
             .doit()
             .await
             .map_err(Box::new)?;
-
-        for m in self.messages() {
-            log::info!("Message with subject `{}` permanently deleted", m.subject());
-        }
 
         Ok(())
     }
@@ -408,7 +407,7 @@ impl RuleProcessor for GmailClient {
     ///
     /// Uses `https://www.googleapis.com/auth/gmail.modify` scope for secure,
     /// minimal privilege access to Gmail message modification operations.
-    async fn batch_trash(&self) -> Result<()> {
+    async fn batch_trash(&mut self) -> Result<()> {
         let message_ids = MessageList::message_ids(self);
 
         // Early return if no messages to trash, avoiding unnecessary API calls
@@ -427,6 +426,9 @@ impl RuleProcessor for GmailClient {
             remove_label_ids,
         };
 
+        self.log_messages("Message with subject `", "` moved to trash")
+            .await?;
+
         log::trace!("{batch_request:#?}");
 
         let _res = self
@@ -437,10 +439,6 @@ impl RuleProcessor for GmailClient {
             .doit()
             .await
             .map_err(Box::new)?;
-
-        for m in self.messages() {
-            log::info!("Message with subject `{}` moved to trash", m.subject());
-        }
 
         Ok(())
     }
@@ -576,7 +574,7 @@ mod tests {
             Ok(())
         }
 
-        async fn batch_trash(&self) -> Result<()> {
+        async fn batch_trash(&mut self) -> Result<()> {
             // Always increment the counter to track that batch_trash was called
             *self.batch_trash_call_count.lock().unwrap() += 1;
 
@@ -722,11 +720,11 @@ mod tests {
                 Ok(())
             }
 
-            async fn batch_delete(&self) -> Result<()> {
+            async fn batch_delete(&mut self) -> Result<()> {
                 Ok(())
             }
 
-            async fn batch_trash(&self) -> Result<()> {
+            async fn batch_trash(&mut self) -> Result<()> {
                 Ok(())
             }
         }
