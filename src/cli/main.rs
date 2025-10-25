@@ -118,7 +118,7 @@ mod rules_cli;
 mod token_cli;
 
 use config::Config;
-use cull_gmail::{ClientConfig, EolAction, GmailClient, Result, RuleProcessor, Rules};
+use cull_gmail::{ClientConfig, EolAction, GmailClient, MessageList, Result, RuleProcessor, Rules};
 use std::{env, error::Error as stdError};
 
 use init_cli::InitCli;
@@ -511,6 +511,7 @@ async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Res
         if execute {
             execute_action(action, client, &label).await;
         } else {
+            client.log_messages("", "").await?;
             log::warn!("Execution stopped for dry run");
         }
     }
@@ -625,7 +626,7 @@ fn get_rules_path(config: &Config) -> Result<Option<PathBuf>> {
 ///
 /// This function should only be called when execute mode is enabled and after
 /// appropriate user confirmation for destructive operations.
-async fn execute_action(action: EolAction, client: &GmailClient, label: &str) {
+async fn execute_action(action: EolAction, client: &mut GmailClient, label: &str) {
     match action {
         EolAction::Trash => {
             log::info!("***executing trash messages***");
