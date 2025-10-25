@@ -290,7 +290,7 @@ impl MessagesCli {
         match self.action {
             MessageAction::List => {
                 if log::max_level() >= log::Level::Info {
-                    client.log_messages().await
+                    client.log_messages("", "").await
                 } else {
                     Ok(())
                 }
