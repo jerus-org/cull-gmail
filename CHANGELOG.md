@@ -5,9 +5,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.15] - 2025-10-26
+
+Summary: Changed[1], Chore[1], Documentation[1], Fixed[3]
+
+### Fixed
+
+ - 🐛 fix(rule_processor): fix batch_trash and batch_delete signatures
+ - 🐛 fix(cli): prevent dry-run from crashing
+ - 🐛 fix(cli): fix log messages with empty arguments
+
+### Changed
+
+ - ♻️ refactor(message_list): allow pre/post text in log_messages
+
 ## [0.0.14] - 2025-10-23
 
-Summary: Added[2], Chore[6], Fixed[2]
+Summary: Added[2], Chore[7], Fixed[2]
 
 ### Added
 
@@ -531,7 +545,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...HEAD
+[0.0.14]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...v0.0.14
 [0.0.13]: https://github.com/jerus-org/cull-gmail/compare/v0.0.12...v0.0.13
 [0.0.12]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...v0.0.12
 [0.0.11]: https://github.com/jerus-org/cull-gmail/compare/v0.0.10...v0.0.11
