@@ -497,6 +497,7 @@ async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Res
         };
 
         log::info!("Executing rule `#{}` for label `{label}`", rule.describe());
+        client.initialise_message_list();
         client.set_rule(rule.clone());
         client.set_execute(execute);
         if let Err(e) = client.find_rule_and_messages_for_label(&label).await {

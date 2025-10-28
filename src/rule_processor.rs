@@ -196,6 +196,33 @@ pub trait RuleProcessor {
     /// in dry-run mode (`false`) before enabling execution.
     fn set_execute(&mut self, value: bool);
 
+    /// Initialises the message list to prepare for application of rule.
+    ///
+    /// # Arguments
+    ///
+    /// * none
+    ///
+    /// # Example
+    ///
+    /// ```text
+    /// use cull_gmail::{GmailClient, RuleProcessor, ClientConfig};
+    ///
+    /// async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    ///     let config = ClientConfig::builder()
+    ///         .with_client_id("your-client-id")
+    ///         .with_client_secret("your-client-secret")
+    ///         .build();
+    ///     let mut client = GmailClient::new_with_config(config).await?;
+    ///     
+    ///     // Rules would typically be loaded from configuration
+    ///     // let rule = load_rule_from_config();
+    ///     // client.initialise_message_list();
+    ///     // client.set_rule(rule);
+    ///     Ok(())
+    /// }
+    /// ```
+    fn initialise_message_list(&mut self);
+
     /// Configures the end-of-life rule to apply during processing.
     ///
     /// # Arguments
@@ -290,6 +317,16 @@ pub trait RuleProcessor {
 }
 
 impl RuleProcessor for GmailClient {
+    /// Initialise the message list.
+    ///
+    /// The message list is initialised to ensure that the rule is only processed
+    /// on the in-scope messages.
+    ///
+    /// This must be called before processing any labels.
+    fn initialise_message_list(&mut self) {
+        self.messages = Vec::new();
+    }
+
     /// Configures the end-of-life rule for this Gmail client.
     ///
     /// The rule defines which messages to target and what action to perform on them.
@@ -447,7 +484,7 @@ impl RuleProcessor for GmailClient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{EolAction, Error, rules::EolRule};
+    use crate::{EolAction, Error, MessageSummary, rules::EolRule};
     use std::sync::{Arc, Mutex};
 
     /// Test helper to create a simple EolRule with or without a query
@@ -695,11 +732,16 @@ mod tests {
         // For now, we'll create a simple struct that implements RuleProcessor
 
         struct MockProcessor {
+            messages: Vec<MessageSummary>,
             rule: Option<EolRule>,
             execute: bool,
         }
 
         impl RuleProcessor for MockProcessor {
+            fn initialise_message_list(&mut self) {
+                self.messages = Vec::new();
+            }
+
             fn set_rule(&mut self, rule: EolRule) {
                 self.rule = Some(rule);
             }
@@ -732,6 +774,7 @@ mod tests {
         let mut processor = MockProcessor {
             rule: None,
             execute: false,
+            messages: Vec::new(),
         };
 
         // Test initial state
