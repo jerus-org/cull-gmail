@@ -196,7 +196,7 @@ pub trait RuleProcessor {
     /// in dry-run mode (`false`) before enabling execution.
     fn set_execute(&mut self, value: bool);
 
-    /// Initialises the message list to prepare for application of rule.
+    /// Initialises the message and label lists to prepare for application of rule.
     ///
     /// # Arguments
     ///
@@ -221,7 +221,7 @@ pub trait RuleProcessor {
     ///     Ok(())
     /// }
     /// ```
-    fn initialise_message_list(&mut self);
+    fn initialise_lists(&mut self);
 
     /// Configures the end-of-life rule to apply during processing.
     ///
@@ -323,8 +323,9 @@ impl RuleProcessor for GmailClient {
     /// on the in-scope messages.
     ///
     /// This must be called before processing any labels.
-    fn initialise_message_list(&mut self) {
+    fn initialise_lists(&mut self) {
         self.messages = Vec::new();
+        self.label_ids = Vec::new();
     }
 
     /// Configures the end-of-life rule for this Gmail client.
@@ -735,11 +736,13 @@ mod tests {
             messages: Vec<MessageSummary>,
             rule: Option<EolRule>,
             execute: bool,
+            labels: Vec<String>,
         }
 
         impl RuleProcessor for MockProcessor {
-            fn initialise_message_list(&mut self) {
+            fn initialise_lists(&mut self) {
                 self.messages = Vec::new();
+                self.labels = Vec::new();
             }
 
             fn set_rule(&mut self, rule: EolRule) {
@@ -775,6 +778,7 @@ mod tests {
             rule: None,
             execute: false,
             messages: Vec::new(),
+            labels: Vec::new(),
         };
 
         // Test initial state
