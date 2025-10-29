@@ -366,11 +366,11 @@ async fn run(args: Cli) -> Result<()> {
 /// receive adequate feedback about application operations, even when
 /// verbosity is not explicitly requested.
 fn get_logging(level: log::LevelFilter) -> env_logger::Builder {
-    let level = if level > log::LevelFilter::Info {
-        level
-    } else {
-        log::LevelFilter::Info
-    };
+    // let level = if level > log::LevelFilter::Info {
+    //     level
+    // } else {
+    //     log::LevelFilter::Info
+    // };
 
     let mut builder = env_logger::Builder::new();
 
