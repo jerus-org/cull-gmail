@@ -345,7 +345,7 @@ impl EolRule {
 
     /// Generates a Gmail search query for messages that match this rule's age criteria.
     ///
-    /// This method calculates the cutoff date based on the rule's retention period
+    /// This method calculates the cut-off date based on the rule's retention period
     /// and returns a Gmail search query string that can be used to find messages
     /// older than the specified threshold.
     ///
@@ -371,11 +371,15 @@ impl EolRule {
 
     fn calculate_for_date(&self, today: DateTime<Local>) -> Option<String> {
         let message_age = MessageAge::parse(&self.retention)?;
+        log::trace!("testing for {message_age}");
 
         let deadline = match message_age {
             MessageAge::Days(c) => {
                 let delta = TimeDelta::days(c);
-                today.checked_sub_signed(delta)?
+                log::trace!("delta for change: {delta}");
+                let deadline = today.checked_sub_signed(delta)?;
+                log::trace!("calculated deadline: {deadline}");
+                deadline
             }
             MessageAge::Weeks(c) => {
                 let delta = TimeDelta::weeks(c);
@@ -521,6 +525,21 @@ mod test {
     #[test]
     fn test_eol_query_for_eol_rule_365_days() {
         let rule = build_test_rule(crate::MessageAge::Days(365));
+
+        let test_today = Local
+            .with_ymd_and_hms(2025, 9, 15, 0, 0, 0)
+            .single()
+            .unwrap();
+        let query = rule
+            .calculate_for_date(test_today)
+            .expect("Failed to calculate query");
+
+        assert_eq!("before: 2024-09-15", query);
+    }
+
+    #[test]
+    fn test_eol_query_for_eol_rule_1032_days() {
+        let rule = build_test_rule(crate::MessageAge::Days(1032));
 
         let test_today = Local
             .with_ymd_and_hms(2025, 9, 15, 0, 0, 0)
