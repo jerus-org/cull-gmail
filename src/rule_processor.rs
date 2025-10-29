@@ -64,6 +64,13 @@ const TRASH_LABEL: &str = "TRASH";
 /// modification operations. Preferred over broader scopes for security.
 const GMAIL_MODIFY_SCOPE: &str = "https://www.googleapis.com/auth/gmail.modify";
 
+/// Gmail API scope for deleting messages.
+///
+/// This scope allows all operations and is required to authorise the batch
+/// delete operation. It is only used for batch delete. For all other
+/// operations `GMAIL_MODIFY_SCOPE` is preferred.
+const GMAIL_DELETE_SCOPE: &str = "https://mail.google.com/";
+
 /// Internal trait defining the minimal operations needed for rule processing.
 ///
 /// This trait is used internally to enable unit testing of orchestration logic
@@ -424,7 +431,7 @@ impl RuleProcessor for GmailClient {
             .hub()
             .users()
             .messages_batch_delete(batch_request, "me")
-            .add_scope(GMAIL_MODIFY_SCOPE)
+            .add_scope(GMAIL_DELETE_SCOPE)
             .doit()
             .await
             .map_err(Box::new);
