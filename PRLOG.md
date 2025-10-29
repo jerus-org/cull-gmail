@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ♻️ refactor(core)-rename initialise_message_list to initialise_lists(pr [#102])
 
+### Fixed
+
+- 🐛 gmail: handle batch delete errors(pr [#103])
+
 ## [0.0.15] - 2025-10-26
 
 ### Changed
@@ -325,6 +329,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#100]: https://github.com/jerus-org/cull-gmail/pull/100
 [#101]: https://github.com/jerus-org/cull-gmail/pull/101
 [#102]: https://github.com/jerus-org/cull-gmail/pull/102
+[#103]: https://github.com/jerus-org/cull-gmail/pull/103
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...HEAD
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
 [0.0.14]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...v0.0.14
