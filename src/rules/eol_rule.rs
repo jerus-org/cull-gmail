@@ -345,7 +345,7 @@ impl EolRule {
 
     /// Generates a Gmail search query for messages that match this rule's age criteria.
     ///
-    /// This method calculates the cutoff date based on the rule's retention period
+    /// This method calculates the cut-off date based on the rule's retention period
     /// and returns a Gmail search query string that can be used to find messages
     /// older than the specified threshold.
     ///
@@ -371,11 +371,15 @@ impl EolRule {
 
     fn calculate_for_date(&self, today: DateTime<Local>) -> Option<String> {
         let message_age = MessageAge::parse(&self.retention)?;
+        log::debug!("testing for {message_age}");
 
         let deadline = match message_age {
             MessageAge::Days(c) => {
                 let delta = TimeDelta::days(c);
-                today.checked_sub_signed(delta)?
+                log::debug!("delta for change: {delta}");
+                let deadline = today.checked_sub_signed(delta)?;
+                log::debug!("calculated deadline: {deadline}");
+                deadline
             }
             MessageAge::Weeks(c) => {
                 let delta = TimeDelta::weeks(c);
@@ -420,7 +424,7 @@ impl EolRule {
 mod test {
     use chrono::{Local, TimeZone};
 
-    use crate::{MessageAge, Retention, rules::eol_rule::EolRule};
+    use crate::{MessageAge, Retention, rules::eol_rule::EolRule, test_utils::get_test_logger};
 
     fn build_test_rule(age: MessageAge) -> EolRule {
         let retention = Retention::new(age, true);
@@ -531,5 +535,21 @@ mod test {
             .expect("Failed to calculate query");
 
         assert_eq!("before: 2024-09-15", query);
+    }
+
+    #[test]
+    fn test_eol_query_for_eol_rule_3038_days() {
+        get_test_logger();
+        let rule = build_test_rule(crate::MessageAge::Days(6580));
+
+        let test_today = Local
+            .with_ymd_and_hms(2025, 9, 15, 0, 0, 0)
+            .single()
+            .unwrap();
+        let query = rule
+            .calculate_for_date(test_today)
+            .expect("Failed to calculate query");
+
+        assert_eq!("before: 2007-09-10", query);
     }
 }
