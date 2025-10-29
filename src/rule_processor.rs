@@ -420,14 +420,18 @@ impl RuleProcessor for GmailClient {
 
         log::trace!("{batch_request:#?}");
 
-        let _res = self
+        let res = self
             .hub()
             .users()
             .messages_batch_delete(batch_request, "me")
             .add_scope(GMAIL_MODIFY_SCOPE)
             .doit()
             .await
-            .map_err(Box::new)?;
+            .map_err(Box::new);
+
+        log::trace!("Batch delete response {res:?}");
+
+        res?;
 
         Ok(())
     }
