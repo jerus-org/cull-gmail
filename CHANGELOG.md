@@ -5,15 +5,42 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.15] - 2025-10-26
+## [0.0.16] - 2025-10-30
 
-Summary: Changed[1], Chore[1], Documentation[1], Fixed[3]
+Summary: Added[3], Changed[4], Chore[9], Documentation[2], Fixed[7]
+
+### Added
+
+ - ✨ feat(rules): support multiple actions per label
+ - ✨ feat(rule_processor): implement batch operations for message deletion and trashing
+ - ✨ feat(rule_processor): add initialise_message_list to processor
 
 ### Fixed
 
- - 🐛 fix(rule_processor): fix batch_trash and batch_delete signatures
- - 🐛 fix(cli): prevent dry-run from crashing
+ - 🐛 fix(rule_processor): enhance logging for chunk processing
+ - 🐛 fix(cli): correct rule execution order for trash and delete
+ - 🐛 fix(gmail): use GMAIL_DELETE_SCOPE for batch delete
+ - 🐛 fix(rules): correct grammar and improve date calculation
+ - 🐛 fix(eol_rule): correct calculate_for_date and add logging
+ - 🐛 fix(cli): correct logging level
+ - 🐛 fix(gmail): handle batch delete errors
+
+### Changed
+
+ - ♻️ refactor(rules): execute rules by action
+ - ♻️ refactor(gmail): consolidate batch processing logic
+ - ♻️ refactor(rule_processor): enhance Gmail message handling with chunk processing
+ - ♻️ refactor(core): rename initialise_message_list to initialise_lists
+
+## [0.0.15] - 2025-10-26
+
+Summary: Changed[1], Chore[2], Documentation[1], Fixed[3]
+
+### Fixed
+
  - 🐛 fix(cli): fix log messages with empty arguments
+ - 🐛 fix(cli): prevent dry-run from crashing
+ - 🐛 fix(rule_processor): fix batch_trash and batch_delete signatures
 
 ### Changed
 
@@ -545,7 +572,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...HEAD
+[0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
 [0.0.14]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...v0.0.14
 [0.0.13]: https://github.com/jerus-org/cull-gmail/compare/v0.0.12...v0.0.13
 [0.0.12]: https://github.com/jerus-org/cull-gmail/compare/v0.0.11...v0.0.12
