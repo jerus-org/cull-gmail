@@ -523,7 +523,7 @@ impl RuleProcessor for GmailClient {
 
     async fn process_in_chunks(&self, message_ids: Vec<String>, action: EolAction) -> Result<()> {
         let (chunks, remainder) = message_ids.as_chunks::<1000>();
-        log::trace!(
+        log::info!(
             "Message list chopped into {} chunks with {} ids in the remainder",
             chunks.len(),
             remainder.len()
@@ -536,13 +536,13 @@ impl RuleProcessor for GmailClient {
 
         if !chunks.is_empty() {
             for (i, chunk) in chunks.iter().enumerate() {
-                log::trace!("Processing chunk {i}");
+                log::info!("Processing chunk {i}");
                 act(action, chunk).await?;
             }
         }
 
         if !remainder.is_empty() {
-            log::trace!("Processing remainder.");
+            log::info!("Processing remainder.");
             act(action, remainder).await?;
         }
 
