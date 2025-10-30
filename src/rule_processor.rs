@@ -58,6 +58,11 @@ use crate::{EolAction, Error, GmailClient, Result, message_list::MessageList, ru
 /// This constant ensures consistent usage of the TRASH label throughout the module.
 const TRASH_LABEL: &str = "TRASH";
 
+/// Gmail label name for the inbox folder.
+///
+/// This constant ensures consistent usage of the INBOX label throughout the module.
+const INBOX_LABEL: &str = "INBOX";
+
 /// Gmail API scope for modifying messages (recommended scope for most operations).
 ///
 /// This scope allows adding/removing labels, moving messages to trash, and other
@@ -68,7 +73,7 @@ const GMAIL_MODIFY_SCOPE: &str = "https://www.googleapis.com/auth/gmail.modify";
 ///
 /// This scope allows all operations and is required to authorise the batch
 /// delete operation. It is only used for batch delete. For all other
-/// operations `GMAIL_MODIFY_SCOPE` is preferred.
+/// operations [`GMAIL_MODIFY_SCOPE`](Self::GMAIL_MODIFY_SCOPE) is preferred.
 const GMAIL_DELETE_SCOPE: &str = "https://mail.google.com/";
 
 /// Internal trait defining the minimal operations needed for rule processing.
@@ -299,8 +304,50 @@ pub trait RuleProcessor {
     ///
     /// # Gmail API Requirements
     ///
-    /// Requires the `https://www.googleapis.com/auth/gmail.modify` scope or broader.
+    /// Requires the `https://mail.google.com/` scope or broader.
     fn batch_delete(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
+
+    /// Calls the Gmail API to permanently deletes a slice from the list of messages.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - All messages successfully deleted
+    /// * `Err(_)` - Gmail API error, network failure, or insufficient permissions
+    ///
+    /// # Safety
+    ///
+    /// ⚠️ **DESTRUCTIVE OPERATION** - This permanently removes messages from Gmail.
+    /// Deleted messages cannot be recovered. Use [`batch_trash`](Self::batch_trash)
+    /// for recoverable deletion.
+    ///
+    /// # Gmail API Requirements
+    ///
+    /// Requires the `https://mail.google.com/` scope or broader.
+    fn call_batch_delete(
+        &self,
+        ids: &[String],
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
+
+    /// Calls the Gmail API to move a slice of the prepared messages to the Gmail
+    /// trash folder.
+    ///
+    /// Messages moved to trash can be recovered within 30 days through the Gmail
+    /// web interface or API calls.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` - All messages successfully moved to trash
+    /// * `Err(_)` - Gmail API error, network failure, or insufficient permissions
+    ///
+    /// # Recovery
+    ///
+    /// Messages can be recovered from trash within 30 days. After 30 days,
+    /// Gmail automatically purges trashed messages.
+    ///
+    /// # Gmail API Requirements
+    ///
+    /// Requires the `https://www.googleapis.com/auth/gmail.modify` scope.
+    fn batch_trash(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Moves all prepared messages to the Gmail trash folder.
     ///
@@ -320,7 +367,10 @@ pub trait RuleProcessor {
     /// # Gmail API Requirements
     ///
     /// Requires the `https://www.googleapis.com/auth/gmail.modify` scope.
-    fn batch_trash(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
+    fn call_batch_trash(
+        &self,
+        ids: &[String],
+    ) -> impl std::future::Future<Output = Result<()>> + Send;
 }
 
 impl RuleProcessor for GmailClient {
@@ -419,12 +469,34 @@ impl RuleProcessor for GmailClient {
             return Ok(());
         }
 
-        let ids = Some(message_ids);
-        let batch_request = BatchDeleteMessagesRequest { ids };
-
         self.log_messages("Message with subject `", "` permanently deleted")
             .await?;
 
+        let (chunks, remainder) = message_ids.as_chunks::<1000>();
+        log::trace!(
+            "Message list chopped into {} chunks with {} ids in the remainder",
+            chunks.len(),
+            remainder.len()
+        );
+
+        if !chunks.is_empty() {
+            for (i, chunk) in chunks.iter().enumerate() {
+                log::trace!("Processing chunk {i}");
+                self.call_batch_delete(chunk).await?;
+            }
+        }
+
+        if !remainder.is_empty() {
+            log::trace!("Processing remainder.");
+            self.call_batch_delete(remainder).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn call_batch_delete(&self, ids: &[String]) -> Result<()> {
+        let ids = Some(Vec::from(ids));
+        let batch_request = BatchDeleteMessagesRequest { ids };
         log::trace!("{batch_request:#?}");
 
         let res = self
@@ -465,18 +537,41 @@ impl RuleProcessor for GmailClient {
             return Ok(());
         }
 
+        self.log_messages("Message with subject `", "` moved to trash")
+            .await?;
+
+        let (chunks, remainder) = message_ids.as_chunks::<1000>();
+        log::trace!(
+            "Message list chopped into {} chunks with {} ids in the remainder",
+            chunks.len(),
+            remainder.len()
+        );
+
+        if !chunks.is_empty() {
+            for (i, chunk) in chunks.iter().enumerate() {
+                log::trace!("Processing chunk {i}");
+                self.call_batch_delete(chunk).await?;
+            }
+        }
+
+        if !remainder.is_empty() {
+            log::trace!("Processing remainder.");
+            self.call_batch_delete(remainder).await?;
+        }
+
+        Ok(())
+    }
+
+    async fn call_batch_trash(&self, ids: &[String]) -> Result<()> {
+        let ids = Some(Vec::from(ids));
         let add_label_ids = Some(vec![TRASH_LABEL.to_string()]);
-        let ids = Some(message_ids);
-        let remove_label_ids = Some(MessageList::label_ids(self));
+        let remove_label_ids = Some(vec![INBOX_LABEL.to_string()]);
 
         let batch_request = BatchModifyMessagesRequest {
             add_label_ids,
             ids,
             remove_label_ids,
         };
-
-        self.log_messages("Message with subject `", "` moved to trash")
-            .await?;
 
         log::trace!("{batch_request:#?}");
 
@@ -780,7 +875,15 @@ mod tests {
                 Ok(())
             }
 
+            async fn call_batch_delete(&self, _ids: &[String]) -> Result<()> {
+                Ok(())
+            }
+
             async fn batch_trash(&mut self) -> Result<()> {
+                Ok(())
+            }
+
+            async fn call_batch_trash(&self, _ids: &[String]) -> Result<()> {
                 Ok(())
             }
         }
