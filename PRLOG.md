@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🐛 rules: correct grammar and improve date calculation(pr [#104])
 - 🐛 gmail: use GMAIL_DELETE_SCOPE for batch delete(pr [#105])
 - 🐛 cli: correct rule execution order for trash and delete(pr [#108])
+- 🐛 rule_processor: enhance logging for chunk processing(pr [#109])
 
 ## [0.0.15] - 2025-10-26
 
@@ -340,6 +341,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#106]: https://github.com/jerus-org/cull-gmail/pull/106
 [#107]: https://github.com/jerus-org/cull-gmail/pull/107
 [#108]: https://github.com/jerus-org/cull-gmail/pull/108
+[#109]: https://github.com/jerus-org/cull-gmail/pull/109
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...HEAD
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
 [0.0.14]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...v0.0.14
