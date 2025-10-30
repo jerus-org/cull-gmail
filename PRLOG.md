@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ✨ add initialise_message_list to processor(pr [#101])
 - ✨ implement batch operations for message deletion and trashing(pr [#106])
+- ✨ support multiple actions per label(pr [#107])
 
 ### Changed
 
@@ -336,6 +337,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#104]: https://github.com/jerus-org/cull-gmail/pull/104
 [#105]: https://github.com/jerus-org/cull-gmail/pull/105
 [#106]: https://github.com/jerus-org/cull-gmail/pull/106
+[#107]: https://github.com/jerus-org/cull-gmail/pull/107
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...HEAD
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
 [0.0.14]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...v0.0.14
