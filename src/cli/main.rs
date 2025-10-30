@@ -452,12 +452,13 @@ fn get_config() -> Result<(Config, ClientConfig)> {
     ))
 }
 
-/// Executes automated message retention rules across Gmail labels.
+/// Executes automated message retention rules across Gmail labels by action.
 ///
 /// This function orchestrates the rule-based message processing workflow by:
-/// 1. Organizing rules by their target labels
-/// 2. Processing each label according to its configured rule
-/// 3. Executing or simulating actions based on execution mode
+/// 1. Executing rules by action: `Trash` first, then `Delete`
+/// 2. Organizing rules by their target labels
+/// 3. Processing each label according to its configured rule
+/// 4. Executing or simulating actions based on execution mode
 ///
 /// # Arguments
 ///
@@ -506,6 +507,7 @@ async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Res
 /// * `client` - Mutable Gmail client for API operations
 /// * `rules` - Loaded rules configuration containing all retention policies
 /// * `execute` - Whether to actually perform actions (true) or dry-run (false)
+/// * `action` - The action the rule will execute
 ///
 /// # Returns
 ///
