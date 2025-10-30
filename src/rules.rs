@@ -247,7 +247,13 @@ impl Rules {
         self.rules.values().flat_map(|rule| rule.labels()).collect()
     }
 
-    /// Find the id of the rule that contains a label
+    /// Find the ids of the rules that contains a label
+    ///
+    /// A label may have a `trash` and `delete` rule applied to return a
+    /// maximum of two rules.
+    ///
+    /// If a label has more than one `trash` or `delete` rules only the id
+    /// for the last rule will be returned.
     fn find_label(&self, label: &str) -> Vec<usize> {
         let mut rwl = Vec::new();
 
