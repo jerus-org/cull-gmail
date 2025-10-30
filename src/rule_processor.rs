@@ -73,7 +73,7 @@ const GMAIL_MODIFY_SCOPE: &str = "https://www.googleapis.com/auth/gmail.modify";
 ///
 /// This scope allows all operations and is required to authorise the batch
 /// delete operation. It is only used for batch delete. For all other
-/// operations [`GMAIL_MODIFY_SCOPE`](Self::GMAIL_MODIFY_SCOPE) is preferred.
+/// operations `GMAIL_MODIFY_SCOPE` is preferred.
 const GMAIL_DELETE_SCOPE: &str = "https://mail.google.com/";
 
 /// Internal trait defining the minimal operations needed for rule processing.
