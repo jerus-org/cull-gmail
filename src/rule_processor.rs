@@ -470,9 +470,8 @@ impl RuleProcessor for GmailClient {
     ///
     /// # API Scope Requirements
     ///
-    /// Uses `https://www.googleapis.com/auth/gmail.modify` scope for secure,
-    /// minimal privilege access. This scope provides sufficient permissions
-    /// for message deletion while following security best practices.
+    /// Uses `https://mail.google.com/` scope as it is required to immediately and
+    /// permanently delete threads and messages, bypassing Trash.
     async fn batch_delete(&mut self) -> Result<()> {
         let message_ids = MessageList::message_ids(self);
 
@@ -485,45 +484,8 @@ impl RuleProcessor for GmailClient {
         self.log_messages("Message with subject `", "` permanently deleted")
             .await?;
 
-        let (chunks, remainder) = message_ids.as_chunks::<1000>();
-        log::trace!(
-            "Message list chopped into {} chunks with {} ids in the remainder",
-            chunks.len(),
-            remainder.len()
-        );
-
-        if !chunks.is_empty() {
-            for (i, chunk) in chunks.iter().enumerate() {
-                log::trace!("Processing chunk {i}");
-                self.call_batch_delete(chunk).await?;
-            }
-        }
-
-        if !remainder.is_empty() {
-            log::trace!("Processing remainder.");
-            self.call_batch_delete(remainder).await?;
-        }
-
-        Ok(())
-    }
-
-    async fn call_batch_delete(&self, ids: &[String]) -> Result<()> {
-        let ids = Some(Vec::from(ids));
-        let batch_request = BatchDeleteMessagesRequest { ids };
-        log::trace!("{batch_request:#?}");
-
-        let res = self
-            .hub()
-            .users()
-            .messages_batch_delete(batch_request, "me")
-            .add_scope(GMAIL_DELETE_SCOPE)
-            .doit()
-            .await
-            .map_err(Box::new);
-
-        log::trace!("Batch delete response {res:?}");
-
-        res?;
+        self.process_in_chunks(message_ids, EolAction::Delete)
+            .await?;
 
         Ok(())
     }
@@ -583,6 +545,27 @@ impl RuleProcessor for GmailClient {
             log::trace!("Processing remainder.");
             act(action, remainder).await?;
         }
+
+        Ok(())
+    }
+
+    async fn call_batch_delete(&self, ids: &[String]) -> Result<()> {
+        let ids = Some(Vec::from(ids));
+        let batch_request = BatchDeleteMessagesRequest { ids };
+        log::trace!("{batch_request:#?}");
+
+        let res = self
+            .hub()
+            .users()
+            .messages_batch_delete(batch_request, "me")
+            .add_scope(GMAIL_DELETE_SCOPE)
+            .doit()
+            .await
+            .map_err(Box::new);
+
+        log::trace!("Batch delete response {res:?}");
+
+        res?;
 
         Ok(())
     }
