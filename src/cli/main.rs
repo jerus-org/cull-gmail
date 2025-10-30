@@ -488,7 +488,54 @@ fn get_config() -> Result<(Config, ClientConfig)> {
 /// The function continues processing even if individual rules fail, logging
 /// warnings for missing rules, processing errors, or action failures.
 async fn run_rules(client: &mut GmailClient, rules: Rules, execute: bool) -> Result<()> {
-    let rules_by_labels = rules.get_rules_by_label();
+    run_rules_for_action(client, &rules, execute, EolAction::Trash).await?;
+    run_rules_for_action(client, &rules, execute, EolAction::Delete).await?;
+
+    Ok(())
+}
+
+/// Executes automated message retention rules across Gmail labels for an action.
+///
+/// This function orchestrates the rule-based message processing workflow by:
+/// 1. Organizing rules by their target labels
+/// 2. Processing each label according to its configured rule
+/// 3. Executing or simulating actions based on execution mode
+///
+/// # Arguments
+///
+/// * `client` - Mutable Gmail client for API operations
+/// * `rules` - Loaded rules configuration containing all retention policies
+/// * `execute` - Whether to actually perform actions (true) or dry-run (false)
+///
+/// # Returns
+///
+/// Returns `Result<()>` indicating success or failure of the rule processing.
+///
+/// # Rule Processing Flow
+///
+/// For each configured label:
+/// 1. **Rule Lookup**: Find the retention rule for the label
+/// 2. **Rule Application**: Apply rule criteria to find matching messages
+/// 3. **Action Determination**: Determine appropriate action (trash/delete)
+/// 4. **Execution**: Execute action or simulate for dry-run
+///
+/// # Safety Features
+///
+/// - **Dry-run mode**: When `execute` is false, actions are logged but not performed
+/// - **Error isolation**: Errors for individual labels don't stop processing of other labels
+/// - **Detailed logging**: Comprehensive logging of rule execution and results
+///
+/// # Error Handling
+///
+/// The function continues processing even if individual rules fail, logging
+/// warnings for missing rules, processing errors, or action failures.
+async fn run_rules_for_action(
+    client: &mut GmailClient,
+    rules: &Rules,
+    execute: bool,
+    action: EolAction,
+) -> Result<()> {
+    let rules_by_labels = rules.get_rules_by_label_for_action(action);
 
     for label in rules.labels() {
         let Some(rule) = rules_by_labels.get(&label) else {

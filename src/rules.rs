@@ -248,13 +248,25 @@ impl Rules {
     }
 
     /// Find the id of the rule that contains a label
-    fn find_label(&self, label: &str) -> usize {
-        let rules_by_label = self.get_rules_by_label();
-        if let Some(rule) = rules_by_label.get(label) {
-            rule.id()
-        } else {
-            0
+    fn find_label(&self, label: &str) -> Vec<usize> {
+        let mut rwl = Vec::new();
+
+        if let Some(t) = self.find_label_for_action(label, EolAction::Trash) {
+            rwl.push(t);
         }
+
+        if let Some(d) = self.find_label_for_action(label, EolAction::Delete) {
+            rwl.push(d);
+        }
+
+        rwl
+    }
+
+    /// Find the id of the rule that contains a label
+    fn find_label_for_action(&self, label: &str, action: EolAction) -> Option<usize> {
+        let rules_by_label = self.get_rules_by_label_for_action(action);
+
+        rules_by_label.get(label).map(|r| r.id())
     }
 
     /// Removes a rule from the set by its unique ID.
@@ -321,12 +333,14 @@ impl Rules {
             return Err(Error::LabelNotFoundInRules(label.to_string()));
         }
 
-        let rule_id = self.find_label(label);
-        if rule_id == 0 {
+        let rule_ids = self.find_label(label);
+        if rule_ids.is_empty() {
             return Err(Error::NoRuleFoundForLabel(label.to_string()));
         }
 
-        self.rules.remove(&rule_id.to_string());
+        for id in rule_ids {
+            self.rules.remove(&id.to_string());
+        }
 
         log::info!("Rule containing the label `{label}` has been removed.");
         Ok(())
@@ -347,17 +361,19 @@ impl Rules {
     /// let retention = Retention::new(MessageAge::Days(30), false);
     /// rules.add_rule(retention, Some("test"), false);
     ///
-    /// let label_map = rules.get_rules_by_label();
+    /// let label_map = rules.get_rules_by_label(EolAction::Trash);
     /// if let Some(rule) = label_map.get("test") {
     ///     println!("Rule for 'test' label: {}", rule.describe());
     /// }
     /// ```
-    pub fn get_rules_by_label(&self) -> BTreeMap<String, EolRule> {
+    pub fn get_rules_by_label_for_action(&self, action: EolAction) -> BTreeMap<String, EolRule> {
         let mut rbl = BTreeMap::new();
 
         for rule in self.rules.values() {
-            for label in rule.labels() {
-                rbl.insert(label, rule.clone());
+            if rule.action() == Some(action) {
+                for label in rule.labels() {
+                    rbl.insert(label, rule.clone());
+                }
             }
         }
 
@@ -733,7 +749,7 @@ mod tests {
         let retention = Retention::new(MessageAge::Days(7), false);
         rules.add_rule(retention, Some("delete-test"), true);
 
-        let rules_by_label = rules.get_rules_by_label();
+        let rules_by_label = rules.get_rules_by_label_for_action(EolAction::Delete);
         let rule = rules_by_label.get("delete-test").unwrap();
         assert_eq!(rule.action(), Some(EolAction::Delete));
     }
@@ -799,7 +815,7 @@ mod tests {
         let retention = Retention::new(MessageAge::Days(30), false);
         rules.add_rule(retention, Some("mapped-label"), false);
 
-        let label_map = rules.get_rules_by_label();
+        let label_map = rules.get_rules_by_label_for_action(EolAction::Trash);
         let rule = label_map.get("mapped-label");
         assert!(rule.is_some());
         assert!(rule.unwrap().labels().contains(&"mapped-label".to_string()));
