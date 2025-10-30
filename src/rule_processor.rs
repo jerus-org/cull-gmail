@@ -304,7 +304,7 @@ pub trait RuleProcessor {
     ///
     /// # Gmail API Requirements
     ///
-    /// Requires the `https://mail.google.com/` scope or broader.
+    /// Requires the `https://mail.google.com/` scope.
     fn batch_delete(&mut self) -> impl std::future::Future<Output = Result<()>> + Send;
 
     /// Calls the Gmail API to move a slice of the prepared messages to the Gmail
@@ -356,7 +356,7 @@ pub trait RuleProcessor {
     ///
     /// # Gmail API Requirements
     ///
-    /// Requires the `https://mail.google.com/` scope or broader.
+    /// Requires the `https://mail.google.com/` scope.
     fn call_batch_delete(
         &self,
         ids: &[String],
