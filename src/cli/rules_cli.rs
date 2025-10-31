@@ -102,7 +102,7 @@
 //! - **Logging system**: Comprehensive operation tracking
 
 use clap::{Parser, Subcommand};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 mod config_cli;
 mod run_cli;
@@ -210,6 +210,7 @@ pub struct RulesCli {
     /// Each subcommand provides specialized functionality for its domain.
     #[command(subcommand)]
     sub_command: SubCmds,
+    rules: Option<PathBuf>,
 }
 
 impl RulesCli {
@@ -275,8 +276,14 @@ impl RulesCli {
     pub async fn run_with_rules_path(
         &self,
         client: &mut GmailClient,
-        rules_path: Option<&Path>,
+        mut rules_path: Option<&Path>,
     ) -> Result<()> {
+        log::info!("Rules path: {rules_path:?}");
+        if let Some(p) = &self.rules {
+            rules_path = Some(p.as_path());
+        }
+        log::info!("Rules path: {rules_path:?}");
+
         let rules = get_rules_from(rules_path)?;
 
         match &self.sub_command {
