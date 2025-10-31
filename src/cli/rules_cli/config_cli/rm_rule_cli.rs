@@ -2,7 +2,7 @@ use clap::Parser;
 use cull_gmail::{Error, Rules};
 
 #[derive(Debug, Parser)]
-pub struct RmCli {
+pub struct RmRuleCli {
     /// Id of the rule to remove
     #[clap(short, long)]
     id: Option<usize>,
@@ -11,7 +11,7 @@ pub struct RmCli {
     label: Option<String>,
 }
 
-impl RmCli {
+impl RmRuleCli {
     pub fn run(&self, mut config: Rules) -> Result<(), Error> {
         if self.id.is_none() && self.label.is_none() {
             return Err(Error::NoRuleSelector);

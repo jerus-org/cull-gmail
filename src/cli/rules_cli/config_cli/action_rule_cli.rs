@@ -12,7 +12,7 @@ pub enum Action {
 }
 
 #[derive(Debug, Parser)]
-pub struct ActionCli {
+pub struct ActionRuleCli {
     /// Id of the rule on which action applies
     #[clap(short, long)]
     id: usize,
@@ -21,7 +21,7 @@ pub struct ActionCli {
     action: Action,
 }
 
-impl ActionCli {
+impl ActionRuleCli {
     pub fn run(&self, mut config: Rules) -> Result<()> {
         if config.get_rule(self.id).is_none() {
             return Err(Error::RuleNotFound(self.id));
