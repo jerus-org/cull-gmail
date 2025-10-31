@@ -1,31 +1,40 @@
 use clap::{Parser, Subcommand};
 
 mod action_rule_cli;
+mod add_label_cli;
 mod add_rule_cli;
-mod label_cli;
+mod list_label_cli;
+mod remove_label_cli;
 mod rm_rule_cli;
 
 use action_rule_cli::ActionRuleCli;
+use add_label_cli::AddLabelCli;
 use cull_gmail::{Result, Rules};
-use label_cli::LabelCli;
+use list_label_cli::ListLabelCli;
+use remove_label_cli::RemoveLabelCli;
 
 #[derive(Subcommand, Debug)]
 enum SubCmds {
     /// List the rules configured and saved in the config file
-    #[clap(name = "list")]
-    List,
+    #[clap(name = "list-rules")]
+    ListRules,
     /// Add a rules to the config file
     #[clap(name = "add-rule")]
-    Add(add_rule_cli::AddRuleCli),
+    AddRule(add_rule_cli::AddRuleCli),
     /// Remove a rule from the config file
-    #[clap(name = "remove-rule", alias = "rm")]
-    Remove(rm_rule_cli::RmRuleCli),
-    /// Add or remove Label from rule
-    #[clap(name = "label")]
-    Label(LabelCli),
-    /// Set action on a specific rule
+    #[clap(name = "remove-rule", alias = "rm-rule")]
+    RemoveRule(rm_rule_cli::RmRuleCli),
     #[clap(name = "set-action-on-rule")]
-    Action(ActionRuleCli),
+    ActionRule(ActionRuleCli),
+    /// List the labels associated with a rule
+    #[clap(name = "list-labels")]
+    List(ListLabelCli),
+    /// Add label to rule
+    #[clap(name = "add-label")]
+    Add(AddLabelCli),
+    /// Remove a label from a
+    #[clap(name = "remove-label", alias = "rm-label")]
+    Remove(RemoveLabelCli),
 }
 
 #[derive(Parser, Debug)]
@@ -39,9 +48,11 @@ pub struct ConfigCli {
 impl ConfigCli {
     pub fn run(&self, rules: Rules) -> Result<()> {
         match &self.sub_command {
-            SubCmds::Label(label_cli) => label_cli.run(rules),
-            SubCmds::Action(action_cli) => action_cli.run(rules),
-            SubCmds::List => rules.list_rules(),
+            SubCmds::ActionRule(action_cli) => action_cli.run(rules),
+            SubCmds::ListRules => rules.list_rules(),
+            SubCmds::AddRule(add_cli) => add_cli.run(rules),
+            SubCmds::RemoveRule(rm_cli) => rm_cli.run(rules),
+            SubCmds::List(list_cli) => list_cli.run(rules),
             SubCmds::Add(add_cli) => add_cli.run(rules),
             SubCmds::Remove(rm_cli) => rm_cli.run(rules),
         }

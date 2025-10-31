@@ -3,21 +3,21 @@ use clap::Parser;
 use cull_gmail::{Error, Result, Rules};
 
 #[derive(Debug, Parser)]
-pub struct AddCli {
+pub struct RemoveLabelCli {
     /// Id of the rule on which action applies
     #[clap(short, long)]
     id: usize,
-    /// Label to add to the rule
+    /// Label to remove from the rule
     #[clap(short, long)]
     label: String,
 }
 
-impl AddCli {
+impl RemoveLabelCli {
     pub fn run(&self, mut config: Rules) -> Result<()> {
         if config.get_rule(self.id).is_none() {
             return Err(Error::RuleNotFound(self.id));
         }
 
-        config.add_label_to_rule(self.id, &self.label)
+        config.remove_label_from_rule(self.id, &self.label)
     }
 }
