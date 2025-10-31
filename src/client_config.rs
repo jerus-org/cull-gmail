@@ -296,6 +296,7 @@ impl ClientConfig {
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn new_from_configuration(configs: Config) -> Result<Self> {
+        log::debug!("Configurations: {configs:#?}");
         let root = configs.get_string("config_root")?;
         let config_root = ConfigRoot::parse(&root);
 
