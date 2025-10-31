@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - ✨ add optional rules path argument to cli(pr [#110])
+- ✨ enhance rules configuration(pr [#112])
 
 ### Fixed
 
@@ -354,6 +355,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#109]: https://github.com/jerus-org/cull-gmail/pull/109
 [#110]: https://github.com/jerus-org/cull-gmail/pull/110
 [#111]: https://github.com/jerus-org/cull-gmail/pull/111
+[#112]: https://github.com/jerus-org/cull-gmail/pull/112
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...HEAD
 [0.0.16]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
