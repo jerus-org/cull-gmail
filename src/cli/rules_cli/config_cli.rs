@@ -1,11 +1,11 @@
 use clap::{Parser, Subcommand};
 
-mod action_cli;
-mod add_cli;
+mod action_rule_cli;
+mod add_rule_cli;
 mod label_cli;
-mod rm_cli;
+mod rm_rule_cli;
 
-use action_cli::ActionCli;
+use action_rule_cli::ActionRuleCli;
 use cull_gmail::{Result, Rules};
 use label_cli::LabelCli;
 
@@ -15,17 +15,17 @@ enum SubCmds {
     #[clap(name = "list")]
     List,
     /// Add a rules to the config file
-    #[clap(name = "add")]
-    Add(add_cli::AddCli),
+    #[clap(name = "add-rule")]
+    Add(add_rule_cli::AddRuleCli),
     /// Remove a rule from the config file
-    #[clap(name = "remove", alias = "rm")]
-    Remove(rm_cli::RmCli),
+    #[clap(name = "remove-rule", alias = "rm")]
+    Remove(rm_rule_cli::RmRuleCli),
     /// Add or remove Label from rule
     #[clap(name = "label")]
     Label(LabelCli),
     /// Set action on a specific rule
-    #[clap(name = "action")]
-    Action(ActionCli),
+    #[clap(name = "set-action-on-rule")]
+    Action(ActionRuleCli),
 }
 
 #[derive(Parser, Debug)]

@@ -23,7 +23,7 @@ impl fmt::Display for Period {
 }
 
 #[derive(Debug, Parser)]
-pub struct AddCli {
+pub struct AddRuleCli {
     /// Period for the rule
     #[arg(short, long)]
     period: Period,
@@ -38,7 +38,7 @@ pub struct AddCli {
     delete: bool,
 }
 
-impl AddCli {
+impl AddRuleCli {
     pub fn run(&self, mut config: Rules) -> Result<(), Error> {
         let generate = self.label.is_none();
         let message_age = MessageAge::new(self.period.to_string().as_str(), self.count)?;
