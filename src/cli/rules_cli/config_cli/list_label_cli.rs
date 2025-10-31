@@ -3,13 +3,13 @@ use clap::Parser;
 use cull_gmail::{Error, Result, Rules};
 
 #[derive(Debug, Parser)]
-pub struct ListCli {
+pub struct ListLabelCli {
     /// Id of the rule on which action applies
     #[clap(short, long)]
     id: usize,
 }
 
-impl ListCli {
+impl ListLabelCli {
     pub fn run(&self, config: Rules) -> Result<()> {
         let Some(rule) = config.get_rule(self.id) else {
             return Err(Error::RuleNotFound(self.id));
