@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - deps: update rust crate flate2 to 1.1.5(pr [#119])
 - deps: update rust crate futures to 0.3.31(pr [#120])
 - deps: update rust crate httpmock to 0.8.2(pr [#121])
+- deps: update rust crate lazy-regex to 3.4.2(pr [#122])
 
 ## [0.0.16] - 2025-10-30
 
@@ -377,6 +378,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#119]: https://github.com/jerus-org/cull-gmail/pull/119
 [#120]: https://github.com/jerus-org/cull-gmail/pull/120
 [#121]: https://github.com/jerus-org/cull-gmail/pull/121
+[#122]: https://github.com/jerus-org/cull-gmail/pull/122
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...HEAD
 [0.0.16]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
