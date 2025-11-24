@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 🐛 client: fix config root parsing(pr [#111])
 - deps: update rust crate assert_fs to 1.1.3(pr [#115])
 - deps: update rust crate base64 to 0.22.1(pr [#116])
+- deps: update rust crate clap to 4.5.53(pr [#117])
 
 ## [0.0.16] - 2025-10-30
 
@@ -367,6 +368,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#114]: https://github.com/jerus-org/cull-gmail/pull/114
 [#115]: https://github.com/jerus-org/cull-gmail/pull/115
 [#116]: https://github.com/jerus-org/cull-gmail/pull/116
+[#117]: https://github.com/jerus-org/cull-gmail/pull/117
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...HEAD
 [0.0.16]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
