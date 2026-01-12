@@ -105,7 +105,7 @@ use google_gmail1::{
         client::legacy::{Client, connect::HttpConnector},
         rt::TokioExecutor,
     },
-    yup_oauth2::{InstalledFlowAuthenticator, InstalledFlowReturnMethod},
+    yup_oauth2::{CustomHyperClientBuilder, InstalledFlowAuthenticator, InstalledFlowReturnMethod},
 };
 
 mod message_summary;
@@ -259,10 +259,11 @@ impl GmailClient {
         let client = Client::builder(executor.clone()).build(connector.clone());
         log::trace!("file to persist tokens to `{}`", config.persist_path());
 
+        let auth_client = Client::builder(executor).build(connector);
         let auth = InstalledFlowAuthenticator::with_client(
             config.secret().clone(),
             InstalledFlowReturnMethod::HTTPRedirect,
-            Client::builder(executor).build(connector),
+            CustomHyperClientBuilder::from(auth_client),
         )
         .persist_tokens_to_disk(config.persist_path())
         .build()
