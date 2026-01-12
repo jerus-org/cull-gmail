@@ -1,5 +1,6 @@
 //! Integration tests for the init CLI command.
 
+use assert_cmd::cargo_bin;
 use assert_cmd::prelude::*;
 use assert_fs::fixture::ChildPath;
 use assert_fs::prelude::*;
@@ -34,7 +35,7 @@ fn run_init_with_dirs(
     rules_dir: &std::path::Path,
     dry_run: bool,
 ) -> assert_cmd::assert::Assert {
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     let config_arg = format!("c:{}", config_dir.to_string_lossy());
     let rules_arg = format!("c:{}", rules_dir.to_string_lossy());
 
@@ -61,7 +62,7 @@ fn run_init_with_credential(
     credential_path: &std::path::Path,
     dry_run: bool,
 ) -> assert_cmd::assert::Assert {
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     let config_arg = format!("c:{}", config_dir.to_string_lossy());
 
     cmd.args([
@@ -101,7 +102,7 @@ fn verify_standard_config_content(config_dir: &std::path::Path) {
 ///
 /// This helper reduces duplication when testing basic init command execution.
 fn run_init_basic(config_dir: &std::path::Path, skip_rules: bool) -> assert_cmd::assert::Assert {
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     let config_arg = format!("c:{}", config_dir.to_string_lossy());
 
     cmd.arg("init");
@@ -117,7 +118,7 @@ fn run_init_basic(config_dir: &std::path::Path, skip_rules: bool) -> assert_cmd:
 
 #[test]
 fn test_init_help() {
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     cmd.args(["init", "--help"]);
 
     cmd.assert()
@@ -137,7 +138,7 @@ fn test_init_dry_run_new_setup() {
     let temp_dir = assert_fs::TempDir::new().unwrap();
     let config_dir = temp_dir.path().join("test-config");
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     cmd.args([
         "init",
         "--config-dir",
@@ -278,7 +279,7 @@ fn test_init_force_overwrite() {
     std::fs::create_dir_all(&config_dir).unwrap();
     std::fs::write(config_dir.join("cull-gmail.toml"), "old config").unwrap();
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     cmd.args([
         "init",
         "--config-dir",
@@ -304,7 +305,7 @@ fn test_init_existing_config_no_force_fails() {
     std::fs::create_dir_all(&config_dir).unwrap();
     std::fs::write(config_dir.join("cull-gmail.toml"), "existing config").unwrap();
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     cmd.args([
         "init",
         "--config-dir",
@@ -367,7 +368,7 @@ fn test_init_invalid_credential_file() {
     // Create an invalid credential file
     credential_file.write_str("invalid json content").unwrap();
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     cmd.args([
         "init",
         "--config-dir",
@@ -389,7 +390,7 @@ fn test_init_nonexistent_credential_file() {
     let config_dir = temp_dir.path().join("test-config");
     let nonexistent_file = temp_dir.path().join("nonexistent.json");
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     cmd.args([
         "init",
         "--config-dir",
@@ -416,7 +417,7 @@ fn test_init_oauth_integration() {
     let temp_dir = assert_fs::TempDir::new().unwrap();
     let config_dir = temp_dir.path().join("test-config");
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     cmd.args([
         "init",
         "--config-dir",
@@ -451,7 +452,7 @@ fn test_init_with_skip_rules_dry_run_shows_skipped() {
     let temp_dir = assert_fs::TempDir::new().unwrap();
     let config_dir = temp_dir.path().join("test-config");
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     cmd.args([
         "init",
         "--skip-rules",
@@ -516,7 +517,7 @@ fn test_init_with_skip_rules_and_rules_dir_creates_dir_only() {
     let config_dir = temp_dir.path().join("config");
     let rules_dir = temp_dir.path().join("rules");
 
-    let mut cmd = Command::cargo_bin("cull-gmail").unwrap();
+    let mut cmd = Command::new(cargo_bin!("cull-gmail"));
     cmd.args([
         "init",
         "--skip-rules",
