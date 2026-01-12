@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ✨ add optional rules path argument to cli(pr [#110])
 - ✨ enhance rules configuration(pr [#112])
+- BREAKING: migrate to circleci-toolkit v4.2.1(pr [#134])
 
 ### Changed
 
@@ -383,6 +384,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#122]: https://github.com/jerus-org/cull-gmail/pull/122
 [#123]: https://github.com/jerus-org/cull-gmail/pull/123
 [#124]: https://github.com/jerus-org/cull-gmail/pull/124
+[#134]: https://github.com/jerus-org/cull-gmail/pull/134
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...HEAD
 [0.0.16]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
