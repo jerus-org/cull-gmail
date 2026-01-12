@@ -52,6 +52,7 @@ workflows:
       - toolkit/label:
           min_rust_version: << pipeline.parameters.min_rust_version >>
           context: pcu-app
+          update_pcu: true
           filters:
             branches:
               only:
