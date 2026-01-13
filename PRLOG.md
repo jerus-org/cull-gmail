@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - deps: update rust crate serde_json to 1.0.149(pr [#126])
 - deps: update rust crate assert_cmd to 2.1.2(pr [#129])
 - deps: update rust crate toml to 0.9.11(pr [#127])
+- deps: update rust crate dialoguer to 0.12.0(pr [#130])
 
 ## [0.0.16] - 2025-10-30
 
@@ -395,6 +396,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#129]: https://github.com/jerus-org/cull-gmail/pull/129
 [#135]: https://github.com/jerus-org/cull-gmail/pull/135
 [#127]: https://github.com/jerus-org/cull-gmail/pull/127
+[#130]: https://github.com/jerus-org/cull-gmail/pull/130
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...HEAD
 [0.0.16]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
