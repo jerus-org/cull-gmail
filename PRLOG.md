@@ -41,6 +41,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - deps: update tokio packages(pr [#132])
 - deps: update rust crate chrono to 0.4.43(pr [#136])
 - deps: update rust crate clap to 4.5.54(pr [#137])
+- deps: update rust crate flate2 to 1.1.8(pr [#138])
 
 ## [0.0.16] - 2025-10-30
 
@@ -405,6 +406,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#132]: https://github.com/jerus-org/cull-gmail/pull/132
 [#136]: https://github.com/jerus-org/cull-gmail/pull/136
 [#137]: https://github.com/jerus-org/cull-gmail/pull/137
+[#138]: https://github.com/jerus-org/cull-gmail/pull/138
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...HEAD
 [0.0.16]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
