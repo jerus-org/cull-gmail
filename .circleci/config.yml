@@ -49,6 +49,25 @@ workflows:
         - << pipeline.parameters.validation_flag >>
         - not: << pipeline.parameters.release_flag >>
     jobs:
+      # Signature verification for trusted PRs (with write access for comments)
+      - toolkit/verify_commit_signatures:
+          name: verify_commit_signatures_trusted
+          context: bot-check
+          post_comment: true
+          update_pcu: false
+          filters:
+            branches:
+              ignore:
+                - main
+                - /pull\/[0-9]+/
+      # Signature verification for forked PRs (read-only, no comments)
+      - toolkit/verify_commit_signatures:
+          name: verify_commit_signatures_forked
+          post_comment: false
+          update_pcu: false
+          filters:
+            branches:
+              only: /pull\/[0-9]+/
       - toolkit/label:
           min_rust_version: << pipeline.parameters.min_rust_version >>
           context: pcu-app
@@ -73,18 +92,34 @@ workflows:
       - toolkit/idiomatic_rust:
           min_rust_version: << pipeline.parameters.min_rust_version >>
       - toolkit/security:
+          name: security audit only
+          sonarcloud: false
+          ignore_advisories: RUSTSEC-2025-0066
+          filters:
+            branches:
+              only: /pull\/[0-9]+/
+      - toolkit/security:
+          name: security with sonarcloud
           context: SonarCloud
           ignore_advisories: RUSTSEC-2025-0066
+          filters:
+            branches:
+              ignore:
+                - /pull\/[0-9]+/
+                - main
       - toolkit/update_prlog:
           filters:
             branches:
               ignore:
+                - /pull\/[0-9]+/
                 - main
           requires:
+            - verify_commit_signatures_trusted
             - toolkit/required_builds
             - toolkit/test_doc_build
             - toolkit/idiomatic_rust
-            - toolkit/security
+            - security audit only
+            - security with sonarcloud
             - toolkit/common_tests
           context:
             - release
