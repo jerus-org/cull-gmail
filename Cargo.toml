@@ -28,7 +28,7 @@ config = { version = "0.15.19", default-features = false, features = [
     "json",
     "toml",
 ] }
-env_logger = "0.11.8"
+env_logger = "0.11.9"
 google-gmail1 = { version = "7.0.0", default-features = false, features = ["yup-oauth2", "aws-lc-rs"] }
 hyper-rustls = { version = "0.27.7", features = ["http1"] }
 lazy-regex = "3.5.1"

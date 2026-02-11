@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - deps: update rust crate thiserror to 2.0.18(pr [#141])
 - deps: resolve rustls crypto provider conflict(pr [#143])
 - deps: update rust crate flate2 to 1.1.9(pr [#146])
+- deps: update rust crate env_logger to 0.11.9(pr [#145])
 
 ## [0.0.16] - 2025-10-30
 
@@ -419,6 +420,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#142]: https://github.com/jerus-org/cull-gmail/pull/142
 [#143]: https://github.com/jerus-org/cull-gmail/pull/143
 [#146]: https://github.com/jerus-org/cull-gmail/pull/146
+[#145]: https://github.com/jerus-org/cull-gmail/pull/145
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...HEAD
 [0.0.16]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
