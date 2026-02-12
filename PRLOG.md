@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ♻️ refactor(cli)-rename rule management subcommands for clarity(pr [#113])
 - 🔧 chore(dependencies)-clap test and tidy ups(pr [#114])
 - ci-enable update_pcu in label job to test fix(pr [#135])
+- 👷 ci(circleci)-add release configuration for automated deployment(pr [#154])
 
 ### Fixed
 
@@ -437,6 +438,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#151]: https://github.com/jerus-org/cull-gmail/pull/151
 [#152]: https://github.com/jerus-org/cull-gmail/pull/152
 [#153]: https://github.com/jerus-org/cull-gmail/pull/153
+[#154]: https://github.com/jerus-org/cull-gmail/pull/154
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...HEAD
 [0.0.16]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
