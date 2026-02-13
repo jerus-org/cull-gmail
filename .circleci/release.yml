@@ -526,6 +526,7 @@ jobs:
     parameters:
       package:
         type: string
+        default: ""
     executor:
       name: toolkit/rust_env_rolling
     steps:
@@ -702,7 +703,6 @@ workflows:
       - release-crate:
           name: release-cull-gmail
           requires: [approve-release]
-          package: cull-gmail
           context:
             - release
             - bot-check
