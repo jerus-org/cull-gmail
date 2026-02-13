@@ -451,10 +451,10 @@ jobs:
               CRATE_VERSION="$VERSION_OVERRIDE"
               echo "Result: Will release version $CRATE_VERSION (OVERRIDE)"
               echo "Note: Version explicitly set via crate_version parameter"
-              NEXTSV_VERSION=$(nextsv -bn calculate --package cull-gmail 2>/dev/null || echo "none")
+              NEXTSV_VERSION=$(nextsv -bn calculate  2>/dev/null || echo "none")
               echo "      (nextsv would have calculated: $NEXTSV_VERSION)"
             else
-              CRATE_VERSION=$(nextsv -bn calculate --package cull-gmail 2>/dev/null || echo "")
+              CRATE_VERSION=$(nextsv -bn calculate  2>/dev/null || echo "")
               if [ -z "$CRATE_VERSION" ]; then
                 CRATE_VERSION="none"
                 echo "Result: No crate release needed"
