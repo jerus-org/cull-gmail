@@ -37,6 +37,9 @@ commands:
         description: "Crate name on crates.io"
     steps:
       - run:
+          name: install kdeets
+          command: cargo install kdeets
+      - run:
           name: Check crates.io for << parameters.package >>
           command: |
             set -eo pipefail
@@ -52,8 +55,9 @@ commands:
 
             USER_AGENT="circleci-toolkit/1.0 (https://github.com/jerus-org/circleci-toolkit)"
 
-            if curl -s -H "User-Agent: ${USER_AGENT}" "https://crates.io/api/v1/crates/<< parameters.package >>/versions" | \
-               jq -e ".versions[] | select(.num == \"${VERSION}\")" > /dev/null 2>&1; then
+            most_recent_published="$(kdeets crate -br cull-gmail)"
+
+            if [[ ${most_recent_published} == ${VERSION} ]]; then 
               echo "Version ${VERSION} exists on crates.io - will skip publish"
               echo "export SKIP_PUBLISH=true" >> "$BASH_ENV"
             else

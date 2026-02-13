@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 👷 ci(circleci)-add release configuration for automated deployment(pr [#154])
 - 👷 ci(circleci)-update release workflow configuration(pr [#155])
 - 👷 ci(circleci)-simplify nextsv version calculation(pr [#156])
+- 👷 ci(circleci)-add kdeets installation step to release workflow(pr [#157])
 
 ### Fixed
 
@@ -443,6 +444,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#154]: https://github.com/jerus-org/cull-gmail/pull/154
 [#155]: https://github.com/jerus-org/cull-gmail/pull/155
 [#156]: https://github.com/jerus-org/cull-gmail/pull/156
+[#157]: https://github.com/jerus-org/cull-gmail/pull/157
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...HEAD
 [0.0.16]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
