@@ -255,7 +255,7 @@ commands:
             if [ "<< parameters.package >>" != "" ]; then
               pcu_args="$pcu_args package << parameters.package >>"
             else
-              pcu_args="$pcu_args version --prefix << parameters.prefix >>"
+              pcu_args="$pcu_args --prefix << parameters.prefix >> version"
             fi
 
             if [ "<< parameters.update_prlog >>" = "true" ]; then
