@@ -262,7 +262,7 @@ commands:
               pcu_args="$pcu_args --update-prlog"
             fi
 
-            pcu $pcu_args
+            pcu $pcu_args ${VERSION}
 
   # Build a release binary using cargo.
   # Requires VERSION environment variable (skips if "none").
