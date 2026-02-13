@@ -5,9 +5,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-02-13
+
+Summary: Chore[1], Continuous Integration[2]
+
 ## [0.1.0] - 2026-02-13
 
-Summary: Added[6], Build[1], Changed[1], Chore[49], Continuous Integration[12], Fixed[62]
+Summary: Added[6], Build[1], Changed[1], Chore[50], Continuous Integration[12], Fixed[62]
 
 ### Added
 
@@ -654,7 +658,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...v0.1.0
 [0.0.16]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
 [0.0.14]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...v0.0.14
