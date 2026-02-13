@@ -91,7 +91,11 @@ commands:
               exit 0
             fi
 
-            TAG="<< parameters.package >>-v${VERSION}"
+            if [ "" = "<< parameters.package >>" ]; then 
+              TAG="v${VERSION}"
+            else
+              TAG="<< parameters.package >>-v${VERSION}"
+            fi
 
             # Fetch tags from remote
             git fetch --tags
