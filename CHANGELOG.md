@@ -5,9 +5,91 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2026-02-13
+
+Summary: Added[6], Build[1], Changed[1], Chore[49], Continuous Integration[12], Fixed[62]
+
+### Added
+
+ - feat: add security improvements to CI (#142)
+ - feat: add security improvements to CI
+ - feat!: migrate to circleci-toolkit v4.2.1
+ - ✨ feat(cli): restructure rules config CLI
+ - ✨ feat(cli): enhance rules configuration
+ - ✨ feat(cli): add optional rules path argument to cli
+
+### Fixed
+
+ - fix(deps): update rust crate toml to v1 (#153)
+ - fix(deps): update rust crate toml to v1
+ - fix(deps): update rust crate tempfile to 3.25.0 (#152)
+ - fix(deps): update rust crate tempfile to 3.25.0
+ - fix(deps): update rust crate lazy-regex to 3.6.0 (#151)
+ - fix(deps): update rust crate lazy-regex to 3.6.0
+ - fix(deps): update dependency toolkit to v4.4.2 (#150)
+ - fix(deps): update dependency toolkit to v4.4.2
+ - fix(deps): update rust crate toml to 0.9.12 (#149)
+ - fix(deps): update rust crate toml to 0.9.12
+ - fix(deps): update rust crate predicates to 3.1.4 (#148)
+ - fix(deps): update rust crate predicates to 3.1.4
+ - fix(deps): update rust crate httpmock to 0.8.3 (#147)
+ - fix(deps): update rust crate httpmock to 0.8.3
+ - fix(deps): update rust crate clap to 4.5.58 (#144)
+ - fix(deps): update rust crate clap to 4.5.58
+ - fix(deps): update rust crate env_logger to 0.11.9 (#145)
+ - fix(deps): update rust crate env_logger to 0.11.9
+ - fix(deps): update rust crate flate2 to 1.1.9 (#146)
+ - fix(deps): update rust crate flate2 to 1.1.9
+ - fix(deps): resolve rustls crypto provider conflict (#143)
+ - fix(deps): resolve rustls crypto provider conflict
+ - fix(deps): update bytes and time for security
+ - fix(deps): update rust crate thiserror to 2.0.18 (#141)
+ - fix(deps): update rust crate thiserror to 2.0.18
+ - fix(deps): update rust crate lazy-regex to 3.5.1 (#140)
+ - fix(deps): update rust crate lazy-regex to 3.5.1
+ - fix(deps): update rust crate hyper-rustls to 0.27.7 (#139)
+ - fix(deps): update rust crate hyper-rustls to 0.27.7
+ - fix(deps): update rust crate flate2 to 1.1.8 (#138)
+ - fix(deps): update rust crate flate2 to 1.1.8
+ - fix(deps): update rust crate clap to 4.5.54 (#137)
+ - fix(deps): update rust crate clap to 4.5.54
+ - fix(deps): update rust crate chrono to 0.4.43 (#136)
+ - fix(deps): update rust crate chrono to 0.4.43
+ - fix(deps): update tokio packages (#132)
+ - fix(deps): update tokio packages
+ - fix(deps): update rust crate tempfile to 3.24.0 (#131)
+ - fix(deps): update rust crate tempfile to 3.24.0
+ - fix(deps): update rust crate dialoguer to 0.12.0 (#130)
+ - fix(deps): update rust crate dialoguer to 0.12.0
+ - fix(deps): update rust crate toml to 0.9.11 (#127)
+ - fix(deps): update rust crate toml to 0.9.11
+ - fix(deps): update rust crate assert_cmd to 2.1.2 (#129)
+ - fix(deps): update rust crate assert_cmd to 2.1.2
+ - fix(deps): update rust crate serde_json to 1.0.149 (#126)
+ - fix(deps): update rust crate serde_json to 1.0.149
+ - fix(deps): update rust crate log to 0.4.29 (#125)
+ - fix(deps): update rust crate log to 0.4.29
+ - fix: replace deprecated cargo_bin method with macro
+ - fix: upgrade google-gmail1 to v7 to resolve security advisory
+ - fix(deps): update rust crate temp-env to 0.3.6
+ - fix(deps): update rust crate predicates to 3.1.3
+ - fix(deps): update rust crate lazy-regex to 3.4.2
+ - fix(deps): update rust crate httpmock to 0.8.2
+ - fix(deps): update rust crate futures to 0.3.31
+ - fix(deps): update rust crate flate2 to 1.1.5
+ - fix(deps): update rust crate config to 0.15.19
+ - fix(deps): update rust crate clap to 4.5.53
+ - fix(deps): update rust crate base64 to 0.22.1
+ - fix(deps): update rust crate assert_fs to 1.1.3
+ - 🐛 fix(client): fix config root parsing
+
+### Changed
+
+ - ♻️ refactor(cli): rename rule management subcommands for clarity
+
 ## [0.0.16] - 2025-10-30
 
-Summary: Added[3], Changed[4], Chore[9], Documentation[2], Fixed[7]
+Summary: Added[3], Changed[4], Chore[10], Documentation[2], Fixed[7]
 
 ### Added
 
@@ -20,9 +102,9 @@ Summary: Added[3], Changed[4], Chore[9], Documentation[2], Fixed[7]
  - 🐛 fix(rule_processor): enhance logging for chunk processing
  - 🐛 fix(cli): correct rule execution order for trash and delete
  - 🐛 fix(gmail): use GMAIL_DELETE_SCOPE for batch delete
- - 🐛 fix(rules): correct grammar and improve date calculation
- - 🐛 fix(eol_rule): correct calculate_for_date and add logging
  - 🐛 fix(cli): correct logging level
+ - 🐛 fix(eol_rule): correct calculate_for_date and add logging
+ - 🐛 fix(rules): correct grammar and improve date calculation
  - 🐛 fix(gmail): handle batch delete errors
 
 ### Changed
@@ -572,7 +654,8 @@ Summary: Added[4], Build[3], Chore[21], Continuous Integration[4], Documentation
  - ✨ feat(vscode): add custom dictionary entry for ltex
  - ✨ feat(project): add initial Cargo.toml for cull-gmail tool
 
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...HEAD
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...HEAD
+[0.0.16]: https://github.com/jerus-org/cull-gmail/compare/v0.0.15...v0.0.16
 [0.0.15]: https://github.com/jerus-org/cull-gmail/compare/v0.0.14...v0.0.15
 [0.0.14]: https://github.com/jerus-org/cull-gmail/compare/v0.0.13...v0.0.14
 [0.0.13]: https://github.com/jerus-org/cull-gmail/compare/v0.0.12...v0.0.13
