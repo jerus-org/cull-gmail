@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - 👷 ci(circleci)-fix release tag format in CircleCI config(pr [#161])
+- 👷 ci(circleci)-use toolkit to update prlog(pr [#162])
 
 ## [0.1.2] - 2026-02-14
 
@@ -468,6 +469,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#159]: https://github.com/jerus-org/cull-gmail/pull/159
 [#160]: https://github.com/jerus-org/cull-gmail/pull/160
 [#161]: https://github.com/jerus-org/cull-gmail/pull/161
+[#162]: https://github.com/jerus-org/cull-gmail/pull/162
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.2...HEAD
 [0.1.2]: https://github.com/jerus-org/cull-gmail/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/jerus-org/cull-gmail/compare/v0.1.0...v0.1.1
