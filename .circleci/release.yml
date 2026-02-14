@@ -1,12 +1,12 @@
 version: 2.1
 
 parameters:
-  min_rust_version:
-    type: string
-    default: "1.87"
   fingerprint:
     type: string
     default: SHA256:OkxsH8Z6Iim6WDJBaII9eTT9aaO1f3eDc6IpsgYYPVg
+  min_rust_version:
+    type: string
+    default: "1.88"
   # Version override for crate release (used when nextsv cannot calculate)
   # Set to empty string "" to use nextsv auto-detection
   crate_version_override:
@@ -593,71 +593,71 @@ jobs:
           package: << parameters.package >>
           verbosity: "-vv"
 
-  # Release PRLOG/workspace
-  # Reads version from workspace (calculated by calculate-versions job)
-  release-prlog:
-    executor:
-      name: toolkit/rust_env_rolling
-    steps:
-      - checkout
-      - attach_workspace:
-          at: /tmp
-      - add_ssh_keys:
-          fingerprints:
-            - << pipeline.parameters.fingerprint >>
-      - run:
-          name: Remove original SSH key from agent
-          command: |
-            ssh-add -l
-            # GitHub App integration doesn't create id_rsa.pub, handle gracefully
-            if [ -f ~/.ssh/id_rsa.pub ]; then
-              ssh-add -d ~/.ssh/id_rsa.pub
-            else
-              echo "No id_rsa.pub found (GitHub App integration) - skipping removal"
-            fi
-            ssh-add -l
-      - toolkit/gpg_key
-      - toolkit/git_config
-      - run:
-          name: Release PRLOG
-          command: |
-            set -exo pipefail
-            chmod +x scripts/*.sh
+  # # Release PRLOG/workspace
+  # # Reads version from workspace (calculated by calculate-versions job)
+  # release-prlog:
+  #   executor:
+  #     name: toolkit/rust_env_rolling
+  #   steps:
+  #     - checkout
+  #     - attach_workspace:
+  #         at: /tmp
+  #     - add_ssh_keys:
+  #         fingerprints:
+  #           - << pipeline.parameters.fingerprint >>
+  #     - run:
+  #         name: Remove original SSH key from agent
+  #         command: |
+  #           ssh-add -l
+  #           # GitHub App integration doesn't create id_rsa.pub, handle gracefully
+  #           if [ -f ~/.ssh/id_rsa.pub ]; then
+  #             ssh-add -d ~/.ssh/id_rsa.pub
+  #           else
+  #             echo "No id_rsa.pub found (GitHub App integration) - skipping removal"
+  #           fi
+  #           ssh-add -l
+  #     - toolkit/gpg_key
+  #     - toolkit/git_config
+  #     - run:
+  #         name: Release PRLOG
+  #         command: |
+  #           set -exo pipefail
+  #           chmod +x scripts/*.sh
 
-            # Load version from workspace (calculated by calculate-versions)
-            VERSION_FILE="/tmp/release-versions/workspace-version"
-            if [ -f "$VERSION_FILE" ]; then
-              VERSION=$(cat "$VERSION_FILE")
-              echo "Loaded workspace version from workspace: $VERSION"
-            else
-              echo "ERROR: Version file not found at $VERSION_FILE"
-              echo "This job requires calculate-versions to run first"
-              exit 1
-            fi
+  #           # Load version from workspace (calculated by calculate-versions)
+  #           VERSION_FILE="/tmp/release-versions/workspace-version"
+  #           if [ -f "$VERSION_FILE" ]; then
+  #             VERSION=$(cat "$VERSION_FILE")
+  #             echo "Loaded workspace version from workspace: $VERSION"
+  #           else
+  #             echo "ERROR: Version file not found at $VERSION_FILE"
+  #             echo "This job requires calculate-versions to run first"
+  #             exit 1
+  #           fi
 
-            if [ "$VERSION" = "none" ]; then
-              echo "No PRLOG release needed"
-              exit 0
-            fi
+  #           if [ "$VERSION" = "none" ]; then
+  #             echo "No PRLOG release needed"
+  #             exit 0
+  #           fi
 
-            # Check if tag already exists
-            TAG="v${VERSION}"
-            git fetch --tags origin main
+  #           # Check if tag already exists
+  #           TAG="v${VERSION}"
+  #           git fetch --tags origin main
 
-            # Pull latest main (release-crate may have pushed commits)
-            git pull --rebase origin main
+  #           # Pull latest main (release-crate may have pushed commits)
+  #           git pull --rebase origin main
 
-            if git tag -l "$TAG" | grep -q .; then
-              echo "Tag $TAG already exists - updating PRLOG without new tag"
-              # Update PRLOG.md with the release date but don't create new tag
-              ./scripts/release-prlog.sh "$VERSION" --no-tag 2>/dev/null || \
-                ./scripts/release-prlog.sh "$VERSION"
-              git push origin main || echo "No changes to push"
-            else
-              echo "Creating new release for version $VERSION"
-              ./scripts/release-prlog.sh "$VERSION"
-              git push origin main --tags
-            fi
+  #           if git tag -l "$TAG" | grep -q .; then
+  #             echo "Tag $TAG already exists - updating PRLOG without new tag"
+  #             # Update PRLOG.md with the release date but don't create new tag
+  #             ./scripts/release-prlog.sh "$VERSION" --no-tag 2>/dev/null || \
+  #               ./scripts/release-prlog.sh "$VERSION"
+  #             git push origin main || echo "No changes to push"
+  #           else
+  #             echo "Creating new release for version $VERSION"
+  #             ./scripts/release-prlog.sh "$VERSION"
+  #             git push origin main --tags
+  #           fi
 
   # Build release binary and upload to GitHub release for cargo-binstall
   release-binary:
@@ -723,8 +723,13 @@ workflows:
             - bot-check
 
       # Release PRLOG (after crate released)
-      - release-prlog:
+      - toolkit/make_release:
           requires: [release-cull-gmail]
           context:
             - release
             - bot-check
+          ssh_fingerprint: << pipeline.parameters.fingerprint >>
+          min_rust_version: << pipeline.parameters.min_rust_version >>
+          when_cargo_release: false
+          when_use_workspace: false
+          pcu_update_prlog: true
