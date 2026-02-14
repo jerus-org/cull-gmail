@@ -685,7 +685,7 @@ jobs:
           binary_name: cull-gmail
       - upload_release_asset:
           asset_path: cull-gmail-x86_64-unknown-linux-gnu.tar.gz
-          release_tag: cull-gmail-v${VERSION}
+          release_tag: v${VERSION}
 
 workflows:
   release:
