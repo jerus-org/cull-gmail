@@ -19,7 +19,7 @@ parameters:
     default: ""
 
 orbs:
-  toolkit: jerus-org/circleci-toolkit@4.4.2
+  toolkit: jerus-org/circleci-toolkit@4.4.3
 
 # Commands designed for future migration to circleci-toolkit
 # These extend existing toolkit patterns with backward-compatible parameters
