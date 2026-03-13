@@ -29,43 +29,10 @@ mod test_utils {
             let config_dir = temp_dir.path().join(".config").join("cull-gmail");
             fs::create_dir_all(&config_dir)?;
 
-            // Get the path to the compiled binary - try multiple locations
-            let binary_path = if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
-                // Running under cargo test - binary is in workspace root target/
-                // CARGO_MANIFEST_DIR = crates/cull-gmail, so go up two levels
-                let workspace_root = PathBuf::from(&manifest_dir).join("../..").canonicalize()?;
-                let release_binary = workspace_root
-                    .join("target")
-                    .join("release")
-                    .join("cull-gmail");
-                if release_binary.exists() {
-                    release_binary
-                } else {
-                    workspace_root
-                        .join("target")
-                        .join("debug")
-                        .join("cull-gmail")
-                }
-            } else if let Ok(target_dir) = std::env::var("CARGO_TARGET_DIR") {
-                // CI environments may set CARGO_TARGET_DIR
-                let release_binary = PathBuf::from(&target_dir)
-                    .join("release")
-                    .join("cull-gmail");
-                if release_binary.exists() {
-                    release_binary
-                } else {
-                    PathBuf::from(&target_dir).join("debug").join("cull-gmail")
-                }
-            } else {
-                // Fallback for other scenarios
-                std::env::current_exe()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .parent()
-                    .unwrap()
-                    .join("cull-gmail")
-            };
+            // Use CARGO_BIN_EXE_cull-gmail, set by Cargo at compile time to the
+            // actual binary path. Works correctly in workspaces and with tools
+            // that override the target directory (e.g. cargo llvm-cov).
+            let binary_path = PathBuf::from(env!("CARGO_BIN_EXE_cull-gmail"));
 
             // Validate that the binary exists
             if !binary_path.exists() {
