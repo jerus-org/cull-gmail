@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- chore-migrate to workspace structure and 3-file CI pipeline(pr [#170])
+
 ## [0.1.4] - 2026-02-14
 
 ### Changed
@@ -479,9 +483,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#161]: https://github.com/jerus-org/cull-gmail/pull/161
 [#162]: https://github.com/jerus-org/cull-gmail/pull/162
 [#163]: https://github.com/jerus-org/cull-gmail/pull/163
-[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/cull-gmail-v0.1.4...HEAD
-[0.1.4]: https://github.com/jerus-org/cull-gmail/compare/cull-gmail-v0.1.3...cull-gmail-v0.1.4
-[0.1.3]: https://github.com/jerus-org/cull-gmail/compare/cull-gmail-v0.1.2...cull-gmail-v0.1.3
+[#170]: https://github.com/jerus-org/cull-gmail/pull/170
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.4...HEAD
+[0.1.4]: https://github.com/jerus-org/cull-gmail/compare/v0.1.3...v0.1.4
+[0.1.3]: https://github.com/jerus-org/cull-gmail/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/jerus-org/cull-gmail/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/jerus-org/cull-gmail/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/jerus-org/cull-gmail/compare/v0.0.16...v0.1.0
