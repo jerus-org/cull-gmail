@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore-migrate to workspace structure and 3-file CI pipeline(pr [#170])
 
+### Fixed
+
+- deps: update rust crate config to 0.15.21(pr [#171])
+
 ## [0.1.4] - 2026-02-14
 
 ### Changed
@@ -484,6 +488,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#162]: https://github.com/jerus-org/cull-gmail/pull/162
 [#163]: https://github.com/jerus-org/cull-gmail/pull/163
 [#170]: https://github.com/jerus-org/cull-gmail/pull/170
+[#171]: https://github.com/jerus-org/cull-gmail/pull/171
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.4...HEAD
 [0.1.4]: https://github.com/jerus-org/cull-gmail/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/jerus-org/cull-gmail/compare/v0.1.2...v0.1.3
