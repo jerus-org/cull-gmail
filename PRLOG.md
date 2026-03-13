@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- add rules validate subcommand(pr [#177])
+
 ## [0.1.5] - 2026-03-13
 
 ### Changed
@@ -509,6 +515,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#174]: https://github.com/jerus-org/cull-gmail/pull/174
 [#175]: https://github.com/jerus-org/cull-gmail/pull/175
 [#176]: https://github.com/jerus-org/cull-gmail/pull/176
+[#177]: https://github.com/jerus-org/cull-gmail/pull/177
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.5...HEAD
 [0.1.5]: https://github.com/jerus-org/cull-gmail/compare/v0.1.4...v0.1.5
 [0.1.4]: https://github.com/jerus-org/cull-gmail/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/jerus-org/cull-gmail/compare/v0.1.2...v0.1.3
