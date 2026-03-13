@@ -361,13 +361,13 @@ impl Rules {
     /// # Examples
     ///
     /// ```
-    /// use cull_gmail::{Rules, Retention, MessageAge};
+    /// use cull_gmail::{Rules, Retention, MessageAge, EolAction};
     ///
     /// let mut rules = Rules::new();
     /// let retention = Retention::new(MessageAge::Days(30), false);
     /// rules.add_rule(retention, Some("test"), false);
     ///
-    /// let label_map = rules.get_rules_by_label(EolAction::Trash);
+    /// let label_map = rules.get_rules_by_label_for_action(EolAction::Trash);
     /// if let Some(rule) = label_map.get("test") {
     ///     println!("Rule for 'test' label: {}", rule.describe());
     /// }
