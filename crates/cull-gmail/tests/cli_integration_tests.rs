@@ -874,3 +874,127 @@ mod async_integration_tests {
         }
     }
 }
+
+// --- rules validate tests ---
+
+#[cfg(test)]
+mod rules_validate_tests {
+    use super::test_utils::CliTestFixture;
+    use std::fs;
+
+    fn valid_rules_toml() -> &'static str {
+        r#"
+[rules."1"]
+id = 1
+retention = "d:30"
+labels = ["test-label"]
+action = "Trash"
+"#
+    }
+
+    fn invalid_rules_toml() -> &'static str {
+        r#"
+[rules."1"]
+id = 1
+retention = ""
+labels = []
+action = "bad-action"
+"#
+    }
+
+    fn duplicate_label_rules_toml() -> &'static str {
+        r#"
+[rules."1"]
+id = 1
+retention = "d:30"
+labels = ["shared"]
+action = "Trash"
+
+[rules."2"]
+id = 2
+retention = "d:60"
+labels = ["shared"]
+action = "Trash"
+"#
+    }
+
+    #[test]
+    fn test_rules_validate_valid_file_exits_zero() {
+        let fixture = CliTestFixture::new().expect("Failed to create test fixture");
+        let rules_file = fixture.temp_dir.path().join("rules.toml");
+        fs::write(&rules_file, valid_rules_toml()).unwrap();
+
+        let output = fixture
+            .execute_cli(&["rules", rules_file.to_str().unwrap(), "validate"], None)
+            .expect("Failed to execute CLI");
+
+        assert!(
+            output.status.success(),
+            "Expected exit 0 for valid rules, got: {}\nstdout: {}\nstderr: {}",
+            output.status,
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr),
+        );
+    }
+
+    #[test]
+    fn test_rules_validate_invalid_file_exits_nonzero() {
+        let fixture = CliTestFixture::new().expect("Failed to create test fixture");
+        let rules_file = fixture.temp_dir.path().join("rules.toml");
+        fs::write(&rules_file, invalid_rules_toml()).unwrap();
+
+        let output = fixture
+            .execute_cli(&["rules", rules_file.to_str().unwrap(), "validate"], None)
+            .expect("Failed to execute CLI");
+
+        assert!(
+            !output.status.success(),
+            "Expected non-zero exit for invalid rules"
+        );
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let combined = format!("{stdout}{stderr}");
+        assert!(
+            combined.contains("Rule #1"),
+            "Expected issue output mentioning rule #1, got: {combined}"
+        );
+    }
+
+    #[test]
+    fn test_rules_validate_duplicate_label_exits_nonzero() {
+        let fixture = CliTestFixture::new().expect("Failed to create test fixture");
+        let rules_file = fixture.temp_dir.path().join("rules.toml");
+        fs::write(&rules_file, duplicate_label_rules_toml()).unwrap();
+
+        let output = fixture
+            .execute_cli(&["rules", rules_file.to_str().unwrap(), "validate"], None)
+            .expect("Failed to execute CLI");
+
+        assert!(
+            !output.status.success(),
+            "Expected non-zero exit for duplicate label rules"
+        );
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        let stderr = String::from_utf8_lossy(&output.stderr);
+        let combined = format!("{stdout}{stderr}");
+        assert!(
+            combined.contains("shared"),
+            "Expected output mentioning 'shared' label, got: {combined}"
+        );
+    }
+
+    #[test]
+    fn test_rules_validate_missing_file_exits_nonzero() {
+        let fixture = CliTestFixture::new().expect("Failed to create test fixture");
+        let rules_file = fixture.temp_dir.path().join("nonexistent.toml");
+
+        let output = fixture
+            .execute_cli(&["rules", rules_file.to_str().unwrap(), "validate"], None)
+            .expect("Failed to execute CLI");
+
+        assert!(
+            !output.status.success(),
+            "Expected non-zero exit for missing rules file"
+        );
+    }
+}

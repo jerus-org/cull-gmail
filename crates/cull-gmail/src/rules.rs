@@ -43,7 +43,7 @@
 
 use std::{
     collections::BTreeMap,
-    env,
+    env, fmt,
     fs::{self, read_to_string},
     path::Path,
 };
@@ -664,6 +664,116 @@ impl Rules {
         }
         Ok(())
     }
+
+    /// Validates all rules in the set and returns a list of issues found.
+    ///
+    /// Checks each rule for:
+    /// - Non-empty label set
+    /// - Valid retention period string (parseable as a `MessageAge`)
+    /// - Valid action string (parseable as an `EolAction`)
+    ///
+    /// Also checks across rules for duplicate labels (the same label appearing
+    /// in more than one rule).
+    ///
+    /// Returns an empty `Vec` if all rules are valid.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use cull_gmail::Rules;
+    ///
+    /// let rules = Rules::new();
+    /// let issues = rules.validate();
+    /// assert!(issues.is_empty(), "Default rules should all be valid");
+    /// ```
+    pub fn validate(&self) -> Vec<ValidationIssue> {
+        let mut issues = Vec::new();
+        let mut seen_labels: BTreeMap<String, usize> = BTreeMap::new();
+
+        for rule in self.rules.values() {
+            let id = rule.id();
+
+            if rule.labels().is_empty() {
+                issues.push(ValidationIssue::EmptyLabels { rule_id: id });
+            }
+
+            if MessageAge::parse(rule.retention()).is_none() {
+                issues.push(ValidationIssue::InvalidRetention {
+                    rule_id: id,
+                    retention: rule.retention().to_string(),
+                });
+            }
+
+            if rule.action().is_none() {
+                issues.push(ValidationIssue::InvalidAction {
+                    rule_id: id,
+                    action: rule.action_str().to_string(),
+                });
+            }
+
+            for label in rule.labels() {
+                if let Some(&other_id) = seen_labels.get(&label) {
+                    if other_id != id {
+                        issues.push(ValidationIssue::DuplicateLabel {
+                            label: label.clone(),
+                        });
+                    }
+                } else {
+                    seen_labels.insert(label, id);
+                }
+            }
+        }
+
+        issues
+    }
+}
+
+/// An issue found during rules validation.
+#[derive(Debug, PartialEq)]
+pub enum ValidationIssue {
+    /// A rule has no labels configured.
+    EmptyLabels {
+        /// The ID of the offending rule.
+        rule_id: usize,
+    },
+    /// A rule has a retention string that cannot be parsed as a `MessageAge`.
+    InvalidRetention {
+        /// The ID of the offending rule.
+        rule_id: usize,
+        /// The unparseable retention string.
+        retention: String,
+    },
+    /// A rule has an action string that cannot be parsed as an `EolAction`.
+    InvalidAction {
+        /// The ID of the offending rule.
+        rule_id: usize,
+        /// The unparseable action string.
+        action: String,
+    },
+    /// The same label appears in more than one rule.
+    DuplicateLabel {
+        /// The duplicated label.
+        label: String,
+    },
+}
+
+impl fmt::Display for ValidationIssue {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            ValidationIssue::EmptyLabels { rule_id } => {
+                write!(f, "Rule #{rule_id}: no labels configured")
+            }
+            ValidationIssue::InvalidRetention { rule_id, retention } => {
+                write!(f, "Rule #{rule_id}: invalid retention '{retention}'")
+            }
+            ValidationIssue::InvalidAction { rule_id, action } => {
+                write!(f, "Rule #{rule_id}: invalid action '{action}'")
+            }
+            ValidationIssue::DuplicateLabel { label } => {
+                write!(f, "Label '{label}' is used in multiple rules")
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -991,6 +1101,160 @@ mod tests {
         // Should not panic or return error
         let result = rules.list_rules();
         assert!(result.is_ok());
+    }
+
+    // --- validate() tests ---
+
+    #[test]
+    fn test_validate_default_rules_are_valid() {
+        setup_test_environment();
+        let rules = Rules::new();
+        let issues = rules.validate();
+        assert!(
+            issues.is_empty(),
+            "Default rules should be valid, got: {issues:?}"
+        );
+    }
+
+    #[test]
+    fn test_validate_empty_labels_reported() {
+        setup_test_environment();
+        let toml_str = r#"
+[rules."1"]
+id = 1
+retention = "d:30"
+labels = []
+action = "Trash"
+"#;
+        let rules: Rules = toml::from_str(toml_str).unwrap();
+        let issues = rules.validate();
+        assert!(
+            issues
+                .iter()
+                .any(|i| matches!(i, ValidationIssue::EmptyLabels { rule_id: 1 })),
+            "Expected EmptyLabels for rule #1, got: {issues:?}"
+        );
+    }
+
+    #[test]
+    fn test_validate_invalid_retention_reported() {
+        setup_test_environment();
+        let toml_str = r#"
+[rules."1"]
+id = 1
+retention = "invalid"
+labels = ["some-label"]
+action = "Trash"
+"#;
+        let rules: Rules = toml::from_str(toml_str).unwrap();
+        let issues = rules.validate();
+        assert!(
+            issues
+                .iter()
+                .any(|i| matches!(i, ValidationIssue::InvalidRetention { rule_id: 1, .. })),
+            "Expected InvalidRetention for rule #1, got: {issues:?}"
+        );
+    }
+
+    #[test]
+    fn test_validate_empty_retention_reported() {
+        setup_test_environment();
+        let toml_str = r#"
+[rules."1"]
+id = 1
+retention = ""
+labels = ["some-label"]
+action = "Trash"
+"#;
+        let rules: Rules = toml::from_str(toml_str).unwrap();
+        let issues = rules.validate();
+        assert!(
+            issues
+                .iter()
+                .any(|i| matches!(i, ValidationIssue::InvalidRetention { rule_id: 1, .. })),
+            "Expected InvalidRetention for empty retention in rule #1, got: {issues:?}"
+        );
+    }
+
+    #[test]
+    fn test_validate_invalid_action_reported() {
+        setup_test_environment();
+        let toml_str = r#"
+[rules."1"]
+id = 1
+retention = "d:30"
+labels = ["some-label"]
+action = "invalid-action"
+"#;
+        let rules: Rules = toml::from_str(toml_str).unwrap();
+        let issues = rules.validate();
+        assert!(
+            issues
+                .iter()
+                .any(|i| matches!(i, ValidationIssue::InvalidAction { rule_id: 1, .. })),
+            "Expected InvalidAction for rule #1, got: {issues:?}"
+        );
+    }
+
+    #[test]
+    fn test_validate_duplicate_label_reported() {
+        setup_test_environment();
+        let toml_str = r#"
+[rules."1"]
+id = 1
+retention = "d:30"
+labels = ["shared-label"]
+action = "Trash"
+
+[rules."2"]
+id = 2
+retention = "d:60"
+labels = ["shared-label"]
+action = "Trash"
+"#;
+        let rules: Rules = toml::from_str(toml_str).unwrap();
+        let issues = rules.validate();
+        assert!(
+            issues.iter().any(|i| matches!(
+                i,
+                ValidationIssue::DuplicateLabel { label }
+                if label == "shared-label"
+            )),
+            "Expected DuplicateLabel for 'shared-label', got: {issues:?}"
+        );
+    }
+
+    #[test]
+    fn test_validate_multiple_issues_collected() {
+        setup_test_environment();
+        let toml_str = r#"
+[rules."1"]
+id = 1
+retention = ""
+labels = []
+action = "bad"
+"#;
+        let rules: Rules = toml::from_str(toml_str).unwrap();
+        let issues = rules.validate();
+        // All three issues should be present for the one rule
+        assert!(
+            issues
+                .iter()
+                .any(|i| matches!(i, ValidationIssue::EmptyLabels { .. })),
+            "Expected EmptyLabels"
+        );
+        assert!(
+            issues
+                .iter()
+                .any(|i| matches!(i, ValidationIssue::InvalidRetention { .. })),
+            "Expected InvalidRetention"
+        );
+        assert!(
+            issues
+                .iter()
+                .any(|i| matches!(i, ValidationIssue::InvalidAction { .. })),
+            "Expected InvalidAction"
+        );
     }
 
     // Integration tests for save/load would require file system setup

@@ -23,7 +23,7 @@ pub use client_config::ClientConfig;
 pub use gmail_client::GmailClient;
 pub(crate) use gmail_client::MessageSummary;
 pub use retention::Retention;
-pub use rules::Rules;
+pub use rules::{Rules, ValidationIssue};
 
 pub use eol_action::EolAction;
 pub use error::Error;

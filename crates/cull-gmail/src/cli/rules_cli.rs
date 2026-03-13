@@ -106,11 +106,13 @@ use std::path::{Path, PathBuf};
 
 mod config_cli;
 mod run_cli;
+mod validate_cli;
 
 use cull_gmail::{GmailClient, Result, Rules};
 
 use config_cli::ConfigCli;
 use run_cli::RunCli;
+use validate_cli::ValidateCli;
 
 /// Available subcommands for rules management and execution.
 ///
@@ -157,6 +159,16 @@ enum SubCmds {
     /// lifecycle management based on configured retention policies.
     #[clap(name = "run")]
     Run(RunCli),
+
+    /// Validate a rules file without executing any actions.
+    ///
+    /// Checks each rule for a non-empty label set, a valid retention period,
+    /// and a valid action. Also reports duplicate labels across rules.
+    ///
+    /// Exits 0 if all rules are valid, non-zero otherwise. Does not require
+    /// Gmail API credentials.
+    #[clap(name = "validate")]
+    Validate(ValidateCli),
 }
 
 /// Command-line interface for Gmail message retention rule management.
@@ -267,6 +279,23 @@ impl RulesCli {
         self.run_with_rules_path(client, None).await
     }
 
+    /// If the selected subcommand is `validate`, runs it and returns `Some(result)`.
+    ///
+    /// Returns `None` for all other subcommands so the caller can proceed with
+    /// normal config/client initialisation. Validate is the only subcommand that
+    /// does not require a Gmail client or application config.
+    pub fn run_if_validate(&self) -> Option<Result<()>> {
+        if let SubCmds::Validate(validate_cli) = &self.sub_command {
+            let mut rules_path: Option<&Path> = None;
+            if let Some(p) = &self.rules {
+                rules_path = Some(p.as_path());
+            }
+            Some(validate_cli.run(rules_path))
+        } else {
+            None
+        }
+    }
+
     /// Executes the rules command with an optional custom rules path.
     ///
     /// # Arguments
@@ -284,11 +313,18 @@ impl RulesCli {
         }
         log::info!("Rules path: {rules_path:?}");
 
+        // Validate does not need a GmailClient and must not fall back to
+        // creating default rules when the file is missing.
+        if let SubCmds::Validate(validate_cli) = &self.sub_command {
+            return validate_cli.run(rules_path);
+        }
+
         let rules = get_rules_from(rules_path)?;
 
         match &self.sub_command {
             SubCmds::Config(config_cli) => config_cli.run(rules),
             SubCmds::Run(run_cli) => run_cli.run(client, rules).await,
+            SubCmds::Validate(_) => unreachable!("handled above"),
         }
     }
 }
