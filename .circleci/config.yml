@@ -81,6 +81,7 @@ workflows:
 
       - toolkit/code_coverage:
           min_rust_version: << pipeline.parameters.min_rust_version >>
+          package: cull-gmail
           context: SonarCloud
           filters:
             branches:
