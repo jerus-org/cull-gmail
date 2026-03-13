@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - deps: update rust crate assert_cmd to 2.2.0(pr [#172])
 - deps: update rust crate tempfile to 3.27.0(pr [#173])
 - deps: update rust crate tokio to 1.50.0(pr [#174])
+- write README to crate dir for cargo package(pr [#175])
 
 ## [0.1.4] - 2026-02-14
 
@@ -505,6 +506,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#172]: https://github.com/jerus-org/cull-gmail/pull/172
 [#173]: https://github.com/jerus-org/cull-gmail/pull/173
 [#174]: https://github.com/jerus-org/cull-gmail/pull/174
+[#175]: https://github.com/jerus-org/cull-gmail/pull/175
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.4...HEAD
 [0.1.4]: https://github.com/jerus-org/cull-gmail/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/jerus-org/cull-gmail/compare/v0.1.2...v0.1.3
