@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - deps: update rust crate config to 0.15.21(pr [#171])
 - deps: update rust crate chrono to 0.4.44(pr [#165])
+- deps: update rust crate clap to 4.6.0(pr [#166])
 
 ## [0.1.4] - 2026-02-14
 
@@ -491,6 +492,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#170]: https://github.com/jerus-org/cull-gmail/pull/170
 [#171]: https://github.com/jerus-org/cull-gmail/pull/171
 [#165]: https://github.com/jerus-org/cull-gmail/pull/165
+[#166]: https://github.com/jerus-org/cull-gmail/pull/166
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.4...HEAD
 [0.1.4]: https://github.com/jerus-org/cull-gmail/compare/v0.1.3...v0.1.4
 [0.1.3]: https://github.com/jerus-org/cull-gmail/compare/v0.1.2...v0.1.3
