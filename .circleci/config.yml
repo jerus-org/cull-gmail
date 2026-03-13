@@ -58,6 +58,9 @@ workflows:
       - toolkit/security:
           name: security audit only
           sonarcloud: false
+          # RUSTSEC-2025-0066: google-apis-common unmaintained — core transitive
+          # dependency of google-gmail1; no maintained Gmail API alternative exists.
+          ignore_advisories: RUSTSEC-2025-0066
           filters:
             branches:
               only:
@@ -67,6 +70,9 @@ workflows:
       - toolkit/security:
           name: security with sonarcloud
           context: SonarCloud
+          # RUSTSEC-2025-0066: google-apis-common unmaintained — core transitive
+          # dependency of google-gmail1; no maintained Gmail API alternative exists.
+          ignore_advisories: RUSTSEC-2025-0066
           filters:
             branches:
               ignore:

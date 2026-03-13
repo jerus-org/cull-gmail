@@ -1,0 +1,26 @@
+# https://embarkstudios.github.io/cargo-deny/
+
+[advisories]
+ignore = [
+    # google-apis-common 8.0.0: project unmaintained (RUSTSEC-2025-0066).
+    # Core transitive dependency of google-gmail1 which is the only available
+    # Rust client for the Gmail API. No alternative available upstream.
+    { id = "RUSTSEC-2025-0066", reason = "transitive via google-gmail1; no maintained alternative for Gmail API access" },
+]
+
+[licenses]
+allow = [
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "MIT",
+    "Unicode-3.0",
+]
+
+[bans]
+multiple-versions = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
