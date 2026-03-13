@@ -298,6 +298,13 @@ async fn run(args: Cli) -> Result<()> {
         return init_cli.run().await;
     }
 
+    // Handle `rules validate` before loading config: it needs no Gmail credentials.
+    if let Some(SubCmds::Rules(ref rules_cli)) = args.sub_command
+        && let Some(result) = rules_cli.run_if_validate()
+    {
+        return result;
+    }
+
     // For all other commands, load config normally
     let (config, client_config) = get_config()?;
 

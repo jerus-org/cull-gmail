@@ -290,6 +290,11 @@ impl EolRule {
         EolAction::parse(&self.action)
     }
 
+    /// Returns the raw action string as stored in the rule.
+    pub(crate) fn action_str(&self) -> &str {
+        &self.action
+    }
+
     /// Returns a human-readable description of what this rule does.
     ///
     /// The description includes the rule ID, the action that will be performed,
