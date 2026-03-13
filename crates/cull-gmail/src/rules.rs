@@ -688,7 +688,9 @@ impl Rules {
     /// ```
     pub fn validate(&self) -> Vec<ValidationIssue> {
         let mut issues = Vec::new();
-        let mut seen_labels: BTreeMap<String, usize> = BTreeMap::new();
+        // Key: (label, action_str) — the same label in a Trash and a Delete rule is
+        // intentional two-stage processing and must not be flagged as a duplicate.
+        let mut seen_label_actions: BTreeMap<(String, String), usize> = BTreeMap::new();
 
         for rule in self.rules.values() {
             let id = rule.id();
@@ -712,14 +714,15 @@ impl Rules {
             }
 
             for label in rule.labels() {
-                if let Some(&other_id) = seen_labels.get(&label) {
+                let key = (label.clone(), rule.action_str().to_lowercase());
+                if let Some(&other_id) = seen_label_actions.get(&key) {
                     if other_id != id {
                         issues.push(ValidationIssue::DuplicateLabel {
                             label: label.clone(),
                         });
                     }
                 } else {
-                    seen_labels.insert(label, id);
+                    seen_label_actions.insert(key, id);
                 }
             }
         }
@@ -1221,6 +1224,33 @@ action = "Trash"
                 if label == "shared-label"
             )),
             "Expected DuplicateLabel for 'shared-label', got: {issues:?}"
+        );
+    }
+
+    #[test]
+    fn test_validate_same_label_different_actions_not_duplicate() {
+        setup_test_environment();
+        // A label in a Trash rule AND a Delete rule is intentional two-stage processing.
+        let toml_str = r#"
+[rules."1"]
+id = 1
+retention = "w:1"
+labels = ["Development/Notifications"]
+action = "Trash"
+
+[rules."2"]
+id = 2
+retention = "w:2"
+labels = ["Development/Notifications"]
+action = "Delete"
+"#;
+        let rules: Rules = toml::from_str(toml_str).unwrap();
+        let issues = rules.validate();
+        assert!(
+            !issues
+                .iter()
+                .any(|i| matches!(i, ValidationIssue::DuplicateLabel { .. })),
+            "Same label with different actions should NOT be flagged as duplicate, got: {issues:?}"
         );
     }
 
