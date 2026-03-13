@@ -1,73 +1,49 @@
-[package]
-name = "cull-gmail"
-description = "Cull emails from a gmail account using the gmail API"
-version = "0.1.4"
-authors = ["Jeremiah Russell <jrussell@jerus.ie>"]
+[workspace]
+members = ["crates/cull-gmail"]
+resolver = "2"
+
+[workspace.package]
 edition = "2024"
+authors = ["Jeremiah Russell <jrussell@jerus.ie>"]
 rust-version = "1.88"
+license = "MIT"
+repository = "https://github.com/jerus-org/cull-gmail"
 keywords = ["gmail", "gmail-api", "management"]
 categories = ["command-line-utilities"]
-license = "MIT"
-readme = "README.md"
-repository = "https://github.com/jerus-org/cull-gmail"
-include = [
-    "**/*.rs",
-    "Cargo.toml",
-    "README.md",
-    "LICENSE-MIT",
-    "LICENSE-APACHE",
-    "CHANGELOG.md",
-    "docs",
-]
 
-[dependencies]
+[workspace.dependencies]
+base64 = "0.22.1"
 chrono = "0.4.43"
 clap = { version = "4.5.58", features = ["derive"] }
 clap-verbosity-flag = { version = "3.0.4", features = ["tracing"] }
-config = { version = "0.15.19", default-features = false, features = [
-    "json",
-    "toml",
-] }
+config = { version = "0.15.19", default-features = false, features = ["json", "toml"] }
+dialoguer = "0.12.0"
 env_logger = "0.11.9"
+flate2 = "1.1.9"
+futures = "0.3.31"
 google-gmail1 = { version = "7.0.0", default-features = false, features = ["yup-oauth2", "aws-lc-rs"] }
 hyper-rustls = { version = "0.27.7", features = ["http1"] }
+indicatif = "0.18.3"
 lazy-regex = "3.6.0"
 log = "0.4.29"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
 thiserror = "2.0.18"
-tokio = { version = "1.49.0", features = [
-    "macros",
-    "rt-multi-thread",
-    "process",
-] }
+tokio = { version = "1.49.0", features = ["macros", "rt-multi-thread", "process"] }
 toml = "1.0.0"
-base64 = "0.22.1"
-flate2 = "1.1.9"
-dialoguer = "0.12.0"
-indicatif = "0.18.3"
 
-[dev-dependencies]
-httpmock = "0.8.3"
-tokio-test = "0.4.5"
-temp-env = "0.3.6"
-tempfile = "3.25.0"
-futures = "0.3.31"
+# dev-dependencies
 assert_cmd = "2.1.2"
 assert_fs = "1.1.3"
+httpmock = "0.8.3"
 predicates = "3.1.4"
+temp-env = "0.3.6"
+tempfile = "3.25.0"
+tokio-test = "0.4.5"
 
-[lints.clippy]
+[workspace.lints.clippy]
 uninlined-format-args = "warn"
 unnecessary_semicolon = "warn"
 
-[lints.rust]
-dead-code = "allow" # allow temporarily while developing initial code
-
-[lib]
-name = "cull_gmail"
-path = "src/lib.rs"
-
-[[bin]]
-name = "cull-gmail"
-path = "src/cli/main.rs"
+[workspace.lints.rust]
+dead-code = "allow"

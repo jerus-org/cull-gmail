@@ -31,15 +31,17 @@ mod test_utils {
 
             // Get the path to the compiled binary - try multiple locations
             let binary_path = if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
-                // Running under cargo test - try release first, then debug
-                let release_binary = PathBuf::from(&manifest_dir)
+                // Running under cargo test - binary is in workspace root target/
+                // CARGO_MANIFEST_DIR = crates/cull-gmail, so go up two levels
+                let workspace_root = PathBuf::from(&manifest_dir).join("../..").canonicalize()?;
+                let release_binary = workspace_root
                     .join("target")
                     .join("release")
                     .join("cull-gmail");
                 if release_binary.exists() {
                     release_binary
                 } else {
-                    PathBuf::from(&manifest_dir)
+                    workspace_root
                         .join("target")
                         .join("debug")
                         .join("cull-gmail")

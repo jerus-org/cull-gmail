@@ -1,0 +1,7 @@
+pre-release-commit-message = "chore: Release cull-gmail v{{version}}"
+tag-message = "{{tag_name}}"
+tag-name = "cull-gmail-v{{version}}"
+pre-release-hook = ["./release-hook.sh"]
+pre-release-replacements = [
+    { file = "../../docs/lib.md", search = "cull-gmail = \"\\d+\\.\\d+\\.\\d+\"", replace = "cull-gmail = \"{{version}}\"", exactly = 1 },
+]
