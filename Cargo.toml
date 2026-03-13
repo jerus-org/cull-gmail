@@ -20,7 +20,7 @@ config = { version = "0.15.21", default-features = false, features = ["json", "t
 dialoguer = "0.12.0"
 env_logger = "0.11.9"
 flate2 = "1.1.9"
-futures = "0.3.31"
+futures = "0.3.32"
 google-gmail1 = { version = "7.0.0", default-features = false, features = ["yup-oauth2", "aws-lc-rs"] }
 hyper-rustls = { version = "0.27.7", features = ["http1"] }
 indicatif = "0.18.3"
