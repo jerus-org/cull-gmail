@@ -664,7 +664,7 @@ Add the library to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-cull-gmail = "0.1.6"
+cull-gmail = "0.1.7"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 ```
 
