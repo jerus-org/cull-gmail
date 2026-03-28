@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - remove jq from tools verification(pr [#184])
+- deps: update rust crate config to 0.15.22(pr [#179])
 
 ## [0.1.7] - 2026-03-14
 
@@ -535,6 +536,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#178]: https://github.com/jerus-org/cull-gmail/pull/178
 [#183]: https://github.com/jerus-org/cull-gmail/pull/183
 [#184]: https://github.com/jerus-org/cull-gmail/pull/184
+[#179]: https://github.com/jerus-org/cull-gmail/pull/179
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.7...HEAD
 [0.1.7]: https://github.com/jerus-org/cull-gmail/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/jerus-org/cull-gmail/compare/v0.1.5...v0.1.6
