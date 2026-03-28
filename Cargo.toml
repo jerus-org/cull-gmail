@@ -18,7 +18,7 @@ clap = { version = "4.6.0", features = ["derive"] }
 clap-verbosity-flag = { version = "3.0.4", features = ["tracing"] }
 config = { version = "0.15.22", default-features = false, features = ["json", "toml"] }
 dialoguer = "0.12.0"
-env_logger = "0.11.9"
+env_logger = "0.11.10"
 flate2 = "1.1.9"
 futures = "0.3.32"
 google-gmail1 = { version = "7.0.0", default-features = false, features = ["yup-oauth2", "aws-lc-rs"] }
