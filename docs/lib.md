@@ -8,7 +8,7 @@ Add the library to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-cull-gmail = "0.1.7"
+cull-gmail = "0.1.8"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread"] }
 ```
 
