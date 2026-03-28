@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - chore-migrate CI to circleci-toolkit 6.0.0(pr [#183])
 
+### Fixed
+
+- remove jq from tools verification(pr [#184])
+
 ## [0.1.7] - 2026-03-14
 
 ### Fixed
@@ -530,6 +534,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#177]: https://github.com/jerus-org/cull-gmail/pull/177
 [#178]: https://github.com/jerus-org/cull-gmail/pull/178
 [#183]: https://github.com/jerus-org/cull-gmail/pull/183
+[#184]: https://github.com/jerus-org/cull-gmail/pull/184
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.7...HEAD
 [0.1.7]: https://github.com/jerus-org/cull-gmail/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/jerus-org/cull-gmail/compare/v0.1.5...v0.1.6
