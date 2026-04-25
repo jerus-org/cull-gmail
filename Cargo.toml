@@ -22,7 +22,7 @@ env_logger = "0.11.10"
 flate2 = "1.1.9"
 futures = "0.3.32"
 google-gmail1 = { version = "7.0.0", default-features = false, features = ["yup-oauth2", "aws-lc-rs"] }
-hyper-rustls = { version = "0.27.7", features = ["http1"] }
+hyper-rustls = { version = "0.27.9", features = ["http1"] }
 indicatif = "0.18.4"
 lazy-regex = "3.6.0"
 log = "0.4.29"
