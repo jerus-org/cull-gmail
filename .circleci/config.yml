@@ -61,7 +61,6 @@ workflows:
           filters:
             branches:
               only:
-                - main
                 - /pull\/[0-9]+/
 
       - toolkit/security:
@@ -74,7 +73,6 @@ workflows:
             branches:
               ignore:
                 - /pull\/[0-9]+/
-                - main
 
       - toolkit/code_coverage:
           package: cull-gmail
