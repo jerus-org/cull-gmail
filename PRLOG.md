@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - deps: update rust crate toml to 1.1.2(pr [#188])
 - deps: update rust crate tokio to 1.52.1(pr [#190])
 - deps: update dependency toolkit to v6.4.2(pr [#193])
+- deps: update dependency toolkit to v6.5.0(pr [#204])
 
 ## [0.1.8] - 2026-03-28
 
@@ -565,6 +566,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#190]: https://github.com/jerus-org/cull-gmail/pull/190
 [#193]: https://github.com/jerus-org/cull-gmail/pull/193
 [#192]: https://github.com/jerus-org/cull-gmail/pull/192
+[#204]: https://github.com/jerus-org/cull-gmail/pull/204
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.8...HEAD
 [0.1.8]: https://github.com/jerus-org/cull-gmail/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/jerus-org/cull-gmail/compare/v0.1.6...v0.1.7
