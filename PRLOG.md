@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- chore-remove redundant toolkit/label job(pr [#215])
+
 ### Fixed
 
 - deps: update dependency toolkit to v6.6.2(pr [#212])
@@ -598,6 +602,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#205]: https://github.com/jerus-org/cull-gmail/pull/205
 [#206]: https://github.com/jerus-org/cull-gmail/pull/206
 [#207]: https://github.com/jerus-org/cull-gmail/pull/207
+[#215]: https://github.com/jerus-org/cull-gmail/pull/215
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.9...HEAD
 [0.1.9]: https://github.com/jerus-org/cull-gmail/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/jerus-org/cull-gmail/compare/v0.1.7...v0.1.8
