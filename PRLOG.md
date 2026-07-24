@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - deps: update rust crate thiserror to 2.0.19(pr [#209])
 - deps: update rust crate toml to 1.1.3(pr [#210])
 - deps: update serde packages(pr [#211])
+- deps: update rust crate base64 to 0.23.0(pr [#213])
 
 ## [0.1.9] - 2026-06-30
 
@@ -611,6 +612,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#209]: https://github.com/jerus-org/cull-gmail/pull/209
 [#210]: https://github.com/jerus-org/cull-gmail/pull/210
 [#211]: https://github.com/jerus-org/cull-gmail/pull/211
+[#213]: https://github.com/jerus-org/cull-gmail/pull/213
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.9...HEAD
 [0.1.9]: https://github.com/jerus-org/cull-gmail/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/jerus-org/cull-gmail/compare/v0.1.7...v0.1.8
