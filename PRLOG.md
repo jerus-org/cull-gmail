@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- deps: lock file maintenance(pr [#216])
+- deps: update rust crate base64 to 0.23.1(pr [#217])
+- deps: update rust crate clap to 4.6.6(pr [#218])
+- deps: update rust crate futures to 0.3.34(pr [#219])
+- deps: update rust crate lazy-regex to 3.6.1(pr [#220])
+
 ## [0.1.10] - 2026-07-24
 
 ### Changed
@@ -615,6 +625,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#211]: https://github.com/jerus-org/cull-gmail/pull/211
 [#213]: https://github.com/jerus-org/cull-gmail/pull/213
 [#214]: https://github.com/jerus-org/cull-gmail/pull/214
+[#216]: https://github.com/jerus-org/cull-gmail/pull/216
+[#217]: https://github.com/jerus-org/cull-gmail/pull/217
+[#218]: https://github.com/jerus-org/cull-gmail/pull/218
+[#219]: https://github.com/jerus-org/cull-gmail/pull/219
+[#220]: https://github.com/jerus-org/cull-gmail/pull/220
+[Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.10...HEAD
 [0.1.10]: https://github.com/jerus-org/cull-gmail/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/jerus-org/cull-gmail/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/jerus-org/cull-gmail/compare/v0.1.7...v0.1.8
