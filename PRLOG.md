@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - deps: update rust crate lazy-regex to 3.6.2(pr [#239])
 - deps: update rust crate serde_json to 1.0.154(pr [#240])
 - deps: update tokio packages(pr [#241])
+- deps: update rust crate toml to 1.1.8(pr [#242])
 
 ## [0.1.11] - 2026-08-25
 
@@ -677,6 +678,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [#239]: https://github.com/jerus-org/cull-gmail/pull/239
 [#240]: https://github.com/jerus-org/cull-gmail/pull/240
 [#241]: https://github.com/jerus-org/cull-gmail/pull/241
+[#242]: https://github.com/jerus-org/cull-gmail/pull/242
 [Unreleased]: https://github.com/jerus-org/cull-gmail/compare/v0.1.11...HEAD
 [0.1.11]: https://github.com/jerus-org/cull-gmail/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/jerus-org/cull-gmail/compare/v0.1.9...v0.1.10
