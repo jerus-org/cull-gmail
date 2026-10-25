@@ -60,3 +60,17 @@ path = "src/lib.rs"
 [[bin]]
 name = "cull-gmail"
 path = "src/cli/main.rs"
+
+[package.metadata.binstall]
+pkg-url = "{ repo }/releases/download/cull-gmail-v{ version }/cull-gmail-{ target }.tar.gz"
+pkg-fmt = "tgz"
+bin-dir = "{ bin }{ binary-ext }"
+
+# cargo-binstall signature verification. The pubkey is a placeholder in source:
+# the release pipeline generates an ephemeral minisign/rsign keypair, signs the
+# tarball, and `pcu release inject-pubkey` replaces the `pubkey` value below with
+# that release's public key before the crate is published. Without this section
+# pcu has nothing to replace and the signature is published unverifiable.
+[package.metadata.binstall.signing]
+algorithm = "minisign"
+pubkey = "RWQg2OW3k9cNGnclBtimmdPSuCYyskH1JEMJbhsJ+R9ek7Ii8at+GecB"
