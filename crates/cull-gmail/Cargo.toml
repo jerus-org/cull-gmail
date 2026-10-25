@@ -1,7 +1,7 @@
 [package]
 name = "cull-gmail"
 description = "Cull emails from a gmail account using the gmail API"
-version = "0.1.11"
+version = "0.1.12"
 edition.workspace = true
 authors.workspace = true
 rust-version.workspace = true
@@ -73,4 +73,4 @@ bin-dir = "{ bin }{ binary-ext }"
 # pcu has nothing to replace and the signature is published unverifiable.
 [package.metadata.binstall.signing]
 algorithm = "minisign"
-pubkey = "RWQg2OW3k9cNGnclBtimmdPSuCYyskH1JEMJbhsJ+R9ek7Ii8at+GecB"
+pubkey = "RWSqeR5gkf+4ErnMBWXY16T+I+jCJnCOhsf2OHRZfHiDoHs1oFgOQqZ/"
